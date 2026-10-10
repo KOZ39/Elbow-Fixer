@@ -49,10 +49,10 @@ namespace KOZ39.ElbowFixer
 
         private static void Build(BuildContext ctx)
         {
+            var state = ctx.GetState<ElbowFixerState>();
+
             // Another tool may have deleted a mesh since Resolve.
-            var meshes = ctx.GetState<ElbowFixerState>()
-                .Meshes?.Where(mesh => mesh != null)
-                .ToArray();
+            var meshes = state.Meshes?.Where(mesh => mesh != null).ToArray();
 
             if (meshes == null || meshes.Length == 0)
             {

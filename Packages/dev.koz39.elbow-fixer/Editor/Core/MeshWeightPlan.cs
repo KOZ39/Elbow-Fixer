@@ -113,6 +113,7 @@ namespace KOZ39.ElbowFixer
             _lowerIndices[side] = lower;
 
             var forearm = new ForearmAxis(bindposes[lower], arm.Hand.localPosition);
+
             // Arm.Resolve checks length in world units; mesh coordinates can use a different unit.
             Require(
                 float.IsFinite(forearm.Length) && forearm.Length > 0,

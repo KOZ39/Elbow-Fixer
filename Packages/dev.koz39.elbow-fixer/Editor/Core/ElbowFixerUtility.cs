@@ -7,9 +7,7 @@ namespace KOZ39.ElbowFixer
 {
     internal static class ElbowFixerUtility
     {
-        // A mesh below any of these is likely a stray weight, a short accessory or a rigid one bound to a single bone.
         private const int MinForearmVertices = 20;
-
         private const float MinForearmCoverage = 0.3f;
         private const float RigidWeight = 0.999f;
 
@@ -17,7 +15,7 @@ namespace KOZ39.ElbowFixer
         internal static GameObject FindAvatarRoot(Component component) =>
             RuntimeUtil.FindAvatarInParents(component.transform)?.gameObject;
 
-        // Clothes with their own armature are matched by bone name, since Modular Avatar merges them only at build time.
+        // Clothes with their own armature are matched by bone name, since Modular Avatar merges them at build time.
         internal static SkinnedMeshRenderer[] FindTargetMeshes(GameObject avatarRoot)
         {
             var animator = avatarRoot.GetComponent<Animator>();
@@ -94,6 +92,7 @@ namespace KOZ39.ElbowFixer
                 max = Mathf.Max(max, t);
             }
 
+            // Below these, a mesh is likely a stray weight, a short accessory or a rigid one bound to a single bone.
             return count >= MinForearmVertices && max - min >= MinForearmCoverage && blended;
         }
 
