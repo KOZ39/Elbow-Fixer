@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using UnityEngine;
 using static KOZ39.ElbowFixer.ElbowFixerException;
-using Object = UnityEngine.Object;
 
 namespace KOZ39.ElbowFixer
 {
@@ -13,8 +13,6 @@ namespace KOZ39.ElbowFixer
 
         internal readonly SkinnedMeshRenderer Renderer;
         private readonly BoneWeight[] _weights;
-
-        // LowerArm index of each arm in Renderer.bones, or -1 when the mesh does not use it.
         private readonly int[] _lowerIndices;
 
         internal int Redistributed { get; private set; }
@@ -40,12 +38,9 @@ namespace KOZ39.ElbowFixer
                 plan.Redistribute(side, arms[side], bones, bindposes, vertices);
             }
 
-            Require(plan.Redistributed > 0, "NoForearmWeights", renderer.name);
-
             return plan;
         }
 
-        // Returns the largest rest pose drift in metres.
         internal float Apply(Transform[][] supports, Transform avatarRoot)
         {
             var source = Renderer.sharedMesh;
@@ -71,13 +66,15 @@ namespace KOZ39.ElbowFixer
             var after = SkinMatrices(bones, bindposes, avatarSpace);
             var drift = RestDrift(source.vertices, source.boneWeights, before, after);
 
-            // Negated so that NaN also fails.
-            if (!(drift < MaxRestDrift))
-            {
-                throw new ElbowFixerException("RestPoseDrift", Renderer.name, drift * 1000);
-            }
+            // NDMF's error console only substitutes plain {0} placeholders.
+            Require(
+                drift < MaxRestDrift,
+                "RestPoseDrift",
+                Renderer,
+                (drift * 1000).ToString("F5", CultureInfo.CurrentCulture)
+            );
 
-            var mesh = Object.Instantiate(source);
+            var mesh = UnityEngine.Object.Instantiate(source);
             mesh.name = $"{source.name}_ElbowFixer";
             mesh.boneWeights = _weights;
             mesh.bindposes = bindposes.ToArray();
@@ -107,7 +104,7 @@ namespace KOZ39.ElbowFixer
             Require(
                 Array.LastIndexOf(bones, arm.Lower) == lower,
                 "DuplicateLowerArm",
-                Renderer.name,
+                Renderer,
                 arm.Name
             );
             _lowerIndices[side] = lower;
@@ -118,7 +115,7 @@ namespace KOZ39.ElbowFixer
             Require(
                 float.IsFinite(forearm.Length) && forearm.Length > 0,
                 "InvalidBindpose",
-                Renderer.name
+                Renderer
             );
 
             var nodes = TwistRig.WeightNodes(bones.Length, side, lower);
@@ -150,16 +147,14 @@ namespace KOZ39.ElbowFixer
 
         private static Mesh Validate(SkinnedMeshRenderer renderer)
         {
-            var name = renderer.name;
             var mesh = renderer.sharedMesh;
 
-            Require(mesh != null, "MissingMesh", name);
-            Require(mesh.isReadable, "MeshNotReadable", name);
-            Require(!renderer.TryGetComponent<Cloth>(out _), "ClothNotSupported", name);
+            Require(mesh != null, "MissingMesh", renderer);
+            Require(mesh.isReadable, "MeshNotReadable", renderer);
             Require(
                 renderer.quality == SkinQuality.Auto || renderer.quality == SkinQuality.Bone4,
                 "SkinQuality",
-                name
+                renderer
             );
 
             // Mesh.boneWeights holds four influences per vertex and would silently drop the rest.
@@ -168,13 +163,13 @@ namespace KOZ39.ElbowFixer
                 Require(
                     bonesPerVertex.All(count => count <= ForearmWeights.MaxInfluences),
                     "TooManyInfluences",
-                    name
+                    renderer
                 );
             }
 
             var bones = renderer.bones;
             var weights = mesh.boneWeights;
-            Require(mesh.bindposes.Length == bones.Length, "BindposeMismatch", name);
+            Require(mesh.bindposes.Length == bones.Length, "BindposeMismatch", renderer);
             Require(
                 mesh.bindposes.All(matrix =>
                     Enumerable.Range(0, 16).All(i => float.IsFinite(matrix[i]))
@@ -183,20 +178,20 @@ namespace KOZ39.ElbowFixer
                     && Enumerable.Range(0, 16).All(i => float.IsFinite(matrix.inverse[i]))
                 ),
                 "InvalidBindpose",
-                name
+                renderer
             );
             Require(
                 mesh.vertices.All(vertex =>
                     float.IsFinite(vertex.x) && float.IsFinite(vertex.y) && float.IsFinite(vertex.z)
                 ),
                 "NonFiniteVertices",
-                name
+                renderer
             );
             Require(
                 weights.Length == mesh.vertexCount
                     && weights.All(weight => IsValidWeight(weight, bones)),
                 "InvalidWeights",
-                name
+                renderer
             );
 
             return mesh;
@@ -257,7 +252,7 @@ namespace KOZ39.ElbowFixer
                 var oldPosition = Skin(before, oldWeights[i], vertices[i]);
                 var newPosition = Skin(after, _weights[i], vertices[i]);
                 var distance = Vector3.Distance(oldPosition, newPosition);
-                Require(float.IsFinite(distance), "NonFiniteSkinning", Renderer.name);
+                Require(float.IsFinite(distance), "NonFiniteSkinning", Renderer);
                 drift = Mathf.Max(drift, distance);
             }
 

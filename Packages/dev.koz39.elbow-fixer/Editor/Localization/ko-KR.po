@@ -130,7 +130,7 @@ msgstr "'{0}'에 보정할 팔뚝 가중치가 없습니다. 대상 메시에서
 
 #. {0}: 메시 이름, {1}: 거리
 msgid "errors.RestPoseDrift"
-msgstr "'{0}'이(가) 기본 자세에서 {1:F5} mm 움직였습니다. 빌드를 중단했습니다."
+msgstr "'{0}'이(가) 기본 자세에서 {1} mm 움직였습니다. 빌드를 중단했습니다."
 
 #. {0}: 메시 이름
 msgid "errors.NonFiniteVertices"

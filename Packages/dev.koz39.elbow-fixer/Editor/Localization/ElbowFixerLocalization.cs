@@ -11,7 +11,7 @@ namespace KOZ39.ElbowFixer
         private const string Folder =
             "Packages/" + ElbowFixerPackageInfo.Name + "/Editor/Localization";
 
-        private static readonly Localizer _localizer = new Localizer(
+        internal static readonly Localizer Localizer = new Localizer(
             "en-US",
             () =>
                 AssetDatabase
@@ -27,7 +27,7 @@ namespace KOZ39.ElbowFixer
 
         internal static string Text(string key, params object[] arguments)
         {
-            var text = _localizer.GetLocalizedString(key);
+            var text = Localizer.GetLocalizedString(key);
 
             return arguments.Length == 0
                 ? text

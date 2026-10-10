@@ -35,9 +35,12 @@ namespace KOZ39.ElbowFixer
 
             if (primaryFixer != null)
             {
-                ctx.GetState<ElbowFixerState>().Meshes = ElbowFixerBuilder.SelectTargetMeshes(
-                    avatarRoot,
-                    primaryFixer
+                var state = ctx.GetState<ElbowFixerState>();
+
+                // Build runs after the fixer is destroyed, but its errors can still link to the original by path.
+                state.Fixer = ObjectRegistry.GetReference(primaryFixer);
+                ReportErrors(() =>
+                    state.Meshes = ElbowFixerBuilder.SelectTargetMeshes(avatarRoot, primaryFixer)
                 );
             }
 
@@ -59,12 +62,34 @@ namespace KOZ39.ElbowFixer
                 return;
             }
 
-            var report = ElbowFixerBuilder.Build(ctx.AvatarRootObject, meshes);
-            Debug.Log($"{ElbowFixerPackageInfo.LogPrefix} {report}", ctx.AvatarRootObject);
+            ReportErrors(() =>
+            {
+                var report = ElbowFixerBuilder.Build(ctx.AvatarRootObject, state.Fixer, meshes);
+                Debug.Log($"{ElbowFixerPackageInfo.LogPrefix} {report}", ctx.AvatarRootObject);
+            });
+        }
+
+        private static void ReportErrors(System.Action action)
+        {
+            try
+            {
+                action();
+            }
+            catch (ElbowFixerException e)
+            {
+                // NDMF links ObjectReference arguments. Appended last, the context leaves the placeholders unchanged.
+                ErrorReport.ReportError(
+                    ElbowFixerLocalization.Localizer,
+                    ErrorSeverity.Error,
+                    e.Key,
+                    e.Arguments.Append(e.Context).ToArray()
+                );
+            }
         }
 
         private class ElbowFixerState
         {
+            public ObjectReference Fixer;
             public SkinnedMeshRenderer[] Meshes;
         }
     }

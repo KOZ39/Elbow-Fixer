@@ -130,7 +130,7 @@ msgstr "「{0}」に補正する前腕のウェイトがありません。対象
 
 #. {0}: メッシュ名, {1}: 距離
 msgid "errors.RestPoseDrift"
-msgstr "「{0}」が基本姿勢で{1:F5} mm動きました。ビルドを中断しました。"
+msgstr "「{0}」が基本姿勢で{1} mm動きました。ビルドを中断しました。"
 
 #. {0}: メッシュ名
 msgid "errors.NonFiniteVertices"

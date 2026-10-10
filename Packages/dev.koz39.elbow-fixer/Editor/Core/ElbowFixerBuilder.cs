@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Text;
+using nadena.dev.ndmf;
 using UnityEditor;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
@@ -11,7 +12,11 @@ namespace KOZ39.ElbowFixer
     internal static class ElbowFixerBuilder
     {
         // Runs on the NDMF build copy only.
-        internal static string Build(GameObject avatarRoot, SkinnedMeshRenderer[] renderers)
+        internal static string Build(
+            GameObject avatarRoot,
+            ObjectReference fixer,
+            SkinnedMeshRenderer[] renderers
+        )
         {
             // Build copies can be far from the origin. Keep world-space rig and bindpose calculations precise.
             var position = avatarRoot.transform.position;
@@ -20,7 +25,7 @@ namespace KOZ39.ElbowFixer
             {
                 avatarRoot.transform.position = Vector3.zero;
 
-                return BuildAtOrigin(avatarRoot, renderers);
+                return BuildAtOrigin(avatarRoot, fixer, renderers);
             }
             finally
             {
@@ -28,13 +33,22 @@ namespace KOZ39.ElbowFixer
             }
         }
 
-        private static string BuildAtOrigin(GameObject avatarRoot, SkinnedMeshRenderer[] renderers)
+        private static string BuildAtOrigin(
+            GameObject avatarRoot,
+            ObjectReference fixer,
+            SkinnedMeshRenderer[] renderers
+        )
         {
             var arms = Arm.Resolve(avatarRoot);
             RejectMeshAnimations(avatarRoot, renderers);
             var plans = renderers
                 .Select(renderer => MeshWeightPlan.Create(renderer, arms))
                 .ToArray();
+
+            foreach (var plan in plans)
+            {
+                Require(plan.Redistributed > 0, fixer, "NoForearmWeights", plan.Renderer);
+            }
 
             var supports = arms.Select(TwistRig.Build).ToArray();
 
@@ -75,19 +89,27 @@ namespace KOZ39.ElbowFixer
                 .Distinct()
                 .ToArray();
 
-            Require(renderers.Length > 0, "NoMeshes");
+            Require(renderers.Length > 0, fixer, "NoMeshes");
 
             foreach (var renderer in renderers)
             {
                 Require(
                     renderer.transform.IsChildOf(avatarRoot.transform),
+                    fixer,
                     "MeshOutsideAvatar",
-                    renderer.name
+                    renderer
                 );
                 Require(
                     !ElbowFixerUtility.IsEditorOnly(renderer.transform, avatarRoot.transform),
+                    fixer,
                     "MeshEditorOnly",
-                    renderer.name
+                    renderer
+                );
+                Require(
+                    !renderer.TryGetComponent<Cloth>(out _),
+                    fixer,
+                    "ClothNotSupported",
+                    renderer
                 );
             }
 
@@ -128,7 +150,7 @@ namespace KOZ39.ElbowFixer
                         && paths.Contains(binding.path)
                     );
 
-                Require(!replacesMesh, "AnimatedMesh", clip.name);
+                Require(!replacesMesh, "AnimatedMesh", clip);
             }
         }
     }

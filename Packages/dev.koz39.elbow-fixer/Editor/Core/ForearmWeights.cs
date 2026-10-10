@@ -24,7 +24,6 @@ namespace KOZ39.ElbowFixer
             Mathf.Clamp01(Vector3.Dot(vertex - _elbow, _direction) / Length);
     }
 
-    // nodes = [segment 0 … segment N-1, LowerArm]; segment k carries k/N of the forearm twist.
     internal static class ForearmWeights
     {
         internal const int MaxInfluences = 4;
@@ -65,7 +64,7 @@ namespace KOZ39.ElbowFixer
             return influences.Count <= MaxInfluences;
         }
 
-        // Compromise when two segments do not fit: keep the other influences and bind to the closest segment.
+        // Compromise for vertices where two segments do not fit in the four influences.
         internal static BoneWeight Nearest(BoneWeight weight, int lower, int[] nodes, float t)
         {
             var influences = Others(weight, lower);

@@ -130,7 +130,7 @@ msgstr "“{0}” 没有可修复的前臂权重。请将其从目标网格中�
 
 #. {0}: 网格名称, {1}: 距离
 msgid "errors.RestPoseDrift"
-msgstr "“{0}” 在静止姿势下移动了 {1:F5} mm。已中止构建。"
+msgstr "“{0}” 在静止姿势下移动了 {1} mm。已中止构建。"
 
 #. {0}: 网格名称
 msgid "errors.NonFiniteVertices"

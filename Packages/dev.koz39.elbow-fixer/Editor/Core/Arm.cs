@@ -125,13 +125,13 @@ namespace KOZ39.ElbowFixer
             // Ancestor scales also affect the arm, even above the avatar root.
             for (var t = hand; t != null; t = t.parent)
             {
-                Require(IsUniformPositive(t.localScale), "UnsupportedScale", t.name);
+                Require(IsUniformPositive(t.localScale), "UnsupportedScale", t);
             }
 
             RejectExistingTwist(lower, hand);
 
             var upDirection = Vector3.Cross(forearm.normalized, avatarRoot.forward);
-            Require(upDirection.magnitude > 0.1f, "ForearmParallel", name);
+            Require(upDirection.magnitude > 0.1f, lower, "ForearmParallel", name);
 
             return new Arm(side, name, upper, lower, hand, upDirection.normalized);
         }
@@ -159,7 +159,7 @@ namespace KOZ39.ElbowFixer
                         || t.GetComponent<VRCConstraintBase>() != null
                     );
 
-                Require(!isTwistBone && !hasConstraint, "ExistingTwist", t.name);
+                Require(!isTwistBone && !hasConstraint, "ExistingTwist", t);
             }
         }
     }

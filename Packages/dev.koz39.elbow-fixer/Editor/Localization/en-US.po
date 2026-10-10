@@ -130,7 +130,7 @@ msgstr "'{0}' has no forearm weights to fix. Remove it from the target meshes."
 
 #. {0}: mesh name, {1}: distance
 msgid "errors.RestPoseDrift"
-msgstr "'{0}' moved {1:F5} mm in the rest pose. The build was stopped."
+msgstr "'{0}' moved {1} mm in the rest pose. The build was stopped."
 
 #. {0}: mesh name
 msgid "errors.NonFiniteVertices"
