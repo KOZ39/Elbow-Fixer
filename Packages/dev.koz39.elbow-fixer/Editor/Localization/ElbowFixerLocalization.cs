@@ -1,0 +1,37 @@
+using System.Globalization;
+using System.Linq;
+using nadena.dev.ndmf.localization;
+using UnityEditor;
+using UnityEngine;
+
+namespace KOZ39.ElbowFixer
+{
+    internal static class ElbowFixerLocalization
+    {
+        private const string Folder =
+            "Packages/" + ElbowFixerPackageInfo.Name + "/Editor/Localization";
+
+        private static readonly Localizer _localizer = new Localizer(
+            "en-US",
+            () =>
+                AssetDatabase
+                    .FindAssets("t:Object", new[] { Folder })
+                    .Select(guid =>
+                        AssetDatabase.LoadAssetAtPath<LocalizationAsset>(
+                            AssetDatabase.GUIDToAssetPath(guid)
+                        )
+                    )
+                    .Where(asset => asset != null)
+                    .ToList()
+        );
+
+        internal static string Text(string key, params object[] arguments)
+        {
+            var text = _localizer.GetLocalizedString(key);
+
+            return arguments.Length == 0
+                ? text
+                : string.Format(CultureInfo.CurrentCulture, text, arguments);
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "dev.koz39.elbow-fixer",
+  "displayName": "Elbow Fixer",
+  "description": "A non-destructive elbow and forearm twist correction tool for VRChat avatars.",
+  "version": "0.1.0",
+  "unity": "2022.3",
+  "vpmDependencies": {
+    "com.vrchat.avatars": ">=3.7.3 <4.0.0",
+    "nadena.dev.ndmf": ">=1.5.0 <2.0.0"
+  },
+  "author": {
+    "name": "KOZ39",
+    "email": "koz39c@gmail.com",
+    "url": "https://github.com/KOZ39"
+  },
+  "changelogUrl": "https://github.com/KOZ39/Elbow-Fixer/blob/main/CHANGELOG.md",
+  "license": "MIT",
+  "licensesUrl": "https://github.com/KOZ39/Elbow-Fixer/blob/main/LICENSE"
+}

@@ -1,0 +1,145 @@
+msgid ""
+msgstr ""
+"Language: zh-Hant\n"
+
+msgid "labels.TargetMeshes"
+msgstr "目標網格"
+
+msgid "labels.Left"
+msgstr "左"
+
+msgid "labels.Right"
+msgstr "右"
+
+msgid "tooltips.TargetMeshes"
+msgstr "需要跟隨前臂扭轉的網格。請加入身體和衣袖，不要加入手鐲等剛性飾品。"
+
+msgid "tooltips.AutoAdd"
+msgstr "尋找並加入身體、衣袖等需要跟隨前臂扭轉的網格。手鐲等剛性網格和只覆蓋前臂一小部分的網格會被排除。請檢查加入的網格。"
+
+msgid "buttons.Select"
+msgstr "選擇"
+
+msgid "buttons.AutoAdd"
+msgstr "自動加入目標網格（實驗性）"
+
+msgid "messages.NoAvatar"
+msgstr "請將此元件放在帶有 VRC Avatar Descriptor 的 Avatar 內。"
+
+msgid "messages.EditorOnlyIgnored"
+msgstr "此元件位於 EditorOnly 物件下，將被忽略。"
+
+msgid "messages.DuplicateUsed"
+msgstr "存在多個 Elbow Fixer 元件。將使用此元件。"
+
+msgid "messages.DuplicateIgnored"
+msgstr "存在多個 Elbow Fixer 元件。此元件將被忽略。"
+
+#. {0}: 網格名稱, {1}: 頂點數, {2}: 使用最近分段的頂點數
+msgid "messages.PlanSummary"
+msgstr "{0}：重新分配 {1} 個頂點（使用最近分段 {2} 個）"
+
+#. {0}: 蒙皮骨骼和 VRC 約束數量, {1}: 參考物件數量
+msgid "messages.BuildSummary"
+msgstr "已加入 {0} 個蒙皮骨骼、{0} 個 VRC 約束和 {1} 個參考物件。"
+
+#. {0}: 網格名稱, {1}: 距離
+msgid "messages.RestPoseDrift"
+msgstr "{0}：靜止姿勢誤差 {1:F5} mm"
+
+msgid "errors.InvalidAvatar"
+msgstr "Avatar 根物件需要 VRC Avatar Descriptor 和有效的 Humanoid Animator。"
+
+msgid "errors.AlreadyFixed"
+msgstr "已存在 Elbow Fixer 骨骼。請使用尚未修正的 Avatar。"
+
+#. {0}: 左或右
+msgid "errors.MissingArmBones"
+msgstr "{0}臂缺少 UpperArm、LowerArm 或 Hand 骨骼對應。"
+
+#. {0}: 左或右
+msgid "errors.IndirectArmChain"
+msgstr "{0}臂必須是直接相連的 UpperArm > LowerArm > Hand 骨骼鏈。"
+
+#. {0}: 左或右
+msgid "errors.ShortForearm"
+msgstr "{0}前臂過短。"
+
+#. {0}: 物件名稱
+msgid "errors.UnsupportedScale"
+msgstr "「{0}」的縮放為負或不均勻。"
+
+#. {0}: 物件名稱
+msgid "errors.ExistingTwist"
+msgstr "「{0}」已有前臂扭轉骨骼或約束。"
+
+#. {0}: 左或右
+msgid "errors.ForearmParallel"
+msgstr "{0}前臂與 Avatar 正前方平行。請使用原始靜止姿勢。"
+
+msgid "errors.NoMeshes"
+msgstr "請至少加入一個目標網格。"
+
+#. {0}: 網格名稱
+msgid "errors.MeshOutsideAvatar"
+msgstr "「{0}」不屬於此 Avatar。請將其從目標網格中移除。"
+
+#. {0}: 動畫片段名稱
+msgid "errors.AnimatedMesh"
+msgstr "動畫「{0}」會將目標網格替換為其他網格。"
+
+#. {0}: 渲染器名稱
+msgid "errors.MissingMesh"
+msgstr "「{0}」沒有網格。可能已被其他工具刪除或合併。"
+
+#. {0}: 網格名稱
+msgid "errors.MeshNotReadable"
+msgstr "無法讀取「{0}」的網格。請在匯入設定中開啟 Read/Write。"
+
+#. {0}: 網格名稱
+msgid "errors.ClothNotSupported"
+msgstr "不支援帶有 Cloth 元件的「{0}」。請將其從目標網格中移除。"
+
+#. {0}: 網格名稱
+msgid "errors.SkinQuality"
+msgstr "請將「{0}」的 Skin Weights 設為 Auto 或 4 Bones。"
+
+#. {0}: 網格名稱
+msgid "errors.TooManyInfluences"
+msgstr "「{0}」存在骨骼影響超過四個的頂點。"
+
+#. {0}: 網格名稱
+msgid "errors.BindposeMismatch"
+msgstr "「{0}」的骨骼與綁定姿勢數量不一致。"
+
+#. {0}: 網格名稱
+msgid "errors.InvalidBindpose"
+msgstr "「{0}」的綁定姿勢無效。"
+
+#. {0}: 網格名稱
+msgid "errors.InvalidWeights"
+msgstr "「{0}」的蒙皮權重無效。權重必須不小於 0，總和為 1，並指向存在的骨骼。"
+
+#. {0}: 網格名稱, {1}: 左或右
+msgid "errors.DuplicateLowerArm"
+msgstr "「{0}」的骨骼清單中多次包含{1}側 LowerArm 骨骼。"
+
+#. {0}: 網格名稱
+msgid "errors.NoForearmWeights"
+msgstr "「{0}」沒有可修正的前臂權重。請將其從目標網格中移除。"
+
+#. {0}: 網格名稱, {1}: 距離
+msgid "errors.RestPoseDrift"
+msgstr "「{0}」在靜止姿勢下移動了 {1:F5} mm。已中止建置。"
+
+#. {0}: 網格名稱
+msgid "errors.NonFiniteVertices"
+msgstr "「{0}」的頂點位置包含 NaN 或無限大值。"
+
+#. {0}: 網格名稱
+msgid "errors.NonFiniteSkinning"
+msgstr "「{0}」的蒙皮結果位置包含 NaN 或無限大值。"
+
+#. {0}: 網格名稱
+msgid "errors.MeshEditorOnly"
+msgstr "「{0}」位於 EditorOnly 物件下，會在建置時被移除。請將其從目標網格中移除。"

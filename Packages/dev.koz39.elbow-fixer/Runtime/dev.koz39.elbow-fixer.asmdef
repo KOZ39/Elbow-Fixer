@@ -1,0 +1,16 @@
+{
+    "name": "dev.koz39.elbow-fixer",
+    "rootNamespace": "KOZ39.ElbowFixer",
+    "references": [
+        "VRC.SDKBase"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

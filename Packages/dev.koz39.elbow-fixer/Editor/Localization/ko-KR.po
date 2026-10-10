@@ -1,0 +1,145 @@
+msgid ""
+msgstr ""
+"Language: ko-KR\n"
+
+msgid "labels.TargetMeshes"
+msgstr "대상 메시"
+
+msgid "labels.Left"
+msgstr "왼쪽"
+
+msgid "labels.Right"
+msgstr "오른쪽"
+
+msgid "tooltips.TargetMeshes"
+msgstr "팔뚝 비틀림을 따라가야 하는 메시입니다. 몸과 옷 소매를 넣고, 팔찌 같은 단단한 액세서리는 넣지 마세요."
+
+msgid "tooltips.AutoAdd"
+msgstr "몸과 옷 소매처럼 팔뚝 비틀림을 따라가야 하는 메시를 찾아 추가합니다. 팔찌처럼 단단하거나 팔뚝을 조금만 덮는 메시는 제외합니다. 추가된 메시를 확인해 주세요."
+
+msgid "buttons.Select"
+msgstr "선택"
+
+msgid "buttons.AutoAdd"
+msgstr "대상 메시 자동 추가(실험적)"
+
+msgid "messages.NoAvatar"
+msgstr "VRC Avatar Descriptor가 있는 아바타 안에 이 컴포넌트를 넣어 주세요."
+
+msgid "messages.EditorOnlyIgnored"
+msgstr "이 컴포넌트는 EditorOnly 오브젝트 아래에 있어 무시됩니다."
+
+msgid "messages.DuplicateUsed"
+msgstr "Elbow Fixer 컴포넌트가 여러 개 있습니다. 이 컴포넌트가 적용됩니다."
+
+msgid "messages.DuplicateIgnored"
+msgstr "Elbow Fixer 컴포넌트가 여러 개 있습니다. 이 컴포넌트는 무시됩니다."
+
+#. {0}: 메시 이름, {1}: 정점 수, {2}: 가장 가까운 구간을 사용한 정점 수
+msgid "messages.PlanSummary"
+msgstr "{0}: 정점 {1}개 재분배(가장 가까운 구간 사용 {2}개)"
+
+#. {0}: 스키닝 본과 VRC 컨스트레인트 수, {1}: 참조 오브젝트 수
+msgid "messages.BuildSummary"
+msgstr "스키닝 본 {0}개, VRC 컨스트레인트 {0}개, 참조 오브젝트 {1}개를 추가했습니다."
+
+#. {0}: 메시 이름, {1}: 거리
+msgid "messages.RestPoseDrift"
+msgstr "{0}: 기본 자세 오차 {1:F5} mm"
+
+msgid "errors.InvalidAvatar"
+msgstr "아바타 루트에 VRC Avatar Descriptor와 올바른 Humanoid Animator가 필요합니다."
+
+msgid "errors.AlreadyFixed"
+msgstr "Elbow Fixer 본이 이미 있습니다. 아직 보정하지 않은 아바타를 사용해 주세요."
+
+#. {0}: 왼쪽 또는 오른쪽
+msgid "errors.MissingArmBones"
+msgstr "{0} 팔의 UpperArm, LowerArm 또는 Hand 본 매핑이 없습니다."
+
+#. {0}: 왼쪽 또는 오른쪽
+msgid "errors.IndirectArmChain"
+msgstr "{0} 팔은 UpperArm > LowerArm > Hand로 바로 이어져야 합니다."
+
+#. {0}: 왼쪽 또는 오른쪽
+msgid "errors.ShortForearm"
+msgstr "{0} 팔뚝이 너무 짧습니다."
+
+#. {0}: 오브젝트 이름
+msgid "errors.UnsupportedScale"
+msgstr "'{0}'의 스케일이 음수이거나 균일하지 않습니다."
+
+#. {0}: 오브젝트 이름
+msgid "errors.ExistingTwist"
+msgstr "'{0}'에 이미 팔뚝 비틀림 본이나 컨스트레인트가 있습니다."
+
+#. {0}: 왼쪽 또는 오른쪽
+msgid "errors.ForearmParallel"
+msgstr "{0} 팔뚝이 아바타의 정면 방향과 나란합니다. 원래 기본 자세를 사용해 주세요."
+
+msgid "errors.NoMeshes"
+msgstr "대상 메시를 하나 이상 넣어 주세요."
+
+#. {0}: 메시 이름
+msgid "errors.MeshOutsideAvatar"
+msgstr "'{0}'은(는) 이 아바타에 속하지 않습니다. 대상 메시에서 제거해 주세요."
+
+#. {0}: 애니메이션 클립 이름
+msgid "errors.AnimatedMesh"
+msgstr "애니메이션 '{0}'이(가) 대상 메시를 다른 메시로 교체합니다."
+
+#. {0}: 렌더러 이름
+msgid "errors.MissingMesh"
+msgstr "'{0}'에 메시가 없습니다. 다른 도구가 삭제하거나 병합했을 수 있습니다."
+
+#. {0}: 메시 이름
+msgid "errors.MeshNotReadable"
+msgstr "'{0}'의 메시를 읽을 수 없습니다. 임포트 설정에서 Read/Write를 켜 주세요."
+
+#. {0}: 메시 이름
+msgid "errors.ClothNotSupported"
+msgstr "Cloth 컴포넌트가 있는 '{0}'은(는) 지원하지 않습니다. 대상 메시에서 제거해 주세요."
+
+#. {0}: 메시 이름
+msgid "errors.SkinQuality"
+msgstr "'{0}'의 Skin Weights를 Auto 또는 4 Bones로 설정해 주세요."
+
+#. {0}: 메시 이름
+msgid "errors.TooManyInfluences"
+msgstr "'{0}'에 본 영향이 네 개를 넘는 정점이 있습니다."
+
+#. {0}: 메시 이름
+msgid "errors.BindposeMismatch"
+msgstr "'{0}'의 본과 바인드 포즈 개수가 다릅니다."
+
+#. {0}: 메시 이름
+msgid "errors.InvalidBindpose"
+msgstr "'{0}'의 바인드 포즈가 올바르지 않습니다."
+
+#. {0}: 메시 이름
+msgid "errors.InvalidWeights"
+msgstr "'{0}'의 스킨 가중치가 올바르지 않습니다. 가중치는 0 이상이고 합이 1이어야 하며, 존재하는 본을 가리켜야 합니다."
+
+#. {0}: 메시 이름, {1}: 왼쪽 또는 오른쪽
+msgid "errors.DuplicateLowerArm"
+msgstr "'{0}'의 본 목록에 {1} LowerArm 본이 두 번 이상 들어 있습니다."
+
+#. {0}: 메시 이름
+msgid "errors.NoForearmWeights"
+msgstr "'{0}'에 보정할 팔뚝 가중치가 없습니다. 대상 메시에서 제거해 주세요."
+
+#. {0}: 메시 이름, {1}: 거리
+msgid "errors.RestPoseDrift"
+msgstr "'{0}'이(가) 기본 자세에서 {1:F5} mm 움직였습니다. 빌드를 중단했습니다."
+
+#. {0}: 메시 이름
+msgid "errors.NonFiniteVertices"
+msgstr "'{0}'의 정점 위치에 NaN이나 무한대 값이 있습니다."
+
+#. {0}: 메시 이름
+msgid "errors.NonFiniteSkinning"
+msgstr "'{0}'의 스키닝 결과 위치에 NaN이나 무한대 값이 있습니다."
+
+#. {0}: 메시 이름
+msgid "errors.MeshEditorOnly"
+msgstr "'{0}'은(는) EditorOnly 오브젝트 아래에 있어 빌드에서 제거됩니다. 대상 메시에서 제거해 주세요."

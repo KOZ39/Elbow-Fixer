@@ -1,0 +1,145 @@
+msgid ""
+msgstr ""
+"Language: ja-JP\n"
+
+msgid "labels.TargetMeshes"
+msgstr "対象メッシュ"
+
+msgid "labels.Left"
+msgstr "左"
+
+msgid "labels.Right"
+msgstr "右"
+
+msgid "tooltips.TargetMeshes"
+msgstr "前腕のねじれに追従させるメッシュです。ボディと服の袖を入れ、ブレスレットなどの硬いアクセサリーは入れないでください。"
+
+msgid "tooltips.AutoAdd"
+msgstr "ボディや服の袖のように前腕のねじれに追従させるメッシュを探して追加します。ブレスレットのような硬いメッシュや、前腕を少ししか覆わないメッシュは除外します。追加されたメッシュを確認してください。"
+
+msgid "buttons.Select"
+msgstr "選択"
+
+msgid "buttons.AutoAdd"
+msgstr "対象メッシュを自動追加（実験的）"
+
+msgid "messages.NoAvatar"
+msgstr "このコンポーネントをVRC Avatar Descriptorがあるアバターの中に配置してください。"
+
+msgid "messages.EditorOnlyIgnored"
+msgstr "このコンポーネントはEditorOnlyオブジェクトの下にあるため無視されます。"
+
+msgid "messages.DuplicateUsed"
+msgstr "Elbow Fixerコンポーネントが複数あります。このコンポーネントが適用されます。"
+
+msgid "messages.DuplicateIgnored"
+msgstr "Elbow Fixerコンポーネントが複数あります。このコンポーネントは無視されます。"
+
+#. {0}: メッシュ名, {1}: 頂点数, {2}: 最も近い区間を使用した頂点数
+msgid "messages.PlanSummary"
+msgstr "{0}：頂点{1}個を再配分（最も近い区間を使用{2}個）"
+
+#. {0}: スキニング用ボーンとVRCコンストレイントの数, {1}: 参照オブジェクトの数
+msgid "messages.BuildSummary"
+msgstr "スキニング用ボーン{0}本、VRCコンストレイント{0}個、参照オブジェクト{1}個を追加しました。"
+
+#. {0}: メッシュ名, {1}: 距離
+msgid "messages.RestPoseDrift"
+msgstr "{0}：基本姿勢の誤差{1:F5} mm"
+
+msgid "errors.InvalidAvatar"
+msgstr "アバターのルートにVRC Avatar Descriptorと有効なHumanoid Animatorが必要です。"
+
+msgid "errors.AlreadyFixed"
+msgstr "Elbow Fixerのボーンがすでにあります。未補正のアバターを使用してください。"
+
+#. {0}: 左または右
+msgid "errors.MissingArmBones"
+msgstr "{0}腕のUpperArm、LowerArm、Handのいずれかのボーン割り当てがありません。"
+
+#. {0}: 左または右
+msgid "errors.IndirectArmChain"
+msgstr "{0}腕は UpperArm > LowerArm > Hand が直接つながっている必要があります。"
+
+#. {0}: 左または右
+msgid "errors.ShortForearm"
+msgstr "{0}前腕が短すぎます。"
+
+#. {0}: オブジェクト名
+msgid "errors.UnsupportedScale"
+msgstr "「{0}」のスケールが負または不均一です。"
+
+#. {0}: オブジェクト名
+msgid "errors.ExistingTwist"
+msgstr "「{0}」に前腕のねじれボーンまたはコンストレイントがすでにあります。"
+
+#. {0}: 左または右
+msgid "errors.ForearmParallel"
+msgstr "{0}前腕がアバターの正面方向と平行です。元の基本姿勢を使用してください。"
+
+msgid "errors.NoMeshes"
+msgstr "対象メッシュを1つ以上追加してください。"
+
+#. {0}: メッシュ名
+msgid "errors.MeshOutsideAvatar"
+msgstr "「{0}」はこのアバターに含まれていません。対象メッシュから外してください。"
+
+#. {0}: アニメーションクリップ名
+msgid "errors.AnimatedMesh"
+msgstr "アニメーション「{0}」が対象メッシュを別のメッシュに差し替えます。"
+
+#. {0}: レンダラー名
+msgid "errors.MissingMesh"
+msgstr "「{0}」にメッシュがありません。他のツールが削除または統合した可能性があります。"
+
+#. {0}: メッシュ名
+msgid "errors.MeshNotReadable"
+msgstr "「{0}」のメッシュを読み取れません。インポート設定でRead/Writeを有効にしてください。"
+
+#. {0}: メッシュ名
+msgid "errors.ClothNotSupported"
+msgstr "Clothコンポーネントがある「{0}」には対応していません。対象メッシュから外してください。"
+
+#. {0}: メッシュ名
+msgid "errors.SkinQuality"
+msgstr "「{0}」のSkin WeightsをAutoまたは4 Bonesに設定してください。"
+
+#. {0}: メッシュ名
+msgid "errors.TooManyInfluences"
+msgstr "「{0}」にボーンの影響が4つを超える頂点があります。"
+
+#. {0}: メッシュ名
+msgid "errors.BindposeMismatch"
+msgstr "「{0}」のボーンとバインドポーズの数が一致しません。"
+
+#. {0}: メッシュ名
+msgid "errors.InvalidBindpose"
+msgstr "「{0}」のバインドポーズが無効です。"
+
+#. {0}: メッシュ名
+msgid "errors.InvalidWeights"
+msgstr "「{0}」のスキンウェイトが無効です。ウェイトは0以上で合計が1になり、存在するボーンを指している必要があります。"
+
+#. {0}: メッシュ名, {1}: 左または右
+msgid "errors.DuplicateLowerArm"
+msgstr "「{0}」のボーンリストに{1}のLowerArmボーンが複数回含まれています。"
+
+#. {0}: メッシュ名
+msgid "errors.NoForearmWeights"
+msgstr "「{0}」に補正する前腕のウェイトがありません。対象メッシュから外してください。"
+
+#. {0}: メッシュ名, {1}: 距離
+msgid "errors.RestPoseDrift"
+msgstr "「{0}」が基本姿勢で{1:F5} mm動きました。ビルドを中断しました。"
+
+#. {0}: メッシュ名
+msgid "errors.NonFiniteVertices"
+msgstr "「{0}」の頂点位置にNaNまたは無限大の値があります。"
+
+#. {0}: メッシュ名
+msgid "errors.NonFiniteSkinning"
+msgstr "「{0}」のスキニング結果の位置にNaNまたは無限大の値があります。"
+
+#. {0}: メッシュ名
+msgid "errors.MeshEditorOnly"
+msgstr "「{0}」はEditorOnlyオブジェクトの下にあり、ビルド時に削除されます。対象メッシュから外してください。"

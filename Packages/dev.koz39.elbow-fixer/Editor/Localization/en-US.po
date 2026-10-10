@@ -1,0 +1,145 @@
+msgid ""
+msgstr ""
+"Language: en-US\n"
+
+msgid "labels.TargetMeshes"
+msgstr "Target Meshes"
+
+msgid "labels.Left"
+msgstr "left"
+
+msgid "labels.Right"
+msgstr "right"
+
+msgid "tooltips.TargetMeshes"
+msgstr "Meshes that should follow the forearm twist. Add the body and clothing sleeves, and leave rigid accessories such as bracelets out."
+
+msgid "tooltips.AutoAdd"
+msgstr "Finds and adds meshes that should follow the forearm twist, such as the body and clothing sleeves. Rigid meshes such as bracelets and meshes that cover little of the forearm are skipped. Check the added meshes."
+
+msgid "buttons.Select"
+msgstr "Select"
+
+msgid "buttons.AutoAdd"
+msgstr "Auto-Add Target Meshes (Experimental)"
+
+msgid "messages.NoAvatar"
+msgstr "Place this component inside an avatar with a VRC Avatar Descriptor."
+
+msgid "messages.EditorOnlyIgnored"
+msgstr "This component is under an EditorOnly object and will be ignored."
+
+msgid "messages.DuplicateUsed"
+msgstr "Multiple Elbow Fixer components were found. This component will be used."
+
+msgid "messages.DuplicateIgnored"
+msgstr "Multiple Elbow Fixer components were found. This component will be ignored."
+
+#. {0}: mesh name, {1}: vertex count, {2}: vertices using the nearest segment
+msgid "messages.PlanSummary"
+msgstr "{0}: {1} vertices redistributed ({2} using the nearest segment)"
+
+#. {0}: skin bone and VRC constraint count, {1}: reference object count
+msgid "messages.BuildSummary"
+msgstr "Added {0} skin bones, {0} VRC constraints and {1} reference objects."
+
+#. {0}: mesh name, {1}: distance
+msgid "messages.RestPoseDrift"
+msgstr "{0}: rest pose drift {1:F5} mm"
+
+msgid "errors.InvalidAvatar"
+msgstr "The avatar root needs a VRC Avatar Descriptor and a valid Humanoid Animator."
+
+msgid "errors.AlreadyFixed"
+msgstr "Elbow Fixer bones already exist. Use an avatar that has not been fixed yet."
+
+#. {0}: left or right
+msgid "errors.MissingArmBones"
+msgstr "The {0} arm is missing an UpperArm, LowerArm or Hand bone mapping."
+
+#. {0}: left or right
+msgid "errors.IndirectArmChain"
+msgstr "The {0} arm must be a direct UpperArm > LowerArm > Hand chain."
+
+#. {0}: left or right
+msgid "errors.ShortForearm"
+msgstr "The {0} forearm is too short."
+
+#. {0}: object name
+msgid "errors.UnsupportedScale"
+msgstr "'{0}' has a negative or non-uniform scale."
+
+#. {0}: object name
+msgid "errors.ExistingTwist"
+msgstr "'{0}' already has a twist bone or constraint in the forearm."
+
+#. {0}: left or right
+msgid "errors.ForearmParallel"
+msgstr "The {0} forearm points along the avatar's forward direction. Use the original rest pose."
+
+msgid "errors.NoMeshes"
+msgstr "Add at least one target mesh."
+
+#. {0}: mesh name
+msgid "errors.MeshOutsideAvatar"
+msgstr "'{0}' is not part of this avatar. Remove it from the target meshes."
+
+#. {0}: animation clip name
+msgid "errors.AnimatedMesh"
+msgstr "Animation '{0}' replaces a target mesh with another mesh."
+
+#. {0}: renderer name
+msgid "errors.MissingMesh"
+msgstr "'{0}' has no mesh. Another tool may have removed or merged it."
+
+#. {0}: mesh name
+msgid "errors.MeshNotReadable"
+msgstr "The mesh of '{0}' is not readable. Enable Read/Write in its import settings."
+
+#. {0}: mesh name
+msgid "errors.ClothNotSupported"
+msgstr "'{0}' has a Cloth component, which is not supported. Remove it from the target meshes."
+
+#. {0}: mesh name
+msgid "errors.SkinQuality"
+msgstr "Set Skin Weights of '{0}' to Auto or 4 Bones."
+
+#. {0}: mesh name
+msgid "errors.TooManyInfluences"
+msgstr "'{0}' has vertices with more than four bone influences."
+
+#. {0}: mesh name
+msgid "errors.BindposeMismatch"
+msgstr "The bone and bindpose counts of '{0}' differ."
+
+#. {0}: mesh name
+msgid "errors.InvalidBindpose"
+msgstr "'{0}' has an invalid bindpose."
+
+#. {0}: mesh name
+msgid "errors.InvalidWeights"
+msgstr "'{0}' has invalid skin weights. Weights must be zero or more, sum to 1 and reference existing bones."
+
+#. {0}: mesh name, {1}: left or right
+msgid "errors.DuplicateLowerArm"
+msgstr "The bone list of '{0}' contains the {1} LowerArm bone more than once."
+
+#. {0}: mesh name
+msgid "errors.NoForearmWeights"
+msgstr "'{0}' has no forearm weights to fix. Remove it from the target meshes."
+
+#. {0}: mesh name, {1}: distance
+msgid "errors.RestPoseDrift"
+msgstr "'{0}' moved {1:F5} mm in the rest pose. The build was stopped."
+
+#. {0}: mesh name
+msgid "errors.NonFiniteVertices"
+msgstr "'{0}' has NaN or infinite vertex positions."
+
+#. {0}: mesh name
+msgid "errors.NonFiniteSkinning"
+msgstr "Skinning '{0}' produced NaN or infinite positions."
+
+#. {0}: mesh name
+msgid "errors.MeshEditorOnly"
+msgstr "'{0}' is under an EditorOnly object and will be removed during the build. Remove it from the target meshes."
