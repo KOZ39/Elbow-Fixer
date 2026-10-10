@@ -87,7 +87,7 @@ namespace KOZ39.ElbowFixer
             aim.ZeroConstraint();
         }
 
-        // A single source's weight is normalized by the SDK, so it cannot set the twist fraction.
+        // A single source's weight is normalized by the SDK, so only GlobalWeight can set the twist fraction.
         private static void AddTwistConstraint(Transform twist, Transform lower, float weight)
         {
             var constraint = twist.gameObject.AddComponent<VRCRotationConstraint>();
