@@ -7,6 +7,7 @@
 ## 요구 사항
 
 - Unity 2022.3.22f1
+- [Modular Avatar](https://modular-avatar.nadena.dev/)
 
 ## 설치
 
@@ -17,6 +18,10 @@
 1. 하이어라키에서 아바타를 우클릭하고 Elbow Fixer > Setup을 선택합니다.
 2. 몸과 옷 소매가 대상 메시에 자동으로 추가됩니다. 아직 실험적인 기능이니 인스펙터에서 목록을 확인해야 합니다.
 3. 아바타를 빌드할 때 자동으로 적용됩니다.
+
+## 주의 사항
+
+- Elbow Fixer는 Prefabulous의 PA Generate Twist Bones와 함께 사용할 수 없습니다. 아바타에 둘 다 추가되어 있으면 빌드가 오류로 중단됩니다.
 
 ## 참고 자료
 

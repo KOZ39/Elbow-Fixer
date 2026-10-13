@@ -7,6 +7,7 @@ English | [한국어](README_KO.md) | [日本語](README_JA.md)
 ## Requirements
 
 - Unity 2022.3.22f1
+- [Modular Avatar](https://modular-avatar.nadena.dev/)
 
 ## Installation
 
@@ -17,6 +18,10 @@ Click "Add to VCC" on the [VPM listing](https://koz39.github.io/vpm-listing/) to
 1. Right-click your avatar in the Hierarchy and select Elbow Fixer > Setup.
 2. The body and clothing sleeves are added to Target Meshes automatically. This is still experimental, so you need to check the list in the Inspector.
 3. Elbow Fixer is applied automatically when the avatar is built.
+
+## Notes
+
+- Elbow Fixer cannot be used with PA Generate Twist Bones from Prefabulous. If both are added to the avatar, the build stops with an error.
 
 ## References
 
