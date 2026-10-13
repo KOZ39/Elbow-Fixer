@@ -2,7 +2,7 @@
   "name": "dev.koz39.elbow-fixer",
   "displayName": "Elbow Fixer",
   "description": "A non-destructive elbow and forearm twist correction tool for VRChat avatars.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "unity": "2022.3",
   "vpmDependencies": {
     "com.vrchat.avatars": ">=3.7.3 <4.0.0",
