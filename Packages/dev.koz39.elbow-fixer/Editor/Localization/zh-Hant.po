@@ -73,6 +73,10 @@ msgstr "「{0}」的縮放為負或不均勻。"
 msgid "errors.ExistingTwist"
 msgstr "「{0}」已有前臂扭轉骨骼或約束。"
 
+#. {0}: 物件名稱
+msgid "errors.PrefabulousTwist"
+msgstr "「{0}」上的 PA Generate Twist Bones 不能與 Elbow Fixer 同時使用。請移除其中一個。"
+
 #. {0}: 左或右
 msgid "errors.ForearmParallel"
 msgstr "{0}前臂與 Avatar 正前方平行。請使用原始靜止姿勢。"
@@ -118,7 +122,7 @@ msgstr "「{0}」的綁定姿勢無效。"
 
 #. {0}: 網格名稱
 msgid "errors.InvalidWeights"
-msgstr "「{0}」的蒙皮權重無效。權重必須不小於 0，總和為 1，並指向存在的骨骼。"
+msgstr "「{0}」的蒙皮權重無效。權重必須不小於 0 並指向存在的骨骼，有權重的頂點總和必須為 1。"
 
 #. {0}: 網格名稱, {1}: 左或右
 msgid "errors.DuplicateLowerArm"

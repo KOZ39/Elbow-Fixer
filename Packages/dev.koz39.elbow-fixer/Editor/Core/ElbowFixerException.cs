@@ -15,8 +15,11 @@ namespace KOZ39.ElbowFixer
         {
             Key = "errors." + key;
             // NDMF would print a Unity object argument as its full hierarchy path.
+            // A destroyed object still matches the type, but reading its name throws.
             Arguments = arguments
-                .Select(argument => argument is Object obj ? obj.name : argument)
+                .Select(argument =>
+                    argument is Object obj ? (obj != null ? obj.name : "null") : argument
+                )
                 .ToArray();
             Context =
                 context ?? ObjectRegistry.GetReference(arguments.OfType<Object>().FirstOrDefault());

@@ -73,6 +73,10 @@ msgstr "'{0}' has a negative or non-uniform scale."
 msgid "errors.ExistingTwist"
 msgstr "'{0}' already has a twist bone or constraint in the forearm."
 
+#. {0}: object name
+msgid "errors.PrefabulousTwist"
+msgstr "PA Generate Twist Bones on '{0}' cannot be used with Elbow Fixer. Remove one of them."
+
 #. {0}: left or right
 msgid "errors.ForearmParallel"
 msgstr "The {0} forearm points along the avatar's forward direction. Use the original rest pose."
@@ -118,7 +122,7 @@ msgstr "'{0}' has an invalid bindpose."
 
 #. {0}: mesh name
 msgid "errors.InvalidWeights"
-msgstr "'{0}' has invalid skin weights. Weights must be zero or more, sum to 1 and reference existing bones."
+msgstr "'{0}' has invalid skin weights. Weights must be zero or more and reference existing bones, and each weighted vertex must sum to 1."
 
 #. {0}: mesh name, {1}: left or right
 msgid "errors.DuplicateLowerArm"

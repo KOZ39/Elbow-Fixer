@@ -13,11 +13,11 @@ namespace KOZ39.ElbowFixer
 
         internal const int SupportCount = 4;
 
-        // Must match the bone order written by MeshWeightPlan.Apply: arms in order, supports in order.
-        internal static int[] WeightNodes(int boneCount, int side, int lowerIndex) =>
+        // Must match the bone order written by MeshWeightPlan.Apply: each arm's supports, then each mirror set.
+        internal static int[] WeightNodes(int boneCount, int group, int sourceIndex) =>
             Enumerable
-                .Range(boneCount + side * SupportCount, SupportCount)
-                .Append(lowerIndex)
+                .Range(boneCount + group * SupportCount, SupportCount)
+                .Append(sourceIndex)
                 .ToArray();
 
         internal static Transform[] Build(Arm arm)
@@ -54,6 +54,23 @@ namespace KOZ39.ElbowFixer
 
             return supports;
         }
+
+        // The hidden bone's NaN scale reaches the copies through the hierarchy, so they hide and show with it.
+        internal static Transform[] Mirror(Transform hiddenBone, Transform[] supports) =>
+            supports
+                .Select(support =>
+                {
+                    var mirror = CreateChild(
+                        $"{support.name}.Hidden",
+                        hiddenBone,
+                        support.position,
+                        support.rotation
+                    );
+                    AddTwistConstraint(mirror, support, 1);
+
+                    return mirror;
+                })
+                .ToArray();
 
         private static Transform CreateChild(
             string name,

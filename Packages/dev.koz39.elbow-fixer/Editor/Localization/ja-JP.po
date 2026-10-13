@@ -73,6 +73,10 @@ msgstr "「{0}」のスケールが負または不均一です。"
 msgid "errors.ExistingTwist"
 msgstr "「{0}」に前腕のねじれボーンまたはコンストレイントがすでにあります。"
 
+#. {0}: オブジェクト名
+msgid "errors.PrefabulousTwist"
+msgstr "「{0}」のPA Generate Twist BonesはElbow Fixerと併用できません。どちらかを削除してください。"
+
 #. {0}: 左または右
 msgid "errors.ForearmParallel"
 msgstr "{0}前腕がアバターの正面方向と平行です。元の基本姿勢を使用してください。"
@@ -118,7 +122,7 @@ msgstr "「{0}」のバインドポーズが無効です。"
 
 #. {0}: メッシュ名
 msgid "errors.InvalidWeights"
-msgstr "「{0}」のスキンウェイトが無効です。ウェイトは0以上で合計が1になり、存在するボーンを指している必要があります。"
+msgstr "「{0}」のスキンウェイトが無効です。ウェイトは0以上で存在するボーンを指し、ウェイトのある頂点は合計が1になる必要があります。"
 
 #. {0}: メッシュ名, {1}: 左または右
 msgid "errors.DuplicateLowerArm"

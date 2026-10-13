@@ -73,6 +73,10 @@ msgstr "'{0}'의 스케일이 음수이거나 균일하지 않습니다."
 msgid "errors.ExistingTwist"
 msgstr "'{0}'에 이미 팔뚝 비틀림 본이나 컨스트레인트가 있습니다."
 
+#. {0}: 오브젝트 이름
+msgid "errors.PrefabulousTwist"
+msgstr "'{0}'의 PA Generate Twist Bones는 Elbow Fixer와 함께 사용할 수 없습니다. 둘 중 하나를 제거해 주세요."
+
 #. {0}: 왼쪽 또는 오른쪽
 msgid "errors.ForearmParallel"
 msgstr "{0} 팔뚝이 아바타의 정면 방향과 나란합니다. 원래 기본 자세를 사용해 주세요."
@@ -118,7 +122,7 @@ msgstr "'{0}'의 바인드 포즈가 올바르지 않습니다."
 
 #. {0}: 메시 이름
 msgid "errors.InvalidWeights"
-msgstr "'{0}'의 스킨 가중치가 올바르지 않습니다. 가중치는 0 이상이고 합이 1이어야 하며, 존재하는 본을 가리켜야 합니다."
+msgstr "'{0}'의 스킨 가중치가 올바르지 않습니다. 가중치는 0 이상이고 존재하는 본을 가리켜야 하며, 가중치가 있는 정점은 합이 1이어야 합니다."
 
 #. {0}: 메시 이름, {1}: 왼쪽 또는 오른쪽
 msgid "errors.DuplicateLowerArm"

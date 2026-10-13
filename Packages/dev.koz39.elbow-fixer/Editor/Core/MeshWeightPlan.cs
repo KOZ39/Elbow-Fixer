@@ -14,9 +14,12 @@ namespace KOZ39.ElbowFixer
         internal readonly SkinnedMeshRenderer Renderer;
         private readonly BoneWeight[] _weights;
         private readonly int[] _lowerIndices;
+        private readonly List<(int Side, int Bone)> _hiddenSections = new();
 
         internal int Redistributed { get; private set; }
         internal int Nearest { get; private set; }
+
+        internal int MirrorCount => _hiddenSections.Count * TwistRig.SupportCount;
 
         private MeshWeightPlan(SkinnedMeshRenderer renderer, BoneWeight[] weights, int armCount)
         {
@@ -35,7 +38,29 @@ namespace KOZ39.ElbowFixer
 
             for (var side = 0; side < arms.Length; side++)
             {
-                plan.Redistribute(side, arms[side], bones, bindposes, vertices);
+                plan.RedistributeLower(side, arms[side], bones, bindposes, vertices);
+            }
+
+            // Mirrors are added after every arm's supports, in the order found here.
+            for (var side = 0; side < arms.Length; side++)
+            {
+                for (var bone = 0; bone < bones.Length; bone++)
+                {
+                    if (!plan.IsHiddenSectionOf(side, arms[side], bone, bones, bindposes))
+                    {
+                        continue;
+                    }
+
+                    var group = arms.Length + plan._hiddenSections.Count;
+                    plan._hiddenSections.Add((side, bone));
+                    plan.Redistribute(
+                        bone,
+                        TwistRig.WeightNodes(bones.Length, group, bone),
+                        arms[side],
+                        bindposes,
+                        vertices
+                    );
+                }
             }
 
             return plan;
@@ -53,13 +78,22 @@ namespace KOZ39.ElbowFixer
                 .inverse;
             var before = SkinMatrices(bones, bindposes, avatarSpace);
 
-            // Order must match TwistRig.WeightNodes.
+            // Order must match the weight nodes from Create.
             for (var side = 0; side < supports.Length; side++)
             {
                 foreach (var support in supports[side])
                 {
                     bindposes.Add(SupportBindpose(support, _lowerIndices[side], bones, bindposes));
                     bones.Add(support);
+                }
+            }
+
+            foreach (var (side, bone) in _hiddenSections)
+            {
+                foreach (var mirror in TwistRig.Mirror(bones[bone], supports[side]))
+                {
+                    bindposes.Add(SupportBindpose(mirror, bone, bones, bindposes));
+                    bones.Add(mirror);
                 }
             }
 
@@ -86,7 +120,7 @@ namespace KOZ39.ElbowFixer
             return drift;
         }
 
-        private void Redistribute(
+        private void RedistributeLower(
             int side,
             Arm arm,
             Transform[] bones,
@@ -108,8 +142,25 @@ namespace KOZ39.ElbowFixer
                 arm.Name
             );
             _lowerIndices[side] = lower;
+            Redistribute(
+                lower,
+                TwistRig.WeightNodes(bones.Length, side, lower),
+                arm,
+                bindposes,
+                vertices
+            );
+        }
 
-            var forearm = new ForearmAxis(bindposes[lower], arm.Hand.localPosition);
+        // The source must move with the LowerArm, since the forearm axis comes from its bindpose.
+        private void Redistribute(
+            int source,
+            int[] nodes,
+            Arm arm,
+            Matrix4x4[] bindposes,
+            Vector3[] vertices
+        )
+        {
+            var forearm = new ForearmAxis(bindposes[source], arm.Hand.localPosition);
 
             // Arm.Resolve checks length in world units; mesh coordinates can use a different unit.
             Require(
@@ -118,11 +169,9 @@ namespace KOZ39.ElbowFixer
                 Renderer
             );
 
-            var nodes = TwistRig.WeightNodes(bones.Length, side, lower);
-
             for (var v = 0; v < vertices.Length; v++)
             {
-                if (ForearmWeights.LowerWeight(_weights[v], lower) <= 0)
+                if (ForearmWeights.LowerWeight(_weights[v], source) <= 0)
                 {
                     continue;
                 }
@@ -134,15 +183,37 @@ namespace KOZ39.ElbowFixer
                     continue;
                 }
 
-                if (!ForearmWeights.TryRedistribute(_weights[v], lower, nodes, t, out var weight))
+                if (!ForearmWeights.TryRedistribute(_weights[v], source, nodes, t, out var weight))
                 {
-                    weight = ForearmWeights.Nearest(_weights[v], lower, nodes, t);
+                    weight = ForearmWeights.Nearest(_weights[v], source, nodes, t);
                     Nearest++;
                 }
 
                 _weights[v] = weight;
                 Redistributed++;
             }
+        }
+
+        // Modular Avatar hides a toggled mesh section by moving its weights to a copy of the bone
+        // and animating the copy's scale to NaN. A copy of the LowerArm moves with the LowerArm.
+        // The copy sits under a buffer object that Merge Armature may move and rename, but it keeps
+        // the LowerArm's bindpose and stays below the LowerArm.
+        private bool IsHiddenSectionOf(
+            int side,
+            Arm arm,
+            int bone,
+            Transform[] bones,
+            Matrix4x4[] bindposes
+        )
+        {
+            var lower = _lowerIndices[side];
+
+            return lower >= 0
+                && bones[bone] != null
+                && ElbowFixerUtility.IsHiddenBone(bones[bone])
+                && bones[bone].IsChildOf(arm.Lower)
+                && !bones[bone].IsChildOf(arm.Hand)
+                && bindposes[bone] == bindposes[lower];
         }
 
         private static Mesh Validate(SkinnedMeshRenderer renderer)
@@ -197,9 +268,11 @@ namespace KOZ39.ElbowFixer
             return mesh;
         }
 
+        // An unweighted vertex is left unchanged, so it skins the same as before.
         private static bool IsValidWeight(BoneWeight weight, Transform[] bones)
         {
             var slots = ForearmWeights.Slots(weight);
+            var sum = slots.Sum(slot => slot.Weight);
 
             return slots.All(slot =>
                     float.IsFinite(slot.Weight)
@@ -208,8 +281,7 @@ namespace KOZ39.ElbowFixer
                         slot.Weight == 0
                         || (slot.Bone >= 0 && slot.Bone < bones.Length && bones[slot.Bone] != null)
                     )
-                )
-                && Mathf.Abs(slots.Sum(slot => slot.Weight) - 1) < 0.0001f;
+                ) && (sum == 0 || Mathf.Abs(sum - 1) < 0.0001f);
         }
 
         // A support starts at the LowerArm, so deriving its bindpose from the LowerArm's

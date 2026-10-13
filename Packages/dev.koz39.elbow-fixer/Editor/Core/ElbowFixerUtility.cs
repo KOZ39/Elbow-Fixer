@@ -11,6 +11,9 @@ namespace KOZ39.ElbowFixer
         private const float MinForearmCoverage = 0.3f;
         private const float RigidWeight = 0.999f;
 
+        // Prefix from Modular Avatar's NaNimationFilter; the rest of the name is the shape key.
+        private const string HiddenBonePrefix = "NaNimatedBone for ";
+
         // The avatar root NDMF builds, which is the outermost one.
         internal static GameObject FindAvatarRoot(Component component) =>
             RuntimeUtil.FindAvatarInParents(component.transform)?.gameObject;
@@ -107,6 +110,10 @@ namespace KOZ39.ElbowFixer
 
             return (fixers.FirstOrDefault(), fixers);
         }
+
+        // A bone Modular Avatar scales to NaN to hide part of a mesh.
+        internal static bool IsHiddenBone(Transform bone) =>
+            bone.name.StartsWith(HiddenBonePrefix, StringComparison.Ordinal);
 
         internal static bool IsEditorOnly(Transform target, Transform avatarRoot)
         {

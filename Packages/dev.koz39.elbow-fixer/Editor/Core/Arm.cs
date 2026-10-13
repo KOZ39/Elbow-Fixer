@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Animations;
 using VRC.Dynamics;
 using VRC.SDK3.Avatars.Components;
+using VRC.SDK3.Dynamics.Constraint.Components;
 using static KOZ39.ElbowFixer.ElbowFixerException;
 using static KOZ39.ElbowFixer.ElbowFixerLocalization;
 
@@ -56,6 +57,9 @@ namespace KOZ39.ElbowFixer
         private const float MinForearmLength = 0.001f;
         private const float ScaleTolerance = 0.0001f;
 
+        private const string PrefabulousTwistType =
+            "Prefabulous.Universal.Common.Runtime.PrefabulousGenerateTwistBones";
+
         internal readonly string Suffix;
         internal readonly string Name;
         internal readonly Transform Upper;
@@ -98,6 +102,14 @@ namespace KOZ39.ElbowFixer
                     .Any(t => t.name.StartsWith(TwistRig.NamePrefix, StringComparison.Ordinal)),
                 "AlreadyFixed"
             );
+
+            // Prefabulous can generate its twist bones after this build, so look for its component.
+            var prefabulousTwist = avatarRoot
+                .GetComponentsInChildren<MonoBehaviour>(true)
+                .FirstOrDefault(component =>
+                    component != null && component.GetType().FullName == PrefabulousTwistType
+                );
+            Require(prefabulousTwist == null, "PrefabulousTwist", prefabulousTwist);
 
             return ArmSide
                 .All.Select(side => ResolveSide(avatarRoot.transform, animator, side))
@@ -143,6 +155,7 @@ namespace KOZ39.ElbowFixer
 
         // Twist bones or constraints in the forearm would fight the generated rig.
         // Objects attached under the hand, such as accessories, are not part of the forearm.
+        // Modular Avatar's hidden bones are named after a shape key, which may mention twist.
         private static void RejectExistingTwist(Transform lower, Transform hand)
         {
             foreach (var t in lower.GetComponentsInChildren<Transform>(true))
@@ -151,16 +164,24 @@ namespace KOZ39.ElbowFixer
                 var isTwistBone =
                     inForearm
                     && t != lower
+                    && !ElbowFixerUtility.IsHiddenBone(t)
                     && t.name.IndexOf("twist", StringComparison.OrdinalIgnoreCase) >= 0;
-                var hasConstraint =
-                    (inForearm || t == hand)
-                    && (
-                        t.GetComponent<IConstraint>() != null
-                        || t.GetComponent<VRCConstraintBase>() != null
-                    );
+                var hasConstraint = (inForearm || t == hand) && HasRotationConstraint(t);
 
                 Require(!isTwistBone && !hasConstraint, "ExistingTwist", t);
             }
         }
+
+        // Position and scale constraints cannot twist the forearm. Modular Avatar adds scale
+        // constraints under the forearm to hide mesh sections that Shape Changer toggles.
+        private static bool HasRotationConstraint(Transform t) =>
+            t.GetComponents<IConstraint>()
+                .Any(constraint =>
+                    !(constraint is PositionConstraint || constraint is ScaleConstraint)
+                )
+            || t.GetComponents<VRCConstraintBase>()
+                .Any(constraint =>
+                    !(constraint is VRCPositionConstraint || constraint is VRCScaleConstraint)
+                );
     }
 }
