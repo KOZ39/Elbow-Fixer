@@ -14,6 +14,7 @@ namespace KOZ39.ElbowFixer
         internal readonly SkinnedMeshRenderer Renderer;
         private readonly BoneWeight[] _weights;
         private readonly int[] _lowerIndices;
+        private readonly ForearmAxis[] _axes;
         private readonly List<(int Side, int Bone)> _hiddenSections = new();
 
         internal int Redistributed { get; private set; }
@@ -26,6 +27,7 @@ namespace KOZ39.ElbowFixer
             Renderer = renderer;
             _weights = weights;
             _lowerIndices = Enumerable.Repeat(-1, armCount).ToArray();
+            _axes = new ForearmAxis[armCount];
         }
 
         internal static MeshWeightPlan Create(SkinnedMeshRenderer renderer, Arm[] arms)
@@ -56,8 +58,7 @@ namespace KOZ39.ElbowFixer
                     plan.Redistribute(
                         bone,
                         TwistRig.WeightNodes(bones.Length, group, bone),
-                        arms[side],
-                        bindposes,
+                        plan._axes[side],
                         vertices
                     );
                 }
@@ -142,33 +143,25 @@ namespace KOZ39.ElbowFixer
                 arm.Name
             );
             _lowerIndices[side] = lower;
+            _axes[side] = new ForearmAxis(bindposes[lower], arm.Hand.localPosition);
+
+            // Arm.Resolve checks length in world units; mesh coordinates can use a different unit.
+            Require(
+                float.IsFinite(_axes[side].Length) && _axes[side].Length > 0,
+                "InvalidBindpose",
+                Renderer
+            );
             Redistribute(
                 lower,
                 TwistRig.WeightNodes(bones.Length, side, lower),
-                arm,
-                bindposes,
+                _axes[side],
                 vertices
             );
         }
 
-        // The source must move with the LowerArm, since the forearm axis comes from its bindpose.
-        private void Redistribute(
-            int source,
-            int[] nodes,
-            Arm arm,
-            Matrix4x4[] bindposes,
-            Vector3[] vertices
-        )
+        // The source must move with the LowerArm, since the axis comes from the LowerArm's bindpose.
+        private void Redistribute(int source, int[] nodes, ForearmAxis forearm, Vector3[] vertices)
         {
-            var forearm = new ForearmAxis(bindposes[source], arm.Hand.localPosition);
-
-            // Arm.Resolve checks length in world units; mesh coordinates can use a different unit.
-            Require(
-                float.IsFinite(forearm.Length) && forearm.Length > 0,
-                "InvalidBindpose",
-                Renderer
-            );
-
             for (var v = 0; v < vertices.Length; v++)
             {
                 if (ForearmWeights.LowerWeight(_weights[v], source) <= 0)
