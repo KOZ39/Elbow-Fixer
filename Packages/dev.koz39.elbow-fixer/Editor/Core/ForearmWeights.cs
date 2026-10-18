@@ -1,3 +1,4 @@
+// Forearm smoothing informed by Avatar Elbow Repair (MIT). See LICENSE.
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -37,49 +38,80 @@ namespace KOZ39.ElbowFixer
                 (weight.boneIndex3, weight.weight3),
             };
 
-        internal static float LowerWeight(BoneWeight weight, int lower) =>
+        internal static float SourceWeight(BoneWeight weight, int source) =>
             Slots(weight)
-                .Where(slot => slot.Bone == lower && slot.Weight > 0)
+                .Where(slot => slot.Bone == source && slot.Weight > 0)
                 .Sum(slot => slot.Weight);
 
         internal static bool TryRedistribute(
             BoneWeight weight,
-            int lower,
+            int source,
             int[] nodes,
             float t,
             out BoneWeight result
         )
         {
-            var influences = Others(weight, lower);
-            var lowerWeight = LowerWeight(weight, lower);
-            var phase = t * (nodes.Length - 1);
+            var influences = Others(weight, source);
+            var sourceWeight = SourceWeight(weight, source);
+            var last = nodes.Length - 1;
+            var phase = t * last;
             var first = Mathf.FloorToInt(phase);
             var fraction = phase - first;
 
-            Add(influences, nodes[first], lowerWeight * (1 - fraction));
-            Add(influences, nodes[first + 1], lowerWeight * fraction);
+            // Spreading over three nodes evens out the bulge each node leaves on a strongly twisted
+            // forearm. It needs three slots, so vertices with two or more other bones stay linear.
+            // It fades out toward the elbow and wrist, where the clamped kernel would shift the twist.
+            var smoothing =
+                influences.Count <= 1
+                    ? Mathf.SmoothStep(0, 1, Mathf.Min(phase, last - phase) * 2)
+                    : 0;
+
+            if (smoothing > 0)
+            {
+                var center = Mathf.FloorToInt(phase + 0.5f);
+                var offset = phase - center;
+
+                Add(
+                    influences,
+                    nodes[Mathf.Max(center - 1, 0)],
+                    sourceWeight * smoothing * 0.5f * (0.5f - offset) * (0.5f - offset)
+                );
+                Add(
+                    influences,
+                    nodes[center],
+                    sourceWeight * smoothing * (0.75f - offset * offset)
+                );
+                Add(
+                    influences,
+                    nodes[Mathf.Min(center + 1, last)],
+                    sourceWeight * smoothing * 0.5f * (0.5f + offset) * (0.5f + offset)
+                );
+            }
+
+            Add(influences, nodes[first], sourceWeight * (1 - fraction) * (1 - smoothing));
+            Add(influences, nodes[first + 1], sourceWeight * fraction * (1 - smoothing));
 
             result = influences.Count <= MaxInfluences ? Pack(influences) : default;
 
             return influences.Count <= MaxInfluences;
         }
 
-        // Compromise for vertices where two segments do not fit in the four influences.
-        internal static BoneWeight Nearest(BoneWeight weight, int lower, int[] nodes, float t)
+        // Compromise for vertices where two nodes do not fit in the four influences.
+        internal static BoneWeight Nearest(BoneWeight weight, int source, int[] nodes, float t)
         {
-            var influences = Others(weight, lower);
+            var influences = Others(weight, source);
             Add(
                 influences,
                 nodes[Mathf.RoundToInt(t * (nodes.Length - 1))],
-                LowerWeight(weight, lower)
+                SourceWeight(weight, source)
             );
 
             return Pack(influences);
         }
 
-        private static List<(int Bone, float Weight)> Others(BoneWeight weight, int lower) =>
+        private static List<(int Bone, float Weight)> Others(BoneWeight weight, int source) =>
             Slots(weight)
-                .Where(slot => slot.Bone != lower && slot.Weight > 0)
+                .Where(slot => slot.Bone != source && slot.Weight > 0)
                 .GroupBy(slot => slot.Bone)
                 .Select(group => (Bone: group.Key, Weight: group.Sum(slot => slot.Weight)))
                 .ToList();

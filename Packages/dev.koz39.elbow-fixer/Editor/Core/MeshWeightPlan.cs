@@ -17,8 +17,8 @@ namespace KOZ39.ElbowFixer
         private readonly ForearmAxis[] _axes;
         private readonly List<(int Side, int Bone)> _hiddenSections = new();
 
-        internal int Redistributed { get; private set; }
-        internal int Nearest { get; private set; }
+        internal int RedistributedCount { get; private set; }
+        internal int NearestCount { get; private set; }
 
         internal int MirrorCount => _hiddenSections.Count * TwistRig.SupportCount;
 
@@ -164,7 +164,7 @@ namespace KOZ39.ElbowFixer
         {
             for (var v = 0; v < vertices.Length; v++)
             {
-                if (ForearmWeights.LowerWeight(_weights[v], source) <= 0)
+                if (ForearmWeights.SourceWeight(_weights[v], source) <= 0)
                 {
                     continue;
                 }
@@ -179,11 +179,11 @@ namespace KOZ39.ElbowFixer
                 if (!ForearmWeights.TryRedistribute(_weights[v], source, nodes, t, out var weight))
                 {
                     weight = ForearmWeights.Nearest(_weights[v], source, nodes, t);
-                    Nearest++;
+                    NearestCount++;
                 }
 
                 _weights[v] = weight;
-                Redistributed++;
+                RedistributedCount++;
             }
         }
 
@@ -281,12 +281,12 @@ namespace KOZ39.ElbowFixer
         // keeps the rest pose exact even when the current pose differs from the bind pose.
         private Matrix4x4 SupportBindpose(
             Transform support,
-            int lower,
+            int source,
             List<Transform> bones,
             List<Matrix4x4> bindposes
         ) =>
-            lower >= 0
-                ? support.worldToLocalMatrix * bones[lower].localToWorldMatrix * bindposes[lower]
+            source >= 0
+                ? support.worldToLocalMatrix * bones[source].localToWorldMatrix * bindposes[source]
                 : support.worldToLocalMatrix * Renderer.transform.localToWorldMatrix;
 
         private static Matrix4x4[] SkinMatrices(

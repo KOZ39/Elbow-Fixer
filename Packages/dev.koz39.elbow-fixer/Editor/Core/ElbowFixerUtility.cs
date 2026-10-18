@@ -81,7 +81,7 @@ namespace KOZ39.ElbowFixer
 
             for (var v = 0; v < vertices.Length && v < weights.Length; v++)
             {
-                var weight = ForearmWeights.LowerWeight(weights[v], index);
+                var weight = ForearmWeights.SourceWeight(weights[v], index);
 
                 if (weight <= 0)
                 {

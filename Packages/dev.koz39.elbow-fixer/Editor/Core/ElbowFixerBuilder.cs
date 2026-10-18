@@ -47,7 +47,7 @@ namespace KOZ39.ElbowFixer
 
             foreach (var plan in plans)
             {
-                Require(plan.Redistributed > 0, fixer, "NoForearmWeights", plan.Renderer);
+                Require(plan.RedistributedCount > 0, fixer, "NoForearmWeights", plan.Renderer);
             }
 
             var supports = arms.Select(TwistRig.Build).ToArray();
@@ -66,8 +66,8 @@ namespace KOZ39.ElbowFixer
                         Text(
                             "messages.PlanSummary",
                             plan.Renderer.name,
-                            plan.Redistributed,
-                            plan.Nearest
+                            plan.RedistributedCount,
+                            plan.NearestCount
                         )
                     );
                 report
