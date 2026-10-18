@@ -104,11 +104,12 @@ namespace KOZ39.ElbowFixer
             aim.ZeroConstraint();
         }
 
-        // A single source's weight is normalized by the SDK, so only GlobalWeight can set the twist fraction.
-        private static void AddTwistConstraint(Transform twist, Transform lower, float weight)
+        // A single source's weight is normalized by the SDK, so only GlobalWeight can scale the twist. It blends the
+        // rotations, not the angle: 0.25 of a 180-degree twist gives 36.9 degrees, not 45.
+        private static void AddTwistConstraint(Transform twist, Transform source, float weight)
         {
             var constraint = twist.gameObject.AddComponent<VRCRotationConstraint>();
-            constraint.Sources.Add(new VRCConstraintSource(lower, 1));
+            constraint.Sources.Add(new VRCConstraintSource(source, 1));
             constraint.GlobalWeight = weight;
             constraint.ZeroConstraint();
         }

@@ -35,7 +35,7 @@ namespace KOZ39.ElbowFixer
             }
             else
             {
-                var isIgnored = DrawDuplicateWarning(fixer, avatarRoot);
+                var isIgnored = DrawIgnoredWarning(fixer, avatarRoot);
 
                 using (new EditorGUI.DisabledScope(isIgnored))
                 {
@@ -47,7 +47,7 @@ namespace KOZ39.ElbowFixer
             LanguageSwitcher.DrawImmediate();
         }
 
-        private static bool DrawDuplicateWarning(ElbowFixer fixer, GameObject avatarRoot)
+        private static bool DrawIgnoredWarning(ElbowFixer fixer, GameObject avatarRoot)
         {
             var (primaryFixer, fixers) = ElbowFixerUtility.FindFixers(avatarRoot);
 

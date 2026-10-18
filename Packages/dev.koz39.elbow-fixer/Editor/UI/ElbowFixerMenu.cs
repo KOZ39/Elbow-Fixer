@@ -85,6 +85,7 @@ namespace KOZ39.ElbowFixer
             var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, avatar.transform);
             var fixer = instance.GetComponent<ElbowFixer>();
             fixer.targetMeshes = ElbowFixerUtility.FindTargetMeshes(avatar);
+
             PrefabUtility.RecordPrefabInstancePropertyModifications(fixer);
             Undo.RegisterCreatedObjectUndo(instance, $"Setup {displayName}");
 
