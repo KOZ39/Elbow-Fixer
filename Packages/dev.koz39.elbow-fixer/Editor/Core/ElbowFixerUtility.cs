@@ -7,8 +7,10 @@ namespace KOZ39.ElbowFixer
 {
     internal static class ElbowFixerUtility
     {
-        // Prefix from Modular Avatar's NaNimationFilter; the rest of the name is the shape key.
+        // Prefixes from Modular Avatar's NaNimationFilter; the rest of a hidden bone's name is the shape key.
         private const string HiddenBonePrefix = "NaNimatedBone for ";
+
+        private const string HiddenBufferPrefix = "NaNimatedBuffer";
 
         // NDMF builds the outermost avatar, so the inspector must judge fixers against the same root.
         internal static GameObject FindAvatarRoot(Component component)
@@ -32,6 +34,15 @@ namespace KOZ39.ElbowFixer
         // A bone Modular Avatar scales to NaN to hide part of a mesh.
         internal static bool IsHiddenBone(Transform bone) =>
             bone.name.StartsWith(HiddenBonePrefix, StringComparison.Ordinal);
+
+        // Modular Avatar puts a hidden bone under a buffer on the bone it copies, and Merge Armature moves the buffer
+        // onto the avatar bone that bone merges into. The hidden bone keeps the bindpose from before the merge, so
+        // only where it sits tells which bone it copies.
+        internal static Transform CopiedBone(Transform hiddenBone) =>
+            hiddenBone
+                .GetComponentsInParent<Transform>(true)
+                .Skip(1)
+                .First(t => !t.name.StartsWith(HiddenBufferPrefix, StringComparison.Ordinal));
 
         // Objects under an EditorOnly object never reach the build.
         internal static bool IsIncluded(Transform target, Transform avatarRoot) =>

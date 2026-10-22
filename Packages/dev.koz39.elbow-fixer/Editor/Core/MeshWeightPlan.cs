@@ -76,7 +76,7 @@ namespace KOZ39.ElbowFixer
             {
                 for (var boneIndex = 0; boneIndex < bones.Length; boneIndex++)
                 {
-                    if (!plan.IsHiddenSectionOf(side, arms[side], boneIndex, bones, bindposes))
+                    if (!plan.IsHiddenSectionOf(side, arms[side], bones[boneIndex]))
                     {
                         continue;
                     }
@@ -211,43 +211,21 @@ namespace KOZ39.ElbowFixer
         }
 
         // Modular Avatar hides a toggled mesh section by moving its weights to a copy of the bone
-        // and animating the copy's scale to NaN. The copy sits under a buffer object that Merge
-        // Armature may move and rename, but it keeps the copied bone's bindpose and stays below it.
-        private bool IsHiddenSectionOf(
-            int side,
-            Arm arm,
-            int boneIndex,
-            Transform[] bones,
-            Matrix4x4[] bindposes
-        )
-        {
-            var lowerIndex = _lowerIndices[side];
-            var candidate = bones[boneIndex];
-
-            return lowerIndex >= 0
-                && candidate != null
-                && ElbowFixerUtility.IsHiddenBone(candidate)
-                && candidate.IsChildOf(arm.Lower)
-                && !candidate.IsChildOf(arm.Hand)
-                && CopiesLowerArm(arm, boneIndex, bones, bindposes);
-        }
+        // and animating the copy's scale to NaN.
+        private bool IsHiddenSectionOf(int side, Arm arm, Transform candidate) =>
+            _lowerIndices[side] >= 0
+            && candidate != null
+            && ElbowFixerUtility.IsHiddenBone(candidate)
+            && CopiesLowerArm(arm, candidate);
 
         // A copy of the LowerArm, or of a bone whose weights move onto it, follows the rig through mirrors of the
         // supports placed under it.
-        private static bool CopiesLowerArm(
-            Arm arm,
-            int boneIndex,
-            Transform[] bones,
-            Matrix4x4[] bindposes
-        ) =>
-            Enumerable
-                .Range(0, bones.Length)
-                .Any(i =>
-                    i != boneIndex
-                    && bones[i] != null
-                    && bindposes[i] == bindposes[boneIndex]
-                    && (bones[i] == arm.Lower || arm.FindRebind(bones[i]).ArmBone == arm.Lower)
-                );
+        private static bool CopiesLowerArm(Arm arm, Transform hiddenBone)
+        {
+            var copied = ElbowFixerUtility.CopiedBone(hiddenBone);
+
+            return copied == arm.Lower || arm.FindRebind(copied).ArmBone == arm.Lower;
+        }
 
         // Moves weights on a twist bone or a bone with a constraint onto the arm bone it sits on, adding the arm bone
         // when the mesh does not list it. The bones keep their constraints for other meshes. A Modular Avatar copy of
@@ -267,11 +245,10 @@ namespace KOZ39.ElbowFixer
                 foreach (var arm in arms)
                 {
                     var (armBone, blocker) = arm.FindRebind(bone);
-                    var boneIndex = Array.IndexOf(bones, bone);
                     var isHiddenCopy =
                         blocker != null
                         && ElbowFixerUtility.IsHiddenBone(bone)
-                        && CopiesLowerArm(arm, boneIndex, bones, bindposes);
+                        && CopiesLowerArm(arm, bone);
                     Require(
                         blocker == null || isHiddenCopy,
                         "MeshExistingTwist",
@@ -295,7 +272,9 @@ namespace KOZ39.ElbowFixer
                     {
                         armIndex = boneList.Count;
                         boneList.Add(armBone);
-                        bindposeList.Add(BindposeFrom(armBone, bone, bindposes[boneIndex]));
+                        bindposeList.Add(
+                            BindposeFrom(armBone, bone, bindposes[Array.IndexOf(bones, bone)])
+                        );
                     }
 
                     if (isHiddenCopy)
