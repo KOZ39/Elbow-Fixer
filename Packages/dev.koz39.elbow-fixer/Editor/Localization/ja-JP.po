@@ -35,6 +35,10 @@ msgstr "Elbow Fixerコンポーネントが複数あります。このコンポ�
 msgid "messages.DuplicateIgnored"
 msgstr "Elbow Fixerコンポーネントが複数あります。このコンポーネントは無視されます。"
 
+#. {0}: レンダラー名
+msgid "messages.NoMesh"
+msgstr "「{0}」にメッシュがありません。対象メッシュから外してください。"
+
 #. {0}: メッシュ名, {1}: 頂点数, {2}: 最も近い区間を使用した頂点数
 msgid "messages.PlanSummary"
 msgstr "{0}：頂点{1}個を再配分（最も近い区間を使用{2}個）"
@@ -82,55 +86,55 @@ msgid "errors.ForearmParallel"
 msgstr "{0}前腕がアバターの正面方向と平行です。元の基本姿勢を使用してください。"
 
 msgid "errors.NoMeshes"
-msgstr "対象メッシュを1つ以上追加してください。"
+msgstr "対象メッシュがないため補正しません。対象メッシュを1つ以上追加するか、不要な場合はElbow Fixerを削除してください。"
 
 #. {0}: メッシュ名
 msgid "errors.MeshOutsideAvatar"
-msgstr "「{0}」はこのアバターに含まれていません。対象メッシュから外してください。"
+msgstr "「{0}」はこのアバターに含まれていないため、補正から除外されます。対象メッシュから外してください。"
 
-#. {0}: アニメーションクリップ名
+#. {0}: メッシュ名, {1}: アニメーションクリップ名
 msgid "errors.AnimatedMesh"
-msgstr "アニメーション「{0}」が対象メッシュを別のメッシュに差し替えます。"
+msgstr "アニメーション「{1}」がメッシュ「{0}」を別のメッシュに差し替えるため補正から除外されます。対象メッシュから外してください。"
 
 #. {0}: レンダラー名
 msgid "errors.MissingMesh"
-msgstr "「{0}」にメッシュがありません。他のツールが削除または統合した可能性があります。"
+msgstr "「{0}」にメッシュがないため補正から除外されます。他のツールが削除または統合した可能性があります。"
 
 #. {0}: メッシュ名
 msgid "errors.MeshNotReadable"
-msgstr "「{0}」のメッシュを読み取れません。インポート設定でRead/Writeを有効にしてください。"
+msgstr "「{0}」はRead/Writeが無効なため補正から除外されます。インポート設定でRead/Writeを有効にしてください。"
 
 #. {0}: メッシュ名
 msgid "errors.ClothNotSupported"
-msgstr "Clothコンポーネントがある「{0}」には対応していません。対象メッシュから外してください。"
+msgstr "Clothコンポーネントがある「{0}」には対応していないため、補正から除外されます。対象メッシュから外してください。"
 
 #. {0}: メッシュ名
 msgid "errors.SkinQuality"
-msgstr "「{0}」のSkin WeightsをAutoまたは4 Bonesに設定してください。"
+msgstr "「{0}」のQualityがAutoまたは4 Bonesではないため補正から除外されます。QualityをAutoまたは4 Bonesに設定してください。"
 
 #. {0}: メッシュ名
 msgid "errors.TooManyInfluences"
-msgstr "「{0}」にボーンの影響が4つを超える頂点があります。"
+msgstr "「{0}」にボーンの影響が4つを超える頂点があるため補正から除外されます。"
 
 #. {0}: メッシュ名
 msgid "errors.BindposeMismatch"
-msgstr "「{0}」のボーンとバインドポーズの数が一致しません。"
+msgstr "「{0}」のボーンとバインドポーズの数が一致しないため補正から除外されます。"
 
 #. {0}: メッシュ名
 msgid "errors.InvalidBindpose"
-msgstr "「{0}」のバインドポーズが無効です。"
+msgstr "「{0}」のバインドポーズが無効なため補正から除外されます。"
 
 #. {0}: メッシュ名
 msgid "errors.InvalidWeights"
-msgstr "「{0}」のスキンウェイトが無効です。ウェイトは0以上で存在するボーンを指し、ウェイトのある頂点は合計が1になる必要があります。"
+msgstr "「{0}」のスキンウェイトが無効なため補正から除外されます。ウェイトは0以上で存在するボーンを指し、ウェイトのある頂点は合計が1になる必要があります。"
 
 #. {0}: メッシュ名, {1}: 左または右
 msgid "errors.DuplicateLowerArm"
-msgstr "「{0}」のボーンリストに{1}のLowerArmボーンが複数回含まれています。"
+msgstr "「{0}」のボーンリストに{1}のLowerArmボーンが複数回含まれているため補正から除外されます。"
 
 #. {0}: メッシュ名
 msgid "errors.NoForearmWeights"
-msgstr "「{0}」に補正する前腕のウェイトがありません。対象メッシュから外してください。"
+msgstr "「{0}」に前腕のウェイトがないため補正から除外されます。対象メッシュから外してください。"
 
 #. {0}: メッシュ名, {1}: 距離
 msgid "errors.RestPoseDrift"
@@ -138,7 +142,7 @@ msgstr "「{0}」が基本姿勢で{1} mm動きました。ビルドを中断し
 
 #. {0}: メッシュ名
 msgid "errors.NonFiniteVertices"
-msgstr "「{0}」の頂点位置にNaNまたは無限大の値があります。"
+msgstr "「{0}」の頂点位置にNaNまたは無限大の値があるため補正から除外されます。"
 
 #. {0}: メッシュ名
 msgid "errors.NonFiniteSkinning"
@@ -146,4 +150,4 @@ msgstr "「{0}」のスキニング結果の位置にNaNまたは無限大の値
 
 #. {0}: メッシュ名
 msgid "errors.MeshEditorOnly"
-msgstr "「{0}」はEditorOnlyオブジェクトの下にあり、ビルド時に削除されます。対象メッシュから外してください。"
+msgstr "「{0}」はEditorOnlyオブジェクトの下にあり、ビルド時に削除されるため、補正から除外されます。対象メッシュから外してください。"

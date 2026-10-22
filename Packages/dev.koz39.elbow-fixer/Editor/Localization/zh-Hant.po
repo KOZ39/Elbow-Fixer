@@ -35,6 +35,10 @@ msgstr "存在多個 Elbow Fixer 元件。將使用此元件。"
 msgid "messages.DuplicateIgnored"
 msgstr "存在多個 Elbow Fixer 元件。此元件將被忽略。"
 
+#. {0}: 渲染器名稱
+msgid "messages.NoMesh"
+msgstr "「{0}」沒有網格。請將其從目標網格中移除。"
+
 #. {0}: 網格名稱, {1}: 頂點數, {2}: 使用最近分段的頂點數
 msgid "messages.PlanSummary"
 msgstr "{0}：重新分配 {1} 個頂點（使用最近分段 {2} 個）"
@@ -82,55 +86,55 @@ msgid "errors.ForearmParallel"
 msgstr "{0}前臂與 Avatar 正前方平行。請使用原始靜止姿勢。"
 
 msgid "errors.NoMeshes"
-msgstr "請至少加入一個目標網格。"
+msgstr "沒有目標網格，因此不會修正。請至少加入一個目標網格；如果不需要，請移除 Elbow Fixer。"
 
 #. {0}: 網格名稱
 msgid "errors.MeshOutsideAvatar"
-msgstr "「{0}」不屬於此 Avatar。請將其從目標網格中移除。"
+msgstr "「{0}」不屬於此 Avatar，因此不會被修正。請將其從目標網格中移除。"
 
-#. {0}: 動畫片段名稱
+#. {0}: 網格名稱, {1}: 動畫片段名稱
 msgid "errors.AnimatedMesh"
-msgstr "動畫「{0}」會將目標網格替換為其他網格。"
+msgstr "動畫「{1}」會將網格「{0}」替換為其他網格，因此不會被修正。請將「{0}」從目標網格中移除。"
 
 #. {0}: 渲染器名稱
 msgid "errors.MissingMesh"
-msgstr "「{0}」沒有網格。可能已被其他工具刪除或合併。"
+msgstr "「{0}」沒有網格，因此不會被修正。可能已被其他工具刪除或合併。"
 
 #. {0}: 網格名稱
 msgid "errors.MeshNotReadable"
-msgstr "無法讀取「{0}」的網格。請在匯入設定中開啟 Read/Write。"
+msgstr "「{0}」未開啟 Read/Write，因此不會被修正。請在匯入設定中開啟 Read/Write。"
 
 #. {0}: 網格名稱
 msgid "errors.ClothNotSupported"
-msgstr "不支援帶有 Cloth 元件的「{0}」。請將其從目標網格中移除。"
+msgstr "不支援帶有 Cloth 元件的「{0}」，因此不會被修正。請將其從目標網格中移除。"
 
 #. {0}: 網格名稱
 msgid "errors.SkinQuality"
-msgstr "請將「{0}」的 Skin Weights 設為 Auto 或 4 Bones。"
+msgstr "「{0}」的 Quality 不是 Auto 或 4 Bones，因此不會被修正。請將 Quality 設為 Auto 或 4 Bones。"
 
 #. {0}: 網格名稱
 msgid "errors.TooManyInfluences"
-msgstr "「{0}」存在骨骼影響超過四個的頂點。"
+msgstr "「{0}」存在骨骼影響超過四個的頂點，因此不會被修正。"
 
 #. {0}: 網格名稱
 msgid "errors.BindposeMismatch"
-msgstr "「{0}」的骨骼與綁定姿勢數量不一致。"
+msgstr "「{0}」的骨骼與綁定姿勢數量不一致，因此不會被修正。"
 
 #. {0}: 網格名稱
 msgid "errors.InvalidBindpose"
-msgstr "「{0}」的綁定姿勢無效。"
+msgstr "「{0}」的綁定姿勢無效，因此不會被修正。"
 
 #. {0}: 網格名稱
 msgid "errors.InvalidWeights"
-msgstr "「{0}」的蒙皮權重無效。權重必須不小於 0 並指向存在的骨骼，有權重的頂點總和必須為 1。"
+msgstr "「{0}」的蒙皮權重無效，因此不會被修正。權重必須不小於 0 並指向存在的骨骼，有權重的頂點總和必須為 1。"
 
 #. {0}: 網格名稱, {1}: 左或右
 msgid "errors.DuplicateLowerArm"
-msgstr "「{0}」的骨骼清單中多次包含{1}側 LowerArm 骨骼。"
+msgstr "「{0}」的骨骼清單中多次包含{1}側 LowerArm 骨骼，因此不會被修正。"
 
 #. {0}: 網格名稱
 msgid "errors.NoForearmWeights"
-msgstr "「{0}」沒有可修正的前臂權重。請將其從目標網格中移除。"
+msgstr "「{0}」沒有前臂權重，因此不會被修正。請將其從目標網格中移除。"
 
 #. {0}: 網格名稱, {1}: 距離
 msgid "errors.RestPoseDrift"
@@ -138,7 +142,7 @@ msgstr "「{0}」在靜止姿勢下移動了 {1} mm。已中止建置。"
 
 #. {0}: 網格名稱
 msgid "errors.NonFiniteVertices"
-msgstr "「{0}」的頂點位置包含 NaN 或無限大值。"
+msgstr "「{0}」的頂點位置包含 NaN 或無限大值，因此不會被修正。"
 
 #. {0}: 網格名稱
 msgid "errors.NonFiniteSkinning"
@@ -146,4 +150,4 @@ msgstr "「{0}」的蒙皮結果位置包含 NaN 或無限大值。"
 
 #. {0}: 網格名稱
 msgid "errors.MeshEditorOnly"
-msgstr "「{0}」位於 EditorOnly 物件下，會在建置時被移除。請將其從目標網格中移除。"
+msgstr "「{0}」位於 EditorOnly 物件下，會在建置時被移除，因此不會被修正。請將其從目標網格中移除。"

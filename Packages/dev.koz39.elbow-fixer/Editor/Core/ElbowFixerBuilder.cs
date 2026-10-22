@@ -1,6 +1,7 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using nadena.dev.ndmf;
 using UnityEditor;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
@@ -11,11 +12,12 @@ namespace KOZ39.ElbowFixer
 {
     internal static class ElbowFixerBuilder
     {
-        // Runs on the NDMF build copy only.
+        // Runs on the NDMF build copy only. A mesh with a problem of its own goes to skip and stays as it is;
+        // returns null when no mesh is left to fix.
         internal static string Build(
             GameObject avatarRoot,
-            ObjectReference fixer,
-            SkinnedMeshRenderer[] renderers
+            SkinnedMeshRenderer[] renderers,
+            Action<ElbowFixerException> skip
         )
         {
             // Build copies can be far from the origin. Keep world-space rig and bindpose calculations precise.
@@ -25,7 +27,7 @@ namespace KOZ39.ElbowFixer
             {
                 avatarRoot.transform.position = Vector3.zero;
 
-                return BuildAtOrigin(avatarRoot, fixer, renderers);
+                return BuildAtOrigin(avatarRoot, renderers, skip);
             }
             finally
             {
@@ -35,19 +37,20 @@ namespace KOZ39.ElbowFixer
 
         private static string BuildAtOrigin(
             GameObject avatarRoot,
-            ObjectReference fixer,
-            SkinnedMeshRenderer[] renderers
+            SkinnedMeshRenderer[] renderers,
+            Action<ElbowFixerException> skip
         )
         {
             var arms = Arm.Resolve(avatarRoot);
-            RejectMeshAnimations(avatarRoot, renderers);
+            var meshSwaps = FindMeshSwaps(avatarRoot, renderers);
             var plans = renderers
-                .Select(renderer => MeshWeightPlan.Create(renderer, arms))
+                .Select(renderer => TryPlan(renderer, arms, meshSwaps, skip))
+                .Where(plan => plan != null)
                 .ToArray();
 
-            foreach (var plan in plans)
+            if (plans.Length == 0)
             {
-                Require(plan.RedistributedCount > 0, fixer, "NoForearmWeights", plan.Renderer);
+                return null;
             }
 
             var supports = arms.Select(TwistRig.Build).ToArray();
@@ -77,80 +80,69 @@ namespace KOZ39.ElbowFixer
             return report.ToString();
         }
 
-        // A renderer outside the build copy would be the original scene object.
-        internal static SkinnedMeshRenderer[] SelectTargetMeshes(
-            GameObject avatarRoot,
-            ElbowFixer fixer
+        // Problems found before the rig exists concern only this mesh, so they skip it instead of stopping the build.
+        private static MeshWeightPlan TryPlan(
+            SkinnedMeshRenderer renderer,
+            Arm[] arms,
+            Dictionary<SkinnedMeshRenderer, AnimationClip> meshSwaps,
+            Action<ElbowFixerException> skip
         )
         {
-            var renderers = fixer
-                .targetMeshes.Where(renderer => renderer != null)
-                .Distinct()
-                .ToArray();
-
-            Require(renderers.Length > 0, fixer, "NoMeshes");
-
-            foreach (var renderer in renderers)
+            try
             {
                 Require(
-                    ElbowFixerUtility.BelongsToAvatar(renderer.transform, avatarRoot.transform),
-                    fixer,
-                    "MeshOutsideAvatar",
-                    renderer
+                    !meshSwaps.TryGetValue(renderer, out var clip),
+                    "AnimatedMesh",
+                    renderer,
+                    clip
                 );
-                Require(
-                    !ElbowFixerUtility.IsEditorOnly(renderer.transform, avatarRoot.transform),
-                    fixer,
-                    "MeshEditorOnly",
-                    renderer
-                );
-                Require(
-                    !renderer.TryGetComponent<Cloth>(out _),
-                    fixer,
-                    "ClothNotSupported",
-                    renderer
-                );
-            }
+                var plan = MeshWeightPlan.Create(renderer, arms);
+                Require(plan.RedistributedCount > 0, "NoForearmWeights", renderer);
 
-            return renderers;
+                return plan;
+            }
+            catch (ElbowFixerException e)
+            {
+                skip(e);
+
+                return null;
+            }
         }
 
         // An animation that swaps the mesh would replace the fixed mesh at runtime.
-        private static void RejectMeshAnimations(
+        private static Dictionary<SkinnedMeshRenderer, AnimationClip> FindMeshSwaps(
             GameObject avatarRoot,
             SkinnedMeshRenderer[] renderers
         )
         {
             var root = avatarRoot.transform;
-            var paths = renderers
-                .Select(renderer =>
-                    AnimationUtility.CalculateTransformPath(renderer.transform, root)
-                )
-                .ToHashSet();
+            var renderersByPath = renderers.ToLookup(renderer =>
+                AnimationUtility.CalculateTransformPath(renderer.transform, root)
+            );
             var descriptor = avatarRoot.GetComponent<VRCAvatarDescriptor>();
             var layers = descriptor.customizeAnimationLayers
                 ? descriptor
                     .baseAnimationLayers.Concat(descriptor.specialAnimationLayers)
                     .Where(layer => !layer.isDefault)
                 : Enumerable.Empty<VRCAvatarDescriptor.CustomAnimLayer>();
-            var clips = layers
+
+            return layers
                 .Select(layer => layer.animatorController)
                 .Where(controller => controller != null)
                 .SelectMany(controller => controller.animationClips)
-                .Distinct();
-
-            foreach (var clip in clips)
-            {
-                var replacesMesh = AnimationUtility
-                    .GetObjectReferenceCurveBindings(clip)
-                    .Any(binding =>
-                        binding.type == typeof(SkinnedMeshRenderer)
-                        && binding.propertyName == "m_Mesh"
-                        && paths.Contains(binding.path)
-                    );
-
-                Require(!replacesMesh, "AnimatedMesh", clip);
-            }
+                .Distinct()
+                .SelectMany(clip =>
+                    AnimationUtility
+                        .GetObjectReferenceCurveBindings(clip)
+                        .Where(binding =>
+                            binding.type == typeof(SkinnedMeshRenderer)
+                            && binding.propertyName == "m_Mesh"
+                        )
+                        .SelectMany(binding => renderersByPath[binding.path])
+                        .Select(renderer => (Renderer: renderer, Clip: clip))
+                )
+                .GroupBy(swap => swap.Renderer)
+                .ToDictionary(group => group.Key, group => group.First().Clip);
         }
     }
 }

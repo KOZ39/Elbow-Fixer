@@ -35,6 +35,10 @@ msgstr "存在多个 Elbow Fixer 组件。将使用此组件。"
 msgid "messages.DuplicateIgnored"
 msgstr "存在多个 Elbow Fixer 组件。此组件将被忽略。"
 
+#. {0}: 渲染器名称
+msgid "messages.NoMesh"
+msgstr "“{0}” 没有网格。请将其从目标网格中移除。"
+
 #. {0}: 网格名称, {1}: 顶点数, {2}: 使用最近分段的顶点数
 msgid "messages.PlanSummary"
 msgstr "{0}：重新分配 {1} 个顶点（使用最近分段 {2} 个）"
@@ -82,55 +86,55 @@ msgid "errors.ForearmParallel"
 msgstr "{0}前臂与 Avatar 正前方平行。请使用原始静止姿势。"
 
 msgid "errors.NoMeshes"
-msgstr "请至少添加一个目标网格。"
+msgstr "没有目标网格，因此不会修复。请至少添加一个目标网格；如果不需要，请移除 Elbow Fixer。"
 
 #. {0}: 网格名称
 msgid "errors.MeshOutsideAvatar"
-msgstr "“{0}” 不属于此 Avatar。请将其从目标网格中移除。"
+msgstr "“{0}” 不属于此 Avatar，因此不会被修复。请将其从目标网格中移除。"
 
-#. {0}: 动画片段名称
+#. {0}: 网格名称, {1}: 动画片段名称
 msgid "errors.AnimatedMesh"
-msgstr "动画 “{0}” 会将目标网格替换为其他网格。"
+msgstr "动画 “{1}” 会将网格 “{0}” 替换为其他网格，因此不会被修复。请将 “{0}” 从目标网格中移除。"
 
 #. {0}: 渲染器名称
 msgid "errors.MissingMesh"
-msgstr "“{0}” 没有网格。可能已被其他工具删除或合并。"
+msgstr "“{0}” 没有网格，因此不会被修复。可能已被其他工具删除或合并。"
 
 #. {0}: 网格名称
 msgid "errors.MeshNotReadable"
-msgstr "无法读取 “{0}” 的网格。请在导入设置中开启 Read/Write。"
+msgstr "“{0}” 未开启 Read/Write，因此不会被修复。请在导入设置中开启 Read/Write。"
 
 #. {0}: 网格名称
 msgid "errors.ClothNotSupported"
-msgstr "不支持带有 Cloth 组件的 “{0}”。请将其从目标网格中移除。"
+msgstr "不支持带有 Cloth 组件的 “{0}”，因此不会被修复。请将其从目标网格中移除。"
 
 #. {0}: 网格名称
 msgid "errors.SkinQuality"
-msgstr "请将 “{0}” 的 Skin Weights 设为 Auto 或 4 Bones。"
+msgstr "“{0}” 的 Quality 不是 Auto 或 4 Bones，因此不会被修复。请将 Quality 设为 Auto 或 4 Bones。"
 
 #. {0}: 网格名称
 msgid "errors.TooManyInfluences"
-msgstr "“{0}” 存在骨骼影响超过四个的顶点。"
+msgstr "“{0}” 存在骨骼影响超过四个的顶点，因此不会被修复。"
 
 #. {0}: 网格名称
 msgid "errors.BindposeMismatch"
-msgstr "“{0}” 的骨骼与绑定姿势数量不一致。"
+msgstr "“{0}” 的骨骼与绑定姿势数量不一致，因此不会被修复。"
 
 #. {0}: 网格名称
 msgid "errors.InvalidBindpose"
-msgstr "“{0}” 的绑定姿势无效。"
+msgstr "“{0}” 的绑定姿势无效，因此不会被修复。"
 
 #. {0}: 网格名称
 msgid "errors.InvalidWeights"
-msgstr "“{0}” 的蒙皮权重无效。权重必须不小于 0 并指向存在的骨骼，有权重的顶点总和必须为 1。"
+msgstr "“{0}” 的蒙皮权重无效，因此不会被修复。权重必须不小于 0 并指向存在的骨骼，有权重的顶点总和必须为 1。"
 
 #. {0}: 网格名称, {1}: 左或右
 msgid "errors.DuplicateLowerArm"
-msgstr "“{0}” 的骨骼列表中多次包含{1}侧 LowerArm 骨骼。"
+msgstr "“{0}” 的骨骼列表中多次包含{1}侧 LowerArm 骨骼，因此不会被修复。"
 
 #. {0}: 网格名称
 msgid "errors.NoForearmWeights"
-msgstr "“{0}” 没有可修复的前臂权重。请将其从目标网格中移除。"
+msgstr "“{0}” 没有前臂权重，因此不会被修复。请将其从目标网格中移除。"
 
 #. {0}: 网格名称, {1}: 距离
 msgid "errors.RestPoseDrift"
@@ -138,7 +142,7 @@ msgstr "“{0}” 在静止姿势下移动了 {1} mm。已中止构建。"
 
 #. {0}: 网格名称
 msgid "errors.NonFiniteVertices"
-msgstr "“{0}” 的顶点位置包含 NaN 或无穷大值。"
+msgstr "“{0}” 的顶点位置包含 NaN 或无穷大值，因此不会被修复。"
 
 #. {0}: 网格名称
 msgid "errors.NonFiniteSkinning"
@@ -146,4 +150,4 @@ msgstr "“{0}” 的蒙皮结果位置包含 NaN 或无穷大值。"
 
 #. {0}: 网格名称
 msgid "errors.MeshEditorOnly"
-msgstr "“{0}” 位于 EditorOnly 对象下，会在构建时被移除。请将其从目标网格中移除。"
+msgstr "“{0}” 位于 EditorOnly 对象下，会在构建时被移除，因此不会被修复。请将其从目标网格中移除。"

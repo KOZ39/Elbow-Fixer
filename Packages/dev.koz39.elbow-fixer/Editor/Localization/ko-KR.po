@@ -35,6 +35,10 @@ msgstr "Elbow Fixer 컴포넌트가 여러 개 있습니다. 이 컴포넌트가
 msgid "messages.DuplicateIgnored"
 msgstr "Elbow Fixer 컴포넌트가 여러 개 있습니다. 이 컴포넌트는 무시됩니다."
 
+#. {0}: 렌더러 이름
+msgid "messages.NoMesh"
+msgstr "'{0}'에 메시가 없습니다. 대상 메시에서 제거해 주세요."
+
 #. {0}: 메시 이름, {1}: 정점 수, {2}: 가장 가까운 구간을 사용한 정점 수
 msgid "messages.PlanSummary"
 msgstr "{0}: 정점 {1}개 재분배(가장 가까운 구간 사용 {2}개)"
@@ -82,55 +86,55 @@ msgid "errors.ForearmParallel"
 msgstr "{0} 팔뚝이 아바타의 정면 방향과 나란합니다. 원래 기본 자세를 사용해 주세요."
 
 msgid "errors.NoMeshes"
-msgstr "대상 메시를 하나 이상 넣어 주세요."
+msgstr "대상 메시가 없어 보정하지 않습니다. 대상 메시를 하나 이상 추가하거나, 필요 없으면 Elbow Fixer를 제거해 주세요."
 
 #. {0}: 메시 이름
 msgid "errors.MeshOutsideAvatar"
-msgstr "'{0}'은(는) 이 아바타에 속하지 않습니다. 대상 메시에서 제거해 주세요."
+msgstr "'{0}'은(는) 이 아바타에 속하지 않아 보정에서 제외됩니다. 대상 메시에서 제거해 주세요."
 
-#. {0}: 애니메이션 클립 이름
+#. {0}: 메시 이름, {1}: 애니메이션 클립 이름
 msgid "errors.AnimatedMesh"
-msgstr "애니메이션 '{0}'이(가) 대상 메시를 다른 메시로 교체합니다."
+msgstr "'{1}' 애니메이션이 '{0}' 메시를 다른 메시로 교체하므로 보정에서 제외됩니다. 대상 메시에서 제거해 주세요."
 
 #. {0}: 렌더러 이름
 msgid "errors.MissingMesh"
-msgstr "'{0}'에 메시가 없습니다. 다른 도구가 삭제하거나 병합했을 수 있습니다."
+msgstr "'{0}'에 메시가 없어 보정에서 제외됩니다. 다른 도구가 삭제하거나 병합했을 수 있습니다."
 
 #. {0}: 메시 이름
 msgid "errors.MeshNotReadable"
-msgstr "'{0}'의 메시를 읽을 수 없습니다. 임포트 설정에서 Read/Write를 켜 주세요."
+msgstr "'{0}'은(는) Read/Write가 꺼져 있어 보정에서 제외됩니다. 임포트 설정에서 Read/Write를 켜 주세요."
 
 #. {0}: 메시 이름
 msgid "errors.ClothNotSupported"
-msgstr "Cloth 컴포넌트가 있는 '{0}'은(는) 지원하지 않습니다. 대상 메시에서 제거해 주세요."
+msgstr "Cloth 컴포넌트가 있는 '{0}'은(는) 지원하지 않아 보정에서 제외됩니다. 대상 메시에서 제거해 주세요."
 
 #. {0}: 메시 이름
 msgid "errors.SkinQuality"
-msgstr "'{0}'의 Skin Weights를 Auto 또는 4 Bones로 설정해 주세요."
+msgstr "'{0}'은(는) Quality가 Auto나 4 Bones가 아니어서 보정에서 제외됩니다. Quality를 Auto나 4 Bones로 설정해 주세요."
 
 #. {0}: 메시 이름
 msgid "errors.TooManyInfluences"
-msgstr "'{0}'에 본 영향이 네 개를 넘는 정점이 있습니다."
+msgstr "'{0}'에 본 영향이 네 개를 넘는 정점이 있어 보정에서 제외됩니다."
 
 #. {0}: 메시 이름
 msgid "errors.BindposeMismatch"
-msgstr "'{0}'의 본과 바인드 포즈 개수가 다릅니다."
+msgstr "'{0}'의 본과 바인드 포즈 개수가 달라 보정에서 제외됩니다."
 
 #. {0}: 메시 이름
 msgid "errors.InvalidBindpose"
-msgstr "'{0}'의 바인드 포즈가 올바르지 않습니다."
+msgstr "'{0}'의 바인드 포즈가 올바르지 않아 보정에서 제외됩니다."
 
 #. {0}: 메시 이름
 msgid "errors.InvalidWeights"
-msgstr "'{0}'의 스킨 가중치가 올바르지 않습니다. 가중치는 0 이상이고 존재하는 본을 가리켜야 하며, 가중치가 있는 정점은 합이 1이어야 합니다."
+msgstr "'{0}'의 스킨 가중치가 올바르지 않아 보정에서 제외됩니다. 가중치는 0 이상이고 존재하는 본을 가리켜야 하며, 가중치가 있는 정점은 합이 1이어야 합니다."
 
 #. {0}: 메시 이름, {1}: 왼쪽 또는 오른쪽
 msgid "errors.DuplicateLowerArm"
-msgstr "'{0}'의 본 목록에 {1} LowerArm 본이 두 번 이상 들어 있습니다."
+msgstr "'{0}'의 본 목록에 {1} LowerArm 본이 두 번 이상 들어 있어 보정에서 제외됩니다."
 
 #. {0}: 메시 이름
 msgid "errors.NoForearmWeights"
-msgstr "'{0}'에 보정할 팔뚝 가중치가 없습니다. 대상 메시에서 제거해 주세요."
+msgstr "'{0}'에 팔뚝 가중치가 없어 보정에서 제외됩니다. 대상 메시에서 제거해 주세요."
 
 #. {0}: 메시 이름, {1}: 거리
 msgid "errors.RestPoseDrift"
@@ -138,7 +142,7 @@ msgstr "'{0}'이(가) 기본 자세에서 {1} mm 움직였습니다. 빌드를 �
 
 #. {0}: 메시 이름
 msgid "errors.NonFiniteVertices"
-msgstr "'{0}'의 정점 위치에 NaN이나 무한대 값이 있습니다."
+msgstr "'{0}'의 정점 위치에 NaN이나 무한대 값이 있어 보정에서 제외됩니다."
 
 #. {0}: 메시 이름
 msgid "errors.NonFiniteSkinning"
@@ -146,4 +150,4 @@ msgstr "'{0}'의 스키닝 결과 위치에 NaN이나 무한대 값이 있습니
 
 #. {0}: 메시 이름
 msgid "errors.MeshEditorOnly"
-msgstr "'{0}'은(는) EditorOnly 오브젝트 아래에 있어 빌드에서 제거됩니다. 대상 메시에서 제거해 주세요."
+msgstr "'{0}'은(는) EditorOnly 오브젝트 아래에 있어 빌드에서 제거되므로 보정에서 제외됩니다. 대상 메시에서 제거해 주세요."

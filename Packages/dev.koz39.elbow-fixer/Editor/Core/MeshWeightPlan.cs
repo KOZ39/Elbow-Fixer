@@ -12,6 +12,11 @@ namespace KOZ39.ElbowFixer
     {
         private const float MaxRestDrift = 0.00001f;
 
+        // Problems the inspector treats apart from the rest.
+        internal const string MissingMesh = nameof(MissingMesh);
+
+        internal const string MeshNotReadable = nameof(MeshNotReadable);
+
         internal readonly SkinnedMeshRenderer Renderer;
         private readonly Vector3[] _vertices;
         private readonly BoneWeight[] _weights;
@@ -40,16 +45,11 @@ namespace KOZ39.ElbowFixer
 
         internal static MeshWeightPlan Create(SkinnedMeshRenderer renderer, Arm[] arms)
         {
-            var mesh = renderer.sharedMesh;
-            Require(mesh != null, "MissingMesh", renderer);
-            Require(mesh.isReadable, "MeshNotReadable", renderer);
-            Require(
-                renderer.quality == SkinQuality.Auto || renderer.quality == SkinQuality.Bone4,
-                "SkinQuality",
-                renderer
-            );
+            var problem = FindMeshProblem(renderer);
+            Require(problem == null, problem, renderer);
 
             // Each read of these properties copies the whole array.
+            var mesh = renderer.sharedMesh;
             var bones = renderer.bones;
             var bindposes = mesh.bindposes;
             var vertices = mesh.vertices;
@@ -230,6 +230,26 @@ namespace KOZ39.ElbowFixer
                 && candidate.IsChildOf(arm.Lower)
                 && !candidate.IsChildOf(arm.Hand)
                 && bindposes[boneIndex] == bindposes[lowerIndex];
+        }
+
+        // Shared with the inspector. Checked at build time too, since another tool may have replaced the mesh.
+        internal static string FindMeshProblem(SkinnedMeshRenderer renderer)
+        {
+            var mesh = renderer.sharedMesh;
+
+            if (mesh == null)
+            {
+                return MissingMesh;
+            }
+
+            if (!mesh.isReadable)
+            {
+                return MeshNotReadable;
+            }
+
+            return renderer.quality == SkinQuality.Auto || renderer.quality == SkinQuality.Bone4
+                ? null
+                : "SkinQuality";
         }
 
         private static void Validate(

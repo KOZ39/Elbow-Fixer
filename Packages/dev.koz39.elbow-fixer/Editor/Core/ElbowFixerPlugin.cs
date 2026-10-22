@@ -28,20 +28,35 @@ namespace KOZ39.ElbowFixer
                 .Run($"{ElbowFixerPackageInfo.DisplayName} (Build)", Build);
         }
 
-        private static void Resolve(BuildContext ctx)
+        private static void Resolve(BuildContext context)
         {
-            var avatarRoot = ctx.AvatarRootObject;
+            var avatarRoot = context.AvatarRootObject;
             var (primaryFixer, fixers) = ElbowFixerUtility.FindFixers(avatarRoot);
 
             if (primaryFixer != null)
             {
-                var state = ctx.GetState<ElbowFixerState>();
+                var (meshes, skipped) = TargetMeshes.Select(avatarRoot, primaryFixer);
+                context.GetState<ElbowFixerState>().Meshes = meshes;
 
-                // Build runs after the fixer is destroyed, but its errors can still link to the original by path.
-                state.Fixer = ObjectRegistry.GetReference(primaryFixer);
-                ReportErrors(() =>
-                    state.Meshes = ElbowFixerBuilder.SelectTargetMeshes(avatarRoot, primaryFixer)
-                );
+                // A mesh the build cannot fix is left as is, so the upload goes on.
+                foreach (var (mesh, problem) in skipped)
+                {
+                    Report(
+                        ErrorSeverity.NonFatal,
+                        "errors." + problem,
+                        mesh.name,
+                        ObjectRegistry.GetReference(mesh)
+                    );
+                }
+
+                if (meshes.Length == 0)
+                {
+                    Report(
+                        ErrorSeverity.NonFatal,
+                        "errors.NoMeshes",
+                        ObjectRegistry.GetReference(primaryFixer)
+                    );
+                }
             }
 
             foreach (var fixer in fixers)
@@ -50,46 +65,51 @@ namespace KOZ39.ElbowFixer
             }
         }
 
-        private static void Build(BuildContext ctx)
+        private static void Build(BuildContext context)
         {
-            var state = ctx.GetState<ElbowFixerState>();
-
             // Another tool may have deleted a mesh since Resolve.
-            var meshes = state.Meshes?.Where(mesh => mesh != null).ToArray();
+            var meshes = context
+                .GetState<ElbowFixerState>()
+                .Meshes?.Where(mesh => mesh != null)
+                .ToArray();
 
             if (meshes == null || meshes.Length == 0)
             {
                 return;
             }
 
-            ReportErrors(() =>
-            {
-                var report = ElbowFixerBuilder.Build(ctx.AvatarRootObject, state.Fixer, meshes);
-                Debug.Log($"{ElbowFixerPackageInfo.LogPrefix} {report}", ctx.AvatarRootObject);
-            });
-        }
-
-        private static void ReportErrors(System.Action action)
-        {
             try
             {
-                action();
+                // A skipped mesh only warns; a problem with the avatar or the rig still stops the upload.
+                var report = ElbowFixerBuilder.Build(
+                    context.AvatarRootObject,
+                    meshes,
+                    e => Report(ErrorSeverity.NonFatal, e)
+                );
+
+                if (report != null)
+                {
+                    Debug.Log(
+                        $"{ElbowFixerPackageInfo.LogPrefix} {report}",
+                        context.AvatarRootObject
+                    );
+                }
             }
             catch (ElbowFixerException e)
             {
-                // NDMF links ObjectReference arguments. Appended last, the context leaves the placeholders unchanged.
-                ErrorReport.ReportError(
-                    ElbowFixerLocalization.Localizer,
-                    ErrorSeverity.Error,
-                    e.Key,
-                    e.Arguments.Append(e.Context).ToArray()
-                );
+                Report(ErrorSeverity.Error, e);
             }
         }
 
+        // NDMF links ObjectReference arguments; appended last, they leave the placeholders unchanged.
+        private static void Report(ErrorSeverity severity, string key, params object[] arguments) =>
+            ErrorReport.ReportError(ElbowFixerLocalization.Localizer, severity, key, arguments);
+
+        private static void Report(ErrorSeverity severity, ElbowFixerException e) =>
+            Report(severity, e.Key, e.Arguments.Append(e.Context).ToArray());
+
         private class ElbowFixerState
         {
-            public ObjectReference Fixer;
             public SkinnedMeshRenderer[] Meshes;
         }
     }

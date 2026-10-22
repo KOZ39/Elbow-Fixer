@@ -41,6 +41,11 @@ namespace KOZ39.ElbowFixer
                 {
                     DrawSettings(avatarRoot);
                 }
+
+                if (!isIgnored)
+                {
+                    DrawMeshWarnings(fixer, avatarRoot);
+                }
             }
 
             EditorGUILayout.Space();
@@ -125,6 +130,29 @@ namespace KOZ39.ElbowFixer
             }
 
             serializedObject.ApplyModifiedProperties();
+        }
+
+        // Only the cheap checks; the per-vertex ones stay in the build.
+        private void DrawMeshWarnings(ElbowFixer fixer, GameObject avatarRoot)
+        {
+            var (meshes, skipped) = TargetMeshes.Select(avatarRoot, fixer);
+            var problems = skipped.Concat(
+                meshes.Select(mesh => (Mesh: mesh, Problem: MeshWeightPlan.FindMeshProblem(mesh)))
+            );
+
+            foreach (var (mesh, problem) in problems)
+            {
+                // The VRChat SDK's upload panel already reports Read/Write, with a button that fixes it.
+                if (problem == null || problem == MeshWeightPlan.MeshNotReadable)
+                {
+                    continue;
+                }
+
+                // The build's MissingMesh text blames other tools, which only fits the build copy.
+                var key =
+                    problem == MeshWeightPlan.MissingMesh ? "messages.NoMesh" : "errors." + problem;
+                EditorGUILayout.HelpBox(Text(key, mesh.name), MessageType.Warning);
+            }
         }
     }
 }

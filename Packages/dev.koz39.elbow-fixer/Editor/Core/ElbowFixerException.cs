@@ -10,7 +10,7 @@ namespace KOZ39.ElbowFixer
         internal object[] Arguments { get; }
         internal ObjectReference Context { get; }
 
-        private ElbowFixerException(ObjectReference context, string key, object[] arguments)
+        private ElbowFixerException(Object context, string key, object[] arguments)
             : base(key)
         {
             Key = "errors." + key;
@@ -18,32 +18,22 @@ namespace KOZ39.ElbowFixer
             // A destroyed object still matches the type, but reading its name throws.
             Arguments = arguments
                 .Select(argument =>
-                    argument is Object obj ? (obj != null ? obj.name : "null") : argument
+                    argument is Object unityObject
+                        ? (unityObject != null ? unityObject.name : "null")
+                        : argument
                 )
                 .ToArray();
-            Context =
-                context ?? ObjectRegistry.GetReference(arguments.OfType<Object>().FirstOrDefault());
+            Context = ObjectRegistry.GetReference(
+                context != null ? context : arguments.OfType<Object>().FirstOrDefault()
+            );
         }
 
         internal static void Require(bool condition, string key, params object[] arguments) =>
-            Require(condition, (ObjectReference)null, key, arguments);
+            Require(condition, (Object)null, key, arguments);
 
         internal static void Require(
             bool condition,
             Object context,
-            string key,
-            params object[] arguments
-        )
-        {
-            if (!condition)
-            {
-                throw new ElbowFixerException(ObjectRegistry.GetReference(context), key, arguments);
-            }
-        }
-
-        internal static void Require(
-            bool condition,
-            ObjectReference context,
             string key,
             params object[] arguments
         )
