@@ -5,6 +5,7 @@
 ### Changed
 
 - NDMF 1.8.0 이상 필요
+- 다른 아바타 아래의 Elbow Fixer와 메시는 바깥 아바타에서 제외
 
 ### Fixed
 

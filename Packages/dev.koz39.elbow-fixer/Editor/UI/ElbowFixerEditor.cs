@@ -53,7 +53,7 @@ namespace KOZ39.ElbowFixer
 
             if (!fixers.Contains(fixer))
             {
-                EditorGUILayout.HelpBox(Text("messages.EditorOnlyIgnored"), MessageType.Warning);
+                EditorGUILayout.HelpBox(Text("messages.Excluded"), MessageType.Warning);
                 EditorGUILayout.Space();
 
                 return true;

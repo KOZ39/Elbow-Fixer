@@ -26,8 +26,8 @@ msgstr "대상 메시 자동 추가(실험적)"
 msgid "messages.NoAvatar"
 msgstr "VRC Avatar Descriptor가 있는 아바타 아래로 이 컴포넌트를 옮겨 주세요."
 
-msgid "messages.EditorOnlyIgnored"
-msgstr "이 컴포넌트는 EditorOnly 오브젝트 아래에 있어 무시됩니다."
+msgid "messages.Excluded"
+msgstr "이 컴포넌트는 EditorOnly 오브젝트나 다른 아바타 아래에 있어 무시됩니다."
 
 msgid "messages.DuplicateUsed"
 msgstr "Elbow Fixer 컴포넌트가 여러 개 있습니다. 이 컴포넌트가 적용됩니다."

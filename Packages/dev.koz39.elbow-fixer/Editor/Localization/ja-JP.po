@@ -26,8 +26,8 @@ msgstr "対象メッシュを自動追加（実験的）"
 msgid "messages.NoAvatar"
 msgstr "VRC Avatar Descriptorがあるアバターの下にこのコンポーネントを移動してください。"
 
-msgid "messages.EditorOnlyIgnored"
-msgstr "このコンポーネントはEditorOnlyオブジェクトの下にあるため無視されます。"
+msgid "messages.Excluded"
+msgstr "このコンポーネントはEditorOnlyオブジェクトまたは別のアバターの下にあるため無視されます。"
 
 msgid "messages.DuplicateUsed"
 msgstr "Elbow Fixerコンポーネントが複数あります。このコンポーネントが適用されます。"

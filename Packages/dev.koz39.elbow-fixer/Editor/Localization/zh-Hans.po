@@ -26,8 +26,8 @@ msgstr "自动添加目标网格（实验性）"
 msgid "messages.NoAvatar"
 msgstr "请将此组件移到带有 VRC Avatar Descriptor 的 Avatar 下。"
 
-msgid "messages.EditorOnlyIgnored"
-msgstr "此组件位于 EditorOnly 对象下，将被忽略。"
+msgid "messages.Excluded"
+msgstr "此组件位于 EditorOnly 对象或其他 Avatar 下，将被忽略。"
 
 msgid "messages.DuplicateUsed"
 msgstr "存在多个 Elbow Fixer 组件。将使用此组件。"

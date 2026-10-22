@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
-using nadena.dev.ndmf.runtime;
 using UnityEngine;
+using VRC.SDK3.Avatars.Components;
 
 namespace KOZ39.ElbowFixer
 {
@@ -14,9 +14,13 @@ namespace KOZ39.ElbowFixer
         // Prefix from Modular Avatar's NaNimationFilter; the rest of the name is the shape key.
         private const string HiddenBonePrefix = "NaNimatedBone for ";
 
-        // The avatar root NDMF builds, which is the outermost one.
-        internal static GameObject FindAvatarRoot(Component component) =>
-            RuntimeUtil.FindAvatarInParents(component.transform)?.gameObject;
+        // NDMF builds the outermost avatar, so the inspector must judge fixers against the same root.
+        internal static GameObject FindAvatarRoot(Component component)
+        {
+            var descriptors = component.GetComponentsInParent<VRCAvatarDescriptor>(true);
+
+            return descriptors.Length > 0 ? descriptors[^1].gameObject : null;
+        }
 
         // Clothes with their own armature are matched by bone name, since Modular Avatar merges them at build time.
         internal static SkinnedMeshRenderer[] FindTargetMeshes(GameObject avatarRoot)
@@ -40,7 +44,7 @@ namespace KOZ39.ElbowFixer
 
             return avatarRoot
                 .GetComponentsInChildren<SkinnedMeshRenderer>(true)
-                .Where(renderer => !IsEditorOnly(renderer.transform, avatarRoot.transform))
+                .Where(renderer => IsIncluded(renderer.transform, avatarRoot.transform))
                 .Where(renderer => renderer.sharedMesh != null && renderer.sharedMesh.isReadable)
                 .Where(renderer => arms.Any(arm => FollowsForearm(renderer, arm.Lower, arm.Hand)))
                 .ToArray();
@@ -99,12 +103,11 @@ namespace KOZ39.ElbowFixer
             return count >= MinForearmVertices && max - min >= MinForearmCoverage && blended;
         }
 
-        // Fixers under an EditorOnly object never reach the build.
         internal static (ElbowFixer Primary, ElbowFixer[] All) FindFixers(GameObject avatarRoot)
         {
             var fixers = avatarRoot
                 .GetComponentsInChildren<ElbowFixer>(true)
-                .Where(fixer => !IsEditorOnly(fixer.transform, avatarRoot.transform))
+                .Where(fixer => IsIncluded(fixer.transform, avatarRoot.transform))
                 .OrderBy(fixer => fixer.GetComponentsInParent<Transform>(true).Length)
                 .ToArray();
 
@@ -114,6 +117,18 @@ namespace KOZ39.ElbowFixer
         // A bone Modular Avatar scales to NaN to hide part of a mesh.
         internal static bool IsHiddenBone(Transform bone) =>
             bone.name.StartsWith(HiddenBonePrefix, StringComparison.Ordinal);
+
+        // Objects under an EditorOnly object never reach the build.
+        internal static bool IsIncluded(Transform target, Transform avatarRoot) =>
+            BelongsToAvatar(target, avatarRoot) && !IsEditorOnly(target, avatarRoot);
+
+        // Objects under a nested avatar belong to that avatar.
+        internal static bool BelongsToAvatar(Transform target, Transform avatarRoot)
+        {
+            var descriptor = target.GetComponentInParent<VRCAvatarDescriptor>(true);
+
+            return descriptor != null && descriptor.transform == avatarRoot;
+        }
 
         internal static bool IsEditorOnly(Transform target, Transform avatarRoot) =>
             target

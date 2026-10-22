@@ -26,8 +26,8 @@ msgstr "Auto-Add Target Meshes (Experimental)"
 msgid "messages.NoAvatar"
 msgstr "Move this component under an avatar with a VRC Avatar Descriptor."
 
-msgid "messages.EditorOnlyIgnored"
-msgstr "This component is under an EditorOnly object and will be ignored."
+msgid "messages.Excluded"
+msgstr "This component is under an EditorOnly object or another avatar and will be ignored."
 
 msgid "messages.DuplicateUsed"
 msgstr "Multiple Elbow Fixer components were found. This component will be used."

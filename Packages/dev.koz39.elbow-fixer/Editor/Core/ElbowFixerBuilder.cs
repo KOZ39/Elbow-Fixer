@@ -93,7 +93,7 @@ namespace KOZ39.ElbowFixer
             foreach (var renderer in renderers)
             {
                 Require(
-                    renderer.transform.IsChildOf(avatarRoot.transform),
+                    ElbowFixerUtility.BelongsToAvatar(renderer.transform, avatarRoot.transform),
                     fixer,
                     "MeshOutsideAvatar",
                     renderer
