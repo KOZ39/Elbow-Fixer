@@ -12,19 +12,26 @@ namespace KOZ39.ElbowFixer
         private const float MaxRestDrift = 0.00001f;
 
         internal readonly SkinnedMeshRenderer Renderer;
+        private readonly Vector3[] _vertices;
         private readonly BoneWeight[] _weights;
         private readonly int[] _lowerIndices;
         private readonly ForearmAxis[] _axes;
-        private readonly List<(int Side, int Bone)> _hiddenSections = new();
+        private readonly List<(int Side, int BoneIndex)> _hiddenSections = new();
 
         internal int RedistributedCount { get; private set; }
         internal int NearestCount { get; private set; }
 
         internal int MirrorCount => _hiddenSections.Count * TwistRig.SupportCount;
 
-        private MeshWeightPlan(SkinnedMeshRenderer renderer, BoneWeight[] weights, int armCount)
+        private MeshWeightPlan(
+            SkinnedMeshRenderer renderer,
+            Vector3[] vertices,
+            BoneWeight[] weights,
+            int armCount
+        )
         {
             Renderer = renderer;
+            _vertices = vertices;
             _weights = weights;
             _lowerIndices = Enumerable.Repeat(-1, armCount).ToArray();
             _axes = new ForearmAxis[armCount];
@@ -32,34 +39,45 @@ namespace KOZ39.ElbowFixer
 
         internal static MeshWeightPlan Create(SkinnedMeshRenderer renderer, Arm[] arms)
         {
-            var mesh = Validate(renderer);
-            var plan = new MeshWeightPlan(renderer, mesh.boneWeights, arms.Length);
+            var mesh = renderer.sharedMesh;
+            Require(mesh != null, "MissingMesh", renderer);
+            Require(mesh.isReadable, "MeshNotReadable", renderer);
+            Require(
+                renderer.quality == SkinQuality.Auto || renderer.quality == SkinQuality.Bone4,
+                "SkinQuality",
+                renderer
+            );
+
+            // Each read of these properties copies the whole array.
             var bones = renderer.bones;
             var bindposes = mesh.bindposes;
             var vertices = mesh.vertices;
+            var weights = mesh.boneWeights;
+            Validate(renderer, mesh, bones, bindposes, vertices, weights);
+
+            var plan = new MeshWeightPlan(renderer, vertices, weights, arms.Length);
 
             for (var side = 0; side < arms.Length; side++)
             {
-                plan.RedistributeLower(side, arms[side], bones, bindposes, vertices);
+                plan.RedistributeLower(side, arms[side], bones, bindposes);
             }
 
             // Mirrors are added after every arm's supports, in the order found here.
             for (var side = 0; side < arms.Length; side++)
             {
-                for (var bone = 0; bone < bones.Length; bone++)
+                for (var boneIndex = 0; boneIndex < bones.Length; boneIndex++)
                 {
-                    if (!plan.IsHiddenSectionOf(side, arms[side], bone, bones, bindposes))
+                    if (!plan.IsHiddenSectionOf(side, arms[side], boneIndex, bones, bindposes))
                     {
                         continue;
                     }
 
                     var group = arms.Length + plan._hiddenSections.Count;
-                    plan._hiddenSections.Add((side, bone));
+                    plan._hiddenSections.Add((side, boneIndex));
                     plan.Redistribute(
-                        bone,
-                        TwistRig.WeightNodes(bones.Length, group, bone),
-                        plan._axes[side],
-                        vertices
+                        boneIndex,
+                        TwistRig.WeightNodes(bones.Length, group, boneIndex),
+                        plan._axes[side]
                     );
                 }
             }
@@ -67,17 +85,12 @@ namespace KOZ39.ElbowFixer
             return plan;
         }
 
-        internal float Apply(Transform[][] supports, Transform avatarRoot)
+        internal float Apply(Transform[][] supports)
         {
             var source = Renderer.sharedMesh;
             var bones = Renderer.bones.ToList();
             var bindposes = source.bindposes.ToList();
-
-            // Compare in avatar space so the avatar's world position does not cost float precision.
-            var avatarSpace = Matrix4x4
-                .TRS(avatarRoot.position, avatarRoot.rotation, Vector3.one)
-                .inverse;
-            var before = SkinMatrices(bones, bindposes, avatarSpace);
+            var before = SkinMatrices(bones, bindposes).ToArray();
 
             // Order must match the weight nodes from Create.
             for (var side = 0; side < supports.Length; side++)
@@ -89,17 +102,20 @@ namespace KOZ39.ElbowFixer
                 }
             }
 
-            foreach (var (side, bone) in _hiddenSections)
+            foreach (var (side, boneIndex) in _hiddenSections)
             {
-                foreach (var mirror in TwistRig.Mirror(bones[bone], supports[side]))
+                foreach (var mirror in TwistRig.Mirror(bones[boneIndex], supports[side]))
                 {
-                    bindposes.Add(SupportBindpose(mirror, bone, bones, bindposes));
+                    bindposes.Add(SupportBindpose(mirror, boneIndex, bones, bindposes));
                     bones.Add(mirror);
                 }
             }
 
-            var after = SkinMatrices(bones, bindposes, avatarSpace);
-            var drift = RestDrift(source.vertices, source.boneWeights, before, after);
+            // The original bones keep their matrices; only the added ones need computing.
+            var after = before
+                .Concat(SkinMatrices(bones.Skip(before.Length), bindposes.Skip(before.Length)))
+                .ToArray();
+            var drift = RestDrift(source.boneWeights, before, after);
 
             // NDMF's error console only substitutes plain {0} placeholders.
             Require(
@@ -121,29 +137,23 @@ namespace KOZ39.ElbowFixer
             return drift;
         }
 
-        private void RedistributeLower(
-            int side,
-            Arm arm,
-            Transform[] bones,
-            Matrix4x4[] bindposes,
-            Vector3[] vertices
-        )
+        private void RedistributeLower(int side, Arm arm, Transform[] bones, Matrix4x4[] bindposes)
         {
-            var lower = Array.IndexOf(bones, arm.Lower);
+            var lowerIndex = Array.IndexOf(bones, arm.Lower);
 
-            if (lower < 0)
+            if (lowerIndex < 0)
             {
                 return;
             }
 
             Require(
-                Array.LastIndexOf(bones, arm.Lower) == lower,
+                Array.LastIndexOf(bones, arm.Lower) == lowerIndex,
                 "DuplicateLowerArm",
                 Renderer,
                 arm.Name
             );
-            _lowerIndices[side] = lower;
-            _axes[side] = new ForearmAxis(bindposes[lower], arm.Hand.localPosition);
+            _lowerIndices[side] = lowerIndex;
+            _axes[side] = new ForearmAxis(bindposes[lowerIndex], arm.Hand.localPosition);
 
             // Arm.Resolve checks length in world units; mesh coordinates can use a different unit.
             Require(
@@ -152,33 +162,43 @@ namespace KOZ39.ElbowFixer
                 Renderer
             );
             Redistribute(
-                lower,
-                TwistRig.WeightNodes(bones.Length, side, lower),
-                _axes[side],
-                vertices
+                lowerIndex,
+                TwistRig.WeightNodes(bones.Length, side, lowerIndex),
+                _axes[side]
             );
         }
 
         // The source must move with the LowerArm, since the axis comes from the LowerArm's bindpose.
-        private void Redistribute(int source, int[] nodes, ForearmAxis forearm, Vector3[] vertices)
+        private void Redistribute(int source, int[] nodes, ForearmAxis forearm)
         {
-            for (var v = 0; v < vertices.Length; v++)
+            for (var v = 0; v < _vertices.Length; v++)
             {
-                if (ForearmWeights.SourceWeight(_weights[v], source) <= 0)
+                var sourceWeight = ForearmWeights.SourceWeight(_weights[v], source);
+
+                if (sourceWeight <= 0)
                 {
                     continue;
                 }
 
-                var t = forearm.Position(vertices[v]);
+                var t = forearm.Position(_vertices[v]);
 
                 if (t >= 1)
                 {
                     continue;
                 }
 
-                if (!ForearmWeights.TryRedistribute(_weights[v], source, nodes, t, out var weight))
+                if (
+                    !ForearmWeights.TryRedistribute(
+                        _weights[v],
+                        source,
+                        sourceWeight,
+                        nodes,
+                        t,
+                        out var weight
+                    )
+                )
                 {
-                    weight = ForearmWeights.Nearest(_weights[v], source, nodes, t);
+                    weight = ForearmWeights.Nearest(_weights[v], source, sourceWeight, nodes, t);
                     NearestCount++;
                 }
 
@@ -194,33 +214,31 @@ namespace KOZ39.ElbowFixer
         private bool IsHiddenSectionOf(
             int side,
             Arm arm,
-            int bone,
+            int boneIndex,
             Transform[] bones,
             Matrix4x4[] bindposes
         )
         {
-            var lower = _lowerIndices[side];
+            var lowerIndex = _lowerIndices[side];
+            var candidate = bones[boneIndex];
 
-            return lower >= 0
-                && bones[bone] != null
-                && ElbowFixerUtility.IsHiddenBone(bones[bone])
-                && bones[bone].IsChildOf(arm.Lower)
-                && !bones[bone].IsChildOf(arm.Hand)
-                && bindposes[bone] == bindposes[lower];
+            return lowerIndex >= 0
+                && candidate != null
+                && ElbowFixerUtility.IsHiddenBone(candidate)
+                && candidate.IsChildOf(arm.Lower)
+                && !candidate.IsChildOf(arm.Hand)
+                && bindposes[boneIndex] == bindposes[lowerIndex];
         }
 
-        private static Mesh Validate(SkinnedMeshRenderer renderer)
+        private static void Validate(
+            SkinnedMeshRenderer renderer,
+            Mesh mesh,
+            Transform[] bones,
+            Matrix4x4[] bindposes,
+            Vector3[] vertices,
+            BoneWeight[] weights
+        )
         {
-            var mesh = renderer.sharedMesh;
-
-            Require(mesh != null, "MissingMesh", renderer);
-            Require(mesh.isReadable, "MeshNotReadable", renderer);
-            Require(
-                renderer.quality == SkinQuality.Auto || renderer.quality == SkinQuality.Bone4,
-                "SkinQuality",
-                renderer
-            );
-
             // Mesh.boneWeights holds four influences per vertex and would silently drop the rest.
             using (var bonesPerVertex = mesh.GetBonesPerVertex())
             {
@@ -231,35 +249,37 @@ namespace KOZ39.ElbowFixer
                 );
             }
 
-            var bones = renderer.bones;
-            var weights = mesh.boneWeights;
-            Require(mesh.bindposes.Length == bones.Length, "BindposeMismatch", renderer);
+            Require(bindposes.Length == bones.Length, "BindposeMismatch", renderer);
+            Require(bindposes.All(IsValidBindpose), "InvalidBindpose", renderer);
             Require(
-                mesh.bindposes.All(matrix =>
-                    Enumerable.Range(0, 16).All(i => float.IsFinite(matrix[i]))
-                    && float.IsFinite(matrix.determinant)
-                    && matrix.determinant != 0
-                    && Enumerable.Range(0, 16).All(i => float.IsFinite(matrix.inverse[i]))
-                ),
-                "InvalidBindpose",
-                renderer
-            );
-            Require(
-                mesh.vertices.All(vertex =>
+                vertices.All(vertex =>
                     float.IsFinite(vertex.x) && float.IsFinite(vertex.y) && float.IsFinite(vertex.z)
                 ),
                 "NonFiniteVertices",
                 renderer
             );
             Require(
-                weights.Length == mesh.vertexCount
+                weights.Length == vertices.Length
                     && weights.All(weight => IsValidWeight(weight, bones)),
                 "InvalidWeights",
                 renderer
             );
-
-            return mesh;
         }
+
+        private static bool IsValidBindpose(Matrix4x4 matrix)
+        {
+            if (!IsFinite(matrix))
+            {
+                return false;
+            }
+
+            var determinant = matrix.determinant;
+
+            return float.IsFinite(determinant) && determinant != 0 && IsFinite(matrix.inverse);
+        }
+
+        private static bool IsFinite(Matrix4x4 matrix) =>
+            Enumerable.Range(0, 16).All(i => float.IsFinite(matrix[i]));
 
         // An unweighted vertex is left unchanged, so it skins the same as before.
         private static bool IsValidWeight(BoneWeight weight, Transform[] bones)
@@ -289,33 +309,24 @@ namespace KOZ39.ElbowFixer
                 ? support.worldToLocalMatrix * bones[source].localToWorldMatrix * bindposes[source]
                 : support.worldToLocalMatrix * Renderer.transform.localToWorldMatrix;
 
-        private static Matrix4x4[] SkinMatrices(
-            List<Transform> bones,
-            List<Matrix4x4> bindposes,
-            Matrix4x4 space
+        private static IEnumerable<Matrix4x4> SkinMatrices(
+            IEnumerable<Transform> bones,
+            IEnumerable<Matrix4x4> bindposes
         ) =>
-            bones
-                .Select(
-                    (bone, i) =>
-                        bone != null
-                            ? space * bone.localToWorldMatrix * bindposes[i]
-                            : Matrix4x4.identity
-                )
-                .ToArray();
+            bones.Zip(
+                bindposes,
+                (bone, bindpose) =>
+                    bone != null ? bone.localToWorldMatrix * bindpose : Matrix4x4.identity
+            );
 
-        private float RestDrift(
-            Vector3[] vertices,
-            BoneWeight[] oldWeights,
-            Matrix4x4[] before,
-            Matrix4x4[] after
-        )
+        private float RestDrift(BoneWeight[] oldWeights, Matrix4x4[] before, Matrix4x4[] after)
         {
             var drift = 0f;
 
-            for (var i = 0; i < vertices.Length; i++)
+            for (var i = 0; i < _vertices.Length; i++)
             {
-                var oldPosition = Skin(before, oldWeights[i], vertices[i]);
-                var newPosition = Skin(after, _weights[i], vertices[i]);
+                var oldPosition = Skin(before, oldWeights[i], _vertices[i]);
+                var newPosition = Skin(after, _weights[i], _vertices[i]);
                 var distance = Vector3.Distance(oldPosition, newPosition);
                 Require(float.IsFinite(distance), "NonFiniteSkinning", Renderer);
                 drift = Mathf.Max(drift, distance);

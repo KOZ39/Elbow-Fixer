@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using VRC.SDKBase;
 
@@ -7,6 +8,6 @@ namespace KOZ39.ElbowFixer
     [AddComponentMenu("KOZ39/Elbow Fixer")]
     public class ElbowFixer : MonoBehaviour, IEditorOnly
     {
-        public SkinnedMeshRenderer[] targetMeshes = new SkinnedMeshRenderer[0];
+        public SkinnedMeshRenderer[] targetMeshes = Array.Empty<SkinnedMeshRenderer>();
     }
 }

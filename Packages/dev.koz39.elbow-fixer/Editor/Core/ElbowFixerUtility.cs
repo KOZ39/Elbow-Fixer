@@ -105,7 +105,7 @@ namespace KOZ39.ElbowFixer
             var fixers = avatarRoot
                 .GetComponentsInChildren<ElbowFixer>(true)
                 .Where(fixer => !IsEditorOnly(fixer.transform, avatarRoot.transform))
-                .OrderBy(fixer => Depth(fixer.transform))
+                .OrderBy(fixer => fixer.GetComponentsInParent<Transform>(true).Length)
                 .ToArray();
 
             return (fixers.FirstOrDefault(), fixers);
@@ -115,29 +115,10 @@ namespace KOZ39.ElbowFixer
         internal static bool IsHiddenBone(Transform bone) =>
             bone.name.StartsWith(HiddenBonePrefix, StringComparison.Ordinal);
 
-        internal static bool IsEditorOnly(Transform target, Transform avatarRoot)
-        {
-            for (var t = target; t != null && t != avatarRoot.parent; t = t.parent)
-            {
-                if (t.CompareTag("EditorOnly"))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static int Depth(Transform target)
-        {
-            var depth = 0;
-
-            for (var t = target; t.parent != null; t = t.parent)
-            {
-                depth++;
-            }
-
-            return depth;
-        }
+        internal static bool IsEditorOnly(Transform target, Transform avatarRoot) =>
+            target
+                .GetComponentsInParent<Transform>(true)
+                .TakeWhile(t => t != avatarRoot.parent)
+                .Any(t => t.CompareTag("EditorOnly"));
     }
 }

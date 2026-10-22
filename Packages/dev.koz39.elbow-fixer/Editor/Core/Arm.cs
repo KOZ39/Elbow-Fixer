@@ -135,7 +135,7 @@ namespace KOZ39.ElbowFixer
             Require(forearm.magnitude > MinForearmLength, "ShortForearm", name);
 
             // Ancestor scales also affect the arm, even above the avatar root.
-            for (var t = hand; t != null; t = t.parent)
+            foreach (var t in hand.GetComponentsInParent<Transform>(true))
             {
                 Require(IsUniformPositive(t.localScale), "UnsupportedScale", t);
             }

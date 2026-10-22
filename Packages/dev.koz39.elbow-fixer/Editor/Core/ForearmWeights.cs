@@ -46,13 +46,13 @@ namespace KOZ39.ElbowFixer
         internal static bool TryRedistribute(
             BoneWeight weight,
             int source,
+            float sourceWeight,
             int[] nodes,
             float t,
             out BoneWeight result
         )
         {
             var influences = Others(weight, source);
-            var sourceWeight = SourceWeight(weight, source);
             var last = nodes.Length - 1;
             var phase = t * last;
             var first = Mathf.FloorToInt(phase);
@@ -91,69 +91,59 @@ namespace KOZ39.ElbowFixer
             Add(influences, nodes[first], sourceWeight * (1 - fraction) * (1 - smoothing));
             Add(influences, nodes[first + 1], sourceWeight * fraction * (1 - smoothing));
 
-            result = influences.Count <= MaxInfluences ? Pack(influences) : default;
+            var fits = influences.Count <= MaxInfluences;
+            result = fits ? Pack(influences) : default;
 
-            return influences.Count <= MaxInfluences;
+            return fits;
         }
 
         // Compromise for vertices where two nodes do not fit in the four influences.
-        internal static BoneWeight Nearest(BoneWeight weight, int source, int[] nodes, float t)
+        internal static BoneWeight Nearest(
+            BoneWeight weight,
+            int source,
+            float sourceWeight,
+            int[] nodes,
+            float t
+        )
         {
             var influences = Others(weight, source);
-            Add(
-                influences,
-                nodes[Mathf.RoundToInt(t * (nodes.Length - 1))],
-                SourceWeight(weight, source)
-            );
+            Add(influences, nodes[Mathf.RoundToInt(t * (nodes.Length - 1))], sourceWeight);
 
             return Pack(influences);
         }
 
-        private static List<(int Bone, float Weight)> Others(BoneWeight weight, int source) =>
+        private static Dictionary<int, float> Others(BoneWeight weight, int source) =>
             Slots(weight)
                 .Where(slot => slot.Bone != source && slot.Weight > 0)
                 .GroupBy(slot => slot.Bone)
-                .Select(group => (Bone: group.Key, Weight: group.Sum(slot => slot.Weight)))
-                .ToList();
+                .ToDictionary(group => group.Key, group => group.Sum(slot => slot.Weight));
 
-        private static void Add(List<(int Bone, float Weight)> influences, int bone, float weight)
+        private static void Add(Dictionary<int, float> influences, int bone, float weight)
         {
-            if (weight <= 0)
+            if (weight > 0)
             {
-                return;
-            }
-
-            var index = influences.FindIndex(influence => influence.Bone == bone);
-
-            if (index < 0)
-            {
-                influences.Add((bone, weight));
-            }
-            else
-            {
-                influences[index] = (bone, influences[index].Weight + weight);
+                influences.TryGetValue(bone, out var current);
+                influences[bone] = current + weight;
             }
         }
 
-        private static BoneWeight Pack(List<(int Bone, float Weight)> influences)
+        private static BoneWeight Pack(Dictionary<int, float> influences)
         {
-            var sorted = influences.OrderByDescending(influence => influence.Weight).ToList();
-
-            while (sorted.Count < MaxInfluences)
-            {
-                sorted.Add((0, 0));
-            }
+            var sorted = influences
+                .OrderByDescending(influence => influence.Value)
+                .Concat(Enumerable.Repeat(new KeyValuePair<int, float>(0, 0), MaxInfluences))
+                .ToArray();
 
             return new BoneWeight
             {
-                boneIndex0 = sorted[0].Bone,
-                weight0 = sorted[0].Weight,
-                boneIndex1 = sorted[1].Bone,
-                weight1 = sorted[1].Weight,
-                boneIndex2 = sorted[2].Bone,
-                weight2 = sorted[2].Weight,
-                boneIndex3 = sorted[3].Bone,
-                weight3 = sorted[3].Weight,
+                boneIndex0 = sorted[0].Key,
+                weight0 = sorted[0].Value,
+                boneIndex1 = sorted[1].Key,
+                weight1 = sorted[1].Value,
+                boneIndex2 = sorted[2].Key,
+                weight2 = sorted[2].Value,
+                boneIndex3 = sorted[3].Key,
+                weight3 = sorted[3].Value,
             };
         }
     }

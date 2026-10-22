@@ -59,7 +59,7 @@ namespace KOZ39.ElbowFixer
 
             foreach (var plan in plans)
             {
-                var drift = plan.Apply(supports, avatarRoot.transform);
+                var drift = plan.Apply(supports);
                 report
                     .AppendLine()
                     .Append(
@@ -69,8 +69,7 @@ namespace KOZ39.ElbowFixer
                             plan.RedistributedCount,
                             plan.NearestCount
                         )
-                    );
-                report
+                    )
                     .AppendLine()
                     .Append(Text("messages.RestPoseDrift", plan.Renderer.name, drift * 1000));
             }
