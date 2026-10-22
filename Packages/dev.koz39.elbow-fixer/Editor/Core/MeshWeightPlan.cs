@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using nadena.dev.ndmf;
 using UnityEngine;
 using static KOZ39.ElbowFixer.ElbowFixerException;
 
@@ -126,6 +127,7 @@ namespace KOZ39.ElbowFixer
             );
 
             var mesh = UnityEngine.Object.Instantiate(source);
+            ObjectRegistry.RegisterReplacedObject(source, mesh);
             mesh.name = $"{source.name}_ElbowFixer";
             mesh.boneWeights = _weights;
             mesh.bindposes = bindposes.ToArray();
