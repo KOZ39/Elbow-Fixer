@@ -24,7 +24,7 @@ msgid "buttons.AutoAdd"
 msgstr "Auto-Add Target Meshes (Experimental)"
 
 msgid "messages.NoAvatar"
-msgstr "Place this component inside an avatar with a VRC Avatar Descriptor."
+msgstr "Move this component under an avatar with a VRC Avatar Descriptor."
 
 msgid "messages.EditorOnlyIgnored"
 msgstr "This component is under an EditorOnly object and will be ignored."

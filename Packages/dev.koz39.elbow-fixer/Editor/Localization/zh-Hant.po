@@ -24,7 +24,7 @@ msgid "buttons.AutoAdd"
 msgstr "自動加入目標網格（實驗性）"
 
 msgid "messages.NoAvatar"
-msgstr "請將此元件放在帶有 VRC Avatar Descriptor 的 Avatar 內。"
+msgstr "請將此元件移到帶有 VRC Avatar Descriptor 的 Avatar 下。"
 
 msgid "messages.EditorOnlyIgnored"
 msgstr "此元件位於 EditorOnly 物件下，將被忽略。"
@@ -39,9 +39,9 @@ msgstr "存在多個 Elbow Fixer 元件。此元件將被忽略。"
 msgid "messages.PlanSummary"
 msgstr "{0}：重新分配 {1} 個頂點（使用最近分段 {2} 個）"
 
-#. {0}: 蒙皮骨骼和 VRC 約束數量, {1}: 參考物件數量
+#. {0}: 蒙皮骨骼和 VRC Constraint 數量, {1}: 參考物件數量
 msgid "messages.BuildSummary"
-msgstr "已加入 {0} 個蒙皮骨骼、{0} 個 VRC 約束和 {1} 個參考物件。"
+msgstr "已加入 {0} 個蒙皮骨骼、{0} 個 VRC Constraint 和 {1} 個參考物件。"
 
 #. {0}: 網格名稱, {1}: 距離
 msgid "messages.RestPoseDrift"

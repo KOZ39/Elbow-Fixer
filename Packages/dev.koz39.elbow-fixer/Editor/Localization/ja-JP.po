@@ -12,7 +12,7 @@ msgid "labels.Right"
 msgstr "右"
 
 msgid "tooltips.TargetMeshes"
-msgstr "前腕のねじれに追従させるメッシュです。ボディと服の袖を入れ、ブレスレットなどの硬いアクセサリーは入れないでください。"
+msgstr "前腕のねじれに追従させるメッシュです。ボディと服の袖を追加し、ブレスレットなどの硬いアクセサリーは追加しないでください。"
 
 msgid "tooltips.AutoAdd"
 msgstr "ボディや服の袖のように前腕のねじれに追従させるメッシュを探して追加します。ブレスレットのような硬いメッシュや、前腕を少ししか覆わないメッシュは除外します。追加されたメッシュを確認してください。"
@@ -24,7 +24,7 @@ msgid "buttons.AutoAdd"
 msgstr "対象メッシュを自動追加（実験的）"
 
 msgid "messages.NoAvatar"
-msgstr "このコンポーネントをVRC Avatar Descriptorがあるアバターの中に配置してください。"
+msgstr "VRC Avatar Descriptorがあるアバターの下にこのコンポーネントを移動してください。"
 
 msgid "messages.EditorOnlyIgnored"
 msgstr "このコンポーネントはEditorOnlyオブジェクトの下にあるため無視されます。"
@@ -39,9 +39,9 @@ msgstr "Elbow Fixerコンポーネントが複数あります。このコンポ�
 msgid "messages.PlanSummary"
 msgstr "{0}：頂点{1}個を再配分（最も近い区間を使用{2}個）"
 
-#. {0}: スキニング用ボーンとVRCコンストレイントの数, {1}: 参照オブジェクトの数
+#. {0}: スキニング用ボーンとVRC Constraintの数, {1}: 参照オブジェクトの数
 msgid "messages.BuildSummary"
-msgstr "スキニング用ボーン{0}本、VRCコンストレイント{0}個、参照オブジェクト{1}個を追加しました。"
+msgstr "スキニング用ボーン{0}本、VRC Constraint{0}個、参照オブジェクト{1}個を追加しました。"
 
 #. {0}: メッシュ名, {1}: 距離
 msgid "messages.RestPoseDrift"

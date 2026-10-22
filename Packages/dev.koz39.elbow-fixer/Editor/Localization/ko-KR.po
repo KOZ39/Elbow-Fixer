@@ -12,7 +12,7 @@ msgid "labels.Right"
 msgstr "오른쪽"
 
 msgid "tooltips.TargetMeshes"
-msgstr "팔뚝 비틀림을 따라가야 하는 메시입니다. 몸과 옷 소매를 넣고, 팔찌 같은 단단한 액세서리는 넣지 마세요."
+msgstr "팔뚝 비틀림을 따라가야 하는 메시입니다. 몸과 옷 소매를 추가하고, 팔찌 같은 단단한 액세서리는 추가하지 마세요."
 
 msgid "tooltips.AutoAdd"
 msgstr "몸과 옷 소매처럼 팔뚝 비틀림을 따라가야 하는 메시를 찾아 추가합니다. 팔찌처럼 단단하거나 팔뚝을 조금만 덮는 메시는 제외합니다. 추가된 메시를 확인해 주세요."
@@ -24,7 +24,7 @@ msgid "buttons.AutoAdd"
 msgstr "대상 메시 자동 추가(실험적)"
 
 msgid "messages.NoAvatar"
-msgstr "VRC Avatar Descriptor가 있는 아바타 안에 이 컴포넌트를 넣어 주세요."
+msgstr "VRC Avatar Descriptor가 있는 아바타 아래로 이 컴포넌트를 옮겨 주세요."
 
 msgid "messages.EditorOnlyIgnored"
 msgstr "이 컴포넌트는 EditorOnly 오브젝트 아래에 있어 무시됩니다."
@@ -39,9 +39,9 @@ msgstr "Elbow Fixer 컴포넌트가 여러 개 있습니다. 이 컴포넌트는
 msgid "messages.PlanSummary"
 msgstr "{0}: 정점 {1}개 재분배(가장 가까운 구간 사용 {2}개)"
 
-#. {0}: 스키닝 본과 VRC 컨스트레인트 수, {1}: 참조 오브젝트 수
+#. {0}: 스키닝 본과 VRC Constraint 수, {1}: 참조 오브젝트 수
 msgid "messages.BuildSummary"
-msgstr "스키닝 본 {0}개, VRC 컨스트레인트 {0}개, 참조 오브젝트 {1}개를 추가했습니다."
+msgstr "스키닝 본 {0}개, VRC Constraint {0}개, 참조 오브젝트 {1}개를 추가했습니다."
 
 #. {0}: 메시 이름, {1}: 거리
 msgid "messages.RestPoseDrift"

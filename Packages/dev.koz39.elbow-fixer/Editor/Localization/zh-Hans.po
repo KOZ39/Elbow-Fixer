@@ -12,7 +12,7 @@ msgid "labels.Right"
 msgstr "右"
 
 msgid "tooltips.TargetMeshes"
-msgstr "需要跟随前臂扭转的网格。请加入身体和衣袖，不要加入手镯等刚性饰品。"
+msgstr "需要跟随前臂扭转的网格。请添加身体和衣袖，不要添加手镯等刚性饰品。"
 
 msgid "tooltips.AutoAdd"
 msgstr "查找并添加身体、衣袖等需要跟随前臂扭转的网格。手镯等刚性网格和只覆盖前臂一小部分的网格会被排除。请检查添加的网格。"
@@ -24,7 +24,7 @@ msgid "buttons.AutoAdd"
 msgstr "自动添加目标网格（实验性）"
 
 msgid "messages.NoAvatar"
-msgstr "请将此组件放在带有 VRC Avatar Descriptor 的 Avatar 内。"
+msgstr "请将此组件移到带有 VRC Avatar Descriptor 的 Avatar 下。"
 
 msgid "messages.EditorOnlyIgnored"
 msgstr "此组件位于 EditorOnly 对象下，将被忽略。"
@@ -39,9 +39,9 @@ msgstr "存在多个 Elbow Fixer 组件。此组件将被忽略。"
 msgid "messages.PlanSummary"
 msgstr "{0}：重新分配 {1} 个顶点（使用最近分段 {2} 个）"
 
-#. {0}: 蒙皮骨骼和 VRC 约束数量, {1}: 参考对象数量
+#. {0}: 蒙皮骨骼和 VRC Constraint 数量, {1}: 参考对象数量
 msgid "messages.BuildSummary"
-msgstr "已添加 {0} 个蒙皮骨骼、{0} 个 VRC 约束和 {1} 个参考对象。"
+msgstr "已添加 {0} 个蒙皮骨骼、{0} 个 VRC Constraint 和 {1} 个参考对象。"
 
 #. {0}: 网格名称, {1}: 距离
 msgid "messages.RestPoseDrift"
