@@ -7,6 +7,7 @@ using VRC.SDK3.Dynamics.Constraint.Components;
 
 namespace KOZ39.ElbowFixer
 {
+    // Shared by the build and the auto add, which checks clothes against their own arm bones before they are merged.
     internal sealed class ExistingTwist
     {
         private readonly ILookup<Transform, Transform[]> _sources;

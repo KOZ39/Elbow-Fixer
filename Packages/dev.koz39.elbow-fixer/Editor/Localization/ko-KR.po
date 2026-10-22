@@ -5,6 +5,10 @@ msgstr ""
 msgid "labels.TargetMeshes"
 msgstr "대상 메시"
 
+#. {0}: 메시 수
+msgid "labels.SkippedMeshes"
+msgstr "제외된 메시 ({0})"
+
 msgid "labels.Left"
 msgstr "왼쪽"
 
@@ -34,6 +38,9 @@ msgstr "Elbow Fixer 컴포넌트가 여러 개 있습니다. 이 컴포넌트가
 
 msgid "messages.DuplicateIgnored"
 msgstr "Elbow Fixer 컴포넌트가 여러 개 있습니다. 이 컴포넌트는 무시됩니다."
+
+msgid "messages.SkippedExistingTwist"
+msgstr "팔뚝 비틀림 본이나 Constraint가 있는 본 아래의 본을 사용해 추가하지 않았습니다."
 
 #. {0}: 렌더러 이름
 msgid "messages.NoMesh"

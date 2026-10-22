@@ -5,6 +5,10 @@ msgstr ""
 msgid "labels.TargetMeshes"
 msgstr "対象メッシュ"
 
+#. {0}: メッシュ数
+msgid "labels.SkippedMeshes"
+msgstr "除外されたメッシュ ({0})"
+
 msgid "labels.Left"
 msgstr "左"
 
@@ -34,6 +38,9 @@ msgstr "Elbow Fixerコンポーネントが複数あります。このコンポ�
 
 msgid "messages.DuplicateIgnored"
 msgstr "Elbow Fixerコンポーネントが複数あります。このコンポーネントは無視されます。"
+
+msgid "messages.SkippedExistingTwist"
+msgstr "前腕のねじれボーンまたはConstraintがあるボーンの下のボーンを使うため、追加しませんでした。"
 
 #. {0}: レンダラー名
 msgid "messages.NoMesh"

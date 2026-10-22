@@ -418,9 +418,10 @@ namespace KOZ39.ElbowFixer
                 ) && (sum == 0 || Mathf.Abs(sum - 1) < 0.0001f);
         }
 
-        // The bindpose that makes a bone skin like the reference bone in the current pose. Deriving it from the
-        // reference's bindpose keeps the rest pose exact even when the current pose differs from the bind pose.
-        private static Matrix4x4 BindposeFrom(
+        // Shared with the auto add. The bindpose that makes a bone skin like the reference bone in the current pose.
+        // Deriving it from the reference's bindpose keeps the rest pose exact even when the current pose differs from
+        // the bind pose.
+        internal static Matrix4x4 BindposeFrom(
             Transform bone,
             Transform reference,
             Matrix4x4 referenceBindpose

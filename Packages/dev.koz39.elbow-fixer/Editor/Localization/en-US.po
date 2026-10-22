@@ -5,6 +5,10 @@ msgstr ""
 msgid "labels.TargetMeshes"
 msgstr "Target Meshes"
 
+#. {0}: mesh count
+msgid "labels.SkippedMeshes"
+msgstr "Skipped meshes ({0})"
+
 msgid "labels.Left"
 msgstr "left"
 
@@ -34,6 +38,9 @@ msgstr "Multiple Elbow Fixer components were found. This component will be used.
 
 msgid "messages.DuplicateIgnored"
 msgstr "Multiple Elbow Fixer components were found. This component will be ignored."
+
+msgid "messages.SkippedExistingTwist"
+msgstr "Not added because they use a bone under a forearm twist bone or a bone with a constraint."
 
 #. {0}: renderer name
 msgid "messages.NoMesh"

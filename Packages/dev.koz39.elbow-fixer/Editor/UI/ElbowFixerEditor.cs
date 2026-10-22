@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using nadena.dev.ndmf.ui;
 using UnityEditor;
@@ -10,6 +11,14 @@ namespace KOZ39.ElbowFixer
     internal class ElbowFixerEditor : Editor
     {
         private SerializedProperty _targetMeshesProperty;
+
+        // Finding the meshes reads every vertex, so the skipped ones are kept from the last auto add.
+        private (SkinnedMeshRenderer Mesh, Transform Blocker)[] _skippedMeshes = Array.Empty<(
+            SkinnedMeshRenderer,
+            Transform
+        )>();
+
+        private bool _isSkippedListExpanded;
 
         private void OnEnable()
         {
@@ -116,11 +125,11 @@ namespace KOZ39.ElbowFixer
                     )
                     .ToArray();
 
-                foreach (
-                    var mesh in ElbowFixerUtility
-                        .FindTargetMeshes(avatarRoot)
-                        .Where(mesh => !current.Contains(mesh))
-                )
+                var (targets, skipped) = TargetMeshes.Find(avatarRoot);
+                _skippedMeshes = skipped;
+                _isSkippedListExpanded = true;
+
+                foreach (var mesh in targets.Where(mesh => !current.Contains(mesh)))
                 {
                     _targetMeshesProperty.arraySize++;
                     _targetMeshesProperty
@@ -152,6 +161,63 @@ namespace KOZ39.ElbowFixer
                 var key =
                     problem == MeshWeightPlan.MissingMesh ? "messages.NoMesh" : "errors." + problem;
                 EditorGUILayout.HelpBox(Text(key, mesh.name), MessageType.Warning);
+            }
+
+            DrawSkippedMeshes(fixer);
+        }
+
+        // The meshes share one reason, so one line above the folded list gives it.
+        private void DrawSkippedMeshes(ElbowFixer fixer)
+        {
+            var skipped = _skippedMeshes
+                .Where(item =>
+                    item.Mesh != null
+                    && item.Blocker != null
+                    && !fixer.targetMeshes.Contains(item.Mesh)
+                )
+                .ToArray();
+
+            if (skipped.Length == 0)
+            {
+                return;
+            }
+
+            // A foldout's arrow sits left of the content, so one indent level lines it up with the button above.
+            using (new EditorGUI.IndentLevelScope())
+            {
+                _isSkippedListExpanded = EditorGUILayout.Foldout(
+                    _isSkippedListExpanded,
+                    Text("labels.SkippedMeshes", skipped.Length),
+                    true
+                );
+            }
+
+            if (!_isSkippedListExpanded)
+            {
+                return;
+            }
+
+            // Read-only fields still ping their object when clicked, like the Script field.
+            using (new EditorGUI.DisabledScope(true))
+            {
+                using (new EditorGUI.IndentLevelScope())
+                {
+                    EditorGUILayout.LabelField(
+                        Text("messages.SkippedExistingTwist"),
+                        EditorStyles.wordWrappedMiniLabel
+                    );
+                }
+
+                foreach (var (mesh, blocker) in skipped)
+                {
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        // One indent level, like the reason above.
+                        GUILayout.Space(15f);
+                        EditorGUILayout.ObjectField(mesh, typeof(SkinnedMeshRenderer), true);
+                        EditorGUILayout.ObjectField(blocker, typeof(Transform), true);
+                    }
+                }
             }
         }
     }

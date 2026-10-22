@@ -31,13 +31,10 @@ namespace KOZ39.ElbowFixer
                 return;
             }
 
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
-                AssetDatabase.GUIDToAssetPath(PrefabGuid)
-            );
+            var prefab = LoadPrefab();
 
             if (prefab == null)
             {
-                Debug.LogError($"{ElbowFixerPackageInfo.LogPrefix} Could not load the prefab.");
                 return;
             }
 
@@ -52,9 +49,15 @@ namespace KOZ39.ElbowFixer
 
             Undo.CollapseUndoOperations(undoGroup);
 
-            if (created.Length > 0)
+            if (created.Length == 0)
             {
-                Selection.objects = created;
+                return;
+            }
+
+            Selection.objects = created;
+
+            if (created.Length == 1)
+            {
                 EditorGUIUtility.PingObject(created[0]);
             }
         }
@@ -67,6 +70,27 @@ namespace KOZ39.ElbowFixer
                 .Where(target => target.TryGetComponent<VRCAvatarDescriptor>(out _))
                 .Distinct()
                 .ToArray();
+
+        private static GameObject LoadPrefab()
+        {
+            var path = AssetDatabase.GUIDToAssetPath(PrefabGuid);
+
+            if (string.IsNullOrEmpty(path))
+            {
+                Debug.LogError($"{ElbowFixerPackageInfo.LogPrefix} Could not find the prefab.");
+
+                return null;
+            }
+
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+
+            if (prefab == null)
+            {
+                Debug.LogError($"{ElbowFixerPackageInfo.LogPrefix} Failed to load the prefab.");
+            }
+
+            return prefab;
+        }
 
         private static GameObject SetupAvatar(GameObject avatar, GameObject prefab)
         {
@@ -82,9 +106,29 @@ namespace KOZ39.ElbowFixer
                 return null;
             }
 
-            var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, avatar.transform);
+            var instance = PrefabUtility.InstantiatePrefab(prefab, avatar.transform) as GameObject;
+
+            if (instance == null)
+            {
+                Debug.LogError(
+                    $"{ElbowFixerPackageInfo.LogPrefix} Failed to set up {displayName} on avatar '{avatar.name}'.",
+                    avatar
+                );
+
+                return null;
+            }
+
             var fixer = instance.GetComponent<ElbowFixer>();
-            fixer.targetMeshes = ElbowFixerUtility.FindTargetMeshes(avatar);
+            var (targets, skipped) = TargetMeshes.Find(avatar);
+            fixer.targetMeshes = targets;
+
+            foreach (var (mesh, blocker) in skipped)
+            {
+                Debug.LogWarning(
+                    $"{ElbowFixerPackageInfo.LogPrefix} Skipped mesh '{mesh.name}': it uses a bone under '{blocker.name}', a forearm twist bone or a bone with a constraint.",
+                    mesh
+                );
+            }
 
             PrefabUtility.RecordPrefabInstancePropertyModifications(fixer);
             Undo.RegisterCreatedObjectUndo(instance, $"Setup {displayName}");

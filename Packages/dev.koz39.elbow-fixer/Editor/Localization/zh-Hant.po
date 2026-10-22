@@ -5,6 +5,10 @@ msgstr ""
 msgid "labels.TargetMeshes"
 msgstr "目標網格"
 
+#. {0}: 網格數量
+msgid "labels.SkippedMeshes"
+msgstr "已排除的網格 ({0})"
+
 msgid "labels.Left"
 msgstr "左"
 
@@ -34,6 +38,9 @@ msgstr "存在多個 Elbow Fixer 元件。將使用此元件。"
 
 msgid "messages.DuplicateIgnored"
 msgstr "存在多個 Elbow Fixer 元件。此元件將被忽略。"
+
+msgid "messages.SkippedExistingTwist"
+msgstr "這些網格使用了前臂扭轉骨骼或帶 Constraint 的骨骼下方的骨骼，因此未加入。"
 
 #. {0}: 渲染器名稱
 msgid "messages.NoMesh"
