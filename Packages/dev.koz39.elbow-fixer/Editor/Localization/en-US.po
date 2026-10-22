@@ -73,9 +73,13 @@ msgstr "The {0} forearm is too short."
 msgid "errors.UnsupportedScale"
 msgstr "'{0}' has a negative or non-uniform scale."
 
-#. {0}: object name
+#. {0}: bone name
 msgid "errors.ExistingTwist"
-msgstr "'{0}' already has a twist bone or constraint in the forearm."
+msgstr "Bone '{0}' is rotated by a constraint, so it cannot be used with Elbow Fixer. Remove the constraint from this bone."
+
+#. {0}: mesh name, {1}: bone name
+msgid "errors.MeshExistingTwist"
+msgstr "Mesh '{0}' is skipped because it uses a bone under '{1}', a forearm twist bone or a bone with a constraint. Remove '{0}' from the target meshes."
 
 #. {0}: object name
 msgid "errors.PrefabulousTwist"

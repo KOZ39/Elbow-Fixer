@@ -73,9 +73,13 @@ msgstr "{0} 팔뚝이 너무 짧습니다."
 msgid "errors.UnsupportedScale"
 msgstr "'{0}'의 스케일이 음수이거나 균일하지 않습니다."
 
-#. {0}: 오브젝트 이름
+#. {0}: 본 이름
 msgid "errors.ExistingTwist"
-msgstr "'{0}'에 이미 팔뚝 비틀림 본이나 컨스트레인트가 있습니다."
+msgstr "'{0}' 본이 Constraint로 회전해 Elbow Fixer와 함께 사용할 수 없습니다. 이 본의 Constraint를 제거해 주세요."
+
+#. {0}: 메시 이름, {1}: 본 이름
+msgid "errors.MeshExistingTwist"
+msgstr "'{0}' 메시가 팔뚝 비틀림 본이나 Constraint가 있는 '{1}' 본 아래의 본을 사용해 보정에서 제외됩니다. 대상 메시에서 제거해 주세요."
 
 #. {0}: 오브젝트 이름
 msgid "errors.PrefabulousTwist"

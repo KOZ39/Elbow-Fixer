@@ -1,10 +1,7 @@
 using System;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Animations;
-using VRC.Dynamics;
 using VRC.SDK3.Avatars.Components;
-using VRC.SDK3.Dynamics.Constraint.Components;
 using static KOZ39.ElbowFixer.ElbowFixerException;
 using static KOZ39.ElbowFixer.ElbowFixerLocalization;
 
@@ -69,13 +66,16 @@ namespace KOZ39.ElbowFixer
         // Normal of the forward elbow bend plane; stays perpendicular to the forearm while bending.
         internal readonly Vector3 UpDirection;
 
+        private readonly ExistingTwist _existingTwist;
+
         private Arm(
             ArmSide side,
             string name,
             Transform upper,
             Transform lower,
             Transform hand,
-            Vector3 upDirection
+            Vector3 upDirection,
+            ExistingTwist existingTwist
         )
         {
             Suffix = side.Suffix;
@@ -84,6 +84,7 @@ namespace KOZ39.ElbowFixer
             Lower = lower;
             Hand = hand;
             UpDirection = upDirection;
+            _existingTwist = existingTwist;
         }
 
         internal static Arm[] Resolve(GameObject avatarRoot)
@@ -111,12 +112,21 @@ namespace KOZ39.ElbowFixer
                 );
             Require(prefabulousTwist == null, "PrefabulousTwist", prefabulousTwist);
 
+            var existingTwist = new ExistingTwist(avatarRoot);
+
             return ArmSide
-                .All.Select(side => ResolveSide(avatarRoot.transform, animator, side))
+                .All.Select(side =>
+                    ResolveSide(avatarRoot.transform, animator, side, existingTwist)
+                )
                 .ToArray();
         }
 
-        private static Arm ResolveSide(Transform avatarRoot, Animator animator, ArmSide side)
+        private static Arm ResolveSide(
+            Transform avatarRoot,
+            Animator animator,
+            ArmSide side,
+            ExistingTwist existingTwist
+        )
         {
             var name = Text(side.NameKey);
             var upper = animator.GetBoneTransform(side.Upper);
@@ -140,12 +150,14 @@ namespace KOZ39.ElbowFixer
                 Require(IsUniformPositive(t.localScale), "UnsupportedScale", t);
             }
 
-            RejectExistingTwist(lower, hand);
+            // These move every mesh on the forearm, so they would fight the generated rig.
+            Require(!existingTwist.IsRotationDriven(lower), "ExistingTwist", lower);
+            Require(!existingTwist.IsRotationDriven(hand), "ExistingTwist", hand);
 
             var upDirection = Vector3.Cross(forearm.normalized, avatarRoot.forward);
             Require(upDirection.magnitude > 0.1f, lower, "ForearmParallel", name);
 
-            return new Arm(side, name, upper, lower, hand, upDirection.normalized);
+            return new Arm(side, name, upper, lower, hand, upDirection.normalized, existingTwist);
         }
 
         private static bool IsUniformPositive(Vector3 scale) =>
@@ -153,35 +165,7 @@ namespace KOZ39.ElbowFixer
             && Mathf.Abs(scale.x - scale.y) < ScaleTolerance * scale.x
             && Mathf.Abs(scale.x - scale.z) < ScaleTolerance * scale.x;
 
-        // Twist bones or constraints in the forearm would fight the generated rig.
-        // Objects attached under the hand, such as accessories, are not part of the forearm.
-        // Modular Avatar's hidden bones are named after a shape key, which may mention twist.
-        private static void RejectExistingTwist(Transform lower, Transform hand)
-        {
-            foreach (var t in lower.GetComponentsInChildren<Transform>(true))
-            {
-                var inForearm = !t.IsChildOf(hand);
-                var isTwistBone =
-                    inForearm
-                    && t != lower
-                    && !ElbowFixerUtility.IsHiddenBone(t)
-                    && t.name.IndexOf("twist", StringComparison.OrdinalIgnoreCase) >= 0;
-                var hasConstraint = (inForearm || t == hand) && HasRotationConstraint(t);
-
-                Require(!isTwistBone && !hasConstraint, "ExistingTwist", t);
-            }
-        }
-
-        // Position and scale constraints cannot twist the forearm. Modular Avatar adds scale
-        // constraints under the forearm to hide mesh sections that Shape Changer toggles.
-        private static bool HasRotationConstraint(Transform t) =>
-            t.GetComponents<IConstraint>()
-                .Any(constraint =>
-                    !(constraint is PositionConstraint || constraint is ScaleConstraint)
-                )
-            || t.GetComponents<VRCConstraintBase>()
-                .Any(constraint =>
-                    !(constraint is VRCPositionConstraint || constraint is VRCScaleConstraint)
-                );
+        internal (Transform ArmBone, Transform Blocker) FindRebind(Transform bone) =>
+            _existingTwist.FindRebind(bone, Upper, Lower, Hand);
     }
 }

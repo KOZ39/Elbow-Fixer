@@ -73,9 +73,13 @@ msgstr "{0}前臂過短。"
 msgid "errors.UnsupportedScale"
 msgstr "「{0}」的縮放為負或不均勻。"
 
-#. {0}: 物件名稱
+#. {0}: 骨骼名稱
 msgid "errors.ExistingTwist"
-msgstr "「{0}」已有前臂扭轉骨骼或約束。"
+msgstr "骨骼「{0}」由 Constraint 旋轉，因此不能與 Elbow Fixer 同時使用。請移除此骨骼上的 Constraint。"
+
+#. {0}: 網格名稱, {1}: 骨骼名稱
+msgid "errors.MeshExistingTwist"
+msgstr "網格「{0}」使用了前臂扭轉骨骼或帶 Constraint 的骨骼「{1}」下方的骨骼，因此不會被修正。請將「{0}」從目標網格中移除。"
 
 #. {0}: 物件名稱
 msgid "errors.PrefabulousTwist"

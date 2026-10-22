@@ -73,9 +73,13 @@ msgstr "{0}前腕が短すぎます。"
 msgid "errors.UnsupportedScale"
 msgstr "「{0}」のスケールが負または不均一です。"
 
-#. {0}: オブジェクト名
+#. {0}: ボーン名
 msgid "errors.ExistingTwist"
-msgstr "「{0}」に前腕のねじれボーンまたはコンストレイントがすでにあります。"
+msgstr "ボーン「{0}」はConstraintで回転するため、Elbow Fixerと併用できません。このボーンのConstraintを削除してください。"
+
+#. {0}: メッシュ名, {1}: ボーン名
+msgid "errors.MeshExistingTwist"
+msgstr "メッシュ「{0}」は前腕のねじれボーンまたはConstraintがあるボーン「{1}」の下のボーンを使うため、補正から除外されます。対象メッシュから外してください。"
 
 #. {0}: オブジェクト名
 msgid "errors.PrefabulousTwist"

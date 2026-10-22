@@ -38,6 +38,15 @@ namespace KOZ39.ElbowFixer
                 (weight.boneIndex3, weight.weight3),
             };
 
+        internal static Transform[] UsedBones(BoneWeight[] weights, Transform[] bones) =>
+            weights
+                .SelectMany(Slots)
+                .Where(slot => slot.Weight > 0 && slot.Bone >= 0 && slot.Bone < bones.Length)
+                .Select(slot => bones[slot.Bone])
+                .Where(bone => bone != null)
+                .Distinct()
+                .ToArray();
+
         internal static float SourceWeight(BoneWeight weight, int source) =>
             Slots(weight)
                 .Where(slot => slot.Bone == source && slot.Weight > 0)
@@ -108,6 +117,29 @@ namespace KOZ39.ElbowFixer
         {
             var influences = Others(weight, source);
             Add(influences, nodes[Mathf.RoundToInt(t * (nodes.Length - 1))], sourceWeight);
+
+            return Pack(influences);
+        }
+
+        internal static BoneWeight Rebind(BoneWeight weight, IReadOnlyDictionary<int, int> targets)
+        {
+            var slots = Slots(weight);
+
+            if (!slots.Any(slot => slot.Weight > 0 && targets.ContainsKey(slot.Bone)))
+            {
+                return weight;
+            }
+
+            var influences = new Dictionary<int, float>();
+
+            foreach (var (bone, slotWeight) in slots)
+            {
+                Add(
+                    influences,
+                    targets.TryGetValue(bone, out var target) ? target : bone,
+                    slotWeight
+                );
+            }
 
             return Pack(influences);
         }
