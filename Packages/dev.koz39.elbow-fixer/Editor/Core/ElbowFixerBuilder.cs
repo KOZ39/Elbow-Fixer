@@ -55,10 +55,12 @@ namespace KOZ39.ElbowFixer
 
             var supports = arms.Select(TwistRig.Build).ToArray();
 
-            // Every support and mirror bone carries one VRC constraint, and every arm adds one Up reference object.
+            // Every support and mirror bone carries one VRC constraint, and every arm adds its reference objects.
             var boneCount =
                 supports.Sum(bones => bones.Length) + plans.Sum(plan => plan.MirrorCount);
-            var report = new StringBuilder(Text("messages.BuildSummary", boneCount, arms.Length));
+            var report = new StringBuilder(
+                Text("messages.BuildSummary", boneCount, arms.Length * TwistRig.ReferenceCount)
+            );
 
             foreach (var plan in plans)
             {

@@ -64,7 +64,8 @@ namespace KOZ39.ElbowFixer
             var influences = Others(weight, source);
             var last = nodes.Length - 1;
             var phase = t * last;
-            var first = Mathf.FloorToInt(phase);
+            // The wrist itself, at t = 1, falls in the last segment.
+            var first = Mathf.Min(Mathf.FloorToInt(phase), last - 1);
             var fraction = phase - first;
 
             // Spreading over three nodes evens out the bulge each node leaves on a strongly twisted

@@ -85,7 +85,7 @@ namespace KOZ39.ElbowFixer
                     plan._hiddenSections.Add((side, boneIndex));
                     plan.Redistribute(
                         boneIndex,
-                        TwistRig.WeightNodes(bones.Length, group, boneIndex),
+                        TwistRig.WeightNodes(bones.Length, group),
                         plan._axes[side]
                     );
                 }
@@ -171,14 +171,12 @@ namespace KOZ39.ElbowFixer
                 "InvalidBindpose",
                 Renderer
             );
-            Redistribute(
-                lowerIndex,
-                TwistRig.WeightNodes(bones.Length, side, lowerIndex),
-                _axes[side]
-            );
+            Redistribute(lowerIndex, TwistRig.WeightNodes(bones.Length, side), _axes[side]);
         }
 
         // The source must move with the LowerArm, since the axis comes from the LowerArm's bindpose.
+        // Vertices past the wrist go to Roll too: it turns with the Hand, so leaving them on the LowerArm would tear
+        // the mesh at the wrist.
         private void Redistribute(int source, int[] nodes, ForearmAxis forearm)
         {
             for (var v = 0; v < _vertices.Length; v++)
@@ -191,11 +189,6 @@ namespace KOZ39.ElbowFixer
                 }
 
                 var t = forearm.Position(_vertices[v]);
-
-                if (t >= 1)
-                {
-                    continue;
-                }
 
                 if (
                     !ForearmWeights.TryRedistribute(
