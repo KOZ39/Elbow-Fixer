@@ -12,7 +12,6 @@ namespace KOZ39.ElbowFixer
         private const float MinForearmCoverage = 0.3f;
         private const float RigidWeight = 0.999f;
 
-        // Shared by the build and the inspector.
         internal static (
             SkinnedMeshRenderer[] Meshes,
             (SkinnedMeshRenderer Mesh, string Problem)[] Skipped
@@ -32,7 +31,6 @@ namespace KOZ39.ElbowFixer
             );
         }
 
-        // A renderer outside the build copy would be the original scene object.
         internal static string FindSelectionProblem(
             SkinnedMeshRenderer renderer,
             Transform avatarRoot
@@ -51,10 +49,6 @@ namespace KOZ39.ElbowFixer
             return renderer.TryGetComponent<Cloth>(out _) ? "ClothNotSupported" : null;
         }
 
-        // Clothes with their own armature are matched by bone name, since Modular Avatar merges them at build time.
-        // Meshes without Read/Write are included too; the VRChat SDK and the build report them.
-        // Weights on a twist bone or a bone with a constraint count as forearm weights, since the build moves them
-        // onto the LowerArm. Meshes the build would skip, for a bone under such a bone, are returned apart.
         internal static (
             SkinnedMeshRenderer[] Targets,
             (SkinnedMeshRenderer Mesh, Transform Blocker)[] Skipped
@@ -97,7 +91,6 @@ namespace KOZ39.ElbowFixer
                     continue;
                 }
 
-                // Each read of these properties copies the whole array.
                 var bones = renderer.bones;
                 var bindposes = mesh.bindposes;
                 var vertices = mesh.vertices;
@@ -138,10 +131,6 @@ namespace KOZ39.ElbowFixer
             return (targets.ToArray(), skipped.ToArray());
         }
 
-        // The same check as the build: the bones whose weights follow this forearm once weights on twist bones and
-        // bones with a constraint move onto the LowerArm, the LowerArm's bindpose, and a twist bone or a bone with a
-        // constraint that has a used bone under it, which makes the build skip the mesh. A mesh may list only such a
-        // bone, so its LowerArm is found above the bones it uses.
         private static (int[] Sources, Matrix4x4 Bindpose, Transform Blocker)? FindForearm(
             Transform[] bones,
             Matrix4x4[] bindposes,
@@ -190,7 +179,6 @@ namespace KOZ39.ElbowFixer
                 return null;
             }
 
-            // Derived from a rebound bone's bindpose when the mesh does not list the LowerArm, as the build does.
             var lowerIndex = Array.IndexOf(bones, lower);
             var bindpose =
                 lowerIndex >= 0 && lowerIndex < bindposes.Length
@@ -200,9 +188,6 @@ namespace KOZ39.ElbowFixer
             return (sources, bindpose, blocker);
         }
 
-        // Clothes are not merged yet, so a bone is checked in its own armature and then as the avatar bone Modular
-        // Avatar will merge it into. A bone with no match ends up under the avatar bone its nearest matched parent
-        // merges into, which counts as a bone under that twist bone. The arm bone returned is the clothing's own.
         private static (Transform ArmBone, Transform Blocker) FindRebind(
             Transform bone,
             Transform upper,
@@ -302,7 +287,6 @@ namespace KOZ39.ElbowFixer
                 max = Mathf.Max(max, t);
             }
 
-            // Below these, a mesh is likely a stray weight, a short accessory or a rigid one bound to a single bone.
             return count >= MinForearmVertices && max - min >= MinForearmCoverage && blended;
         }
     }

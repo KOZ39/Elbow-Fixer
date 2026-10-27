@@ -12,7 +12,6 @@ namespace KOZ39.ElbowFixer
     {
         private const float MaxRestDrift = 0.00001f;
 
-        // Problems the inspector treats apart from the rest.
         internal const string MissingMesh = nameof(MissingMesh);
 
         internal const string MeshNotReadable = nameof(MeshNotReadable);
@@ -24,7 +23,6 @@ namespace KOZ39.ElbowFixer
         private readonly ForearmAxis[] _axes;
         private readonly List<(int Side, int BoneIndex)> _hiddenSections = new();
 
-        // The renderer's bones and bindposes, with the arm bones the rebind adds.
         private Transform[] _bones;
 
         private Matrix4x4[] _bindposes;
@@ -53,7 +51,6 @@ namespace KOZ39.ElbowFixer
             var problem = FindMeshProblem(renderer);
             Require(problem == null, problem, renderer);
 
-            // Each read of these properties copies the whole array.
             var mesh = renderer.sharedMesh;
             var bones = renderer.bones;
             var bindposes = mesh.bindposes;
@@ -71,7 +68,6 @@ namespace KOZ39.ElbowFixer
                 plan.RedistributeLower(side, arms[side], bones, bindposes);
             }
 
-            // Mirrors are added after every arm's supports, in the order found here.
             for (var side = 0; side < arms.Length; side++)
             {
                 for (var boneIndex = 0; boneIndex < bones.Length; boneIndex++)
@@ -120,13 +116,11 @@ namespace KOZ39.ElbowFixer
                 }
             }
 
-            // The original bones keep their matrices; only the added ones need computing.
             var after = before
                 .Concat(SkinMatrices(bones.Skip(before.Length), bindposes.Skip(before.Length)))
                 .ToArray();
             var drift = RestDrift(source.boneWeights, before, after);
 
-            // NDMF's error console only substitutes plain {0} placeholders.
             Require(
                 drift < MaxRestDrift,
                 "RestPoseDrift",
@@ -165,7 +159,6 @@ namespace KOZ39.ElbowFixer
             _lowerIndices[side] = lowerIndex;
             _axes[side] = new ForearmAxis(bindposes[lowerIndex], arm.Hand.localPosition);
 
-            // Arm.Resolve checks length in world units; mesh coordinates can use a different unit.
             Require(
                 float.IsFinite(_axes[side].Length) && _axes[side].Length > 0,
                 "InvalidBindpose",
@@ -174,9 +167,6 @@ namespace KOZ39.ElbowFixer
             Redistribute(lowerIndex, TwistRig.WeightNodes(bones.Length, side), _axes[side]);
         }
 
-        // The source must move with the LowerArm, since the axis comes from the LowerArm's bindpose.
-        // Vertices past the wrist go to Roll too: it turns with the Hand, so leaving them on the LowerArm would tear
-        // the mesh at the wrist.
         private void Redistribute(int source, int[] nodes, ForearmAxis forearm)
         {
             for (var v = 0; v < _vertices.Length; v++)
@@ -210,16 +200,12 @@ namespace KOZ39.ElbowFixer
             }
         }
 
-        // Modular Avatar hides a toggled mesh section by moving its weights to a copy of the bone
-        // and animating the copy's scale to NaN.
         private bool IsHiddenSectionOf(int side, Arm arm, Transform candidate) =>
             _lowerIndices[side] >= 0
             && candidate != null
             && ElbowFixerUtility.IsHiddenBone(candidate)
             && CopiesLowerArm(arm, candidate);
 
-        // A copy of the LowerArm, or of a bone whose weights move onto it, follows the rig through mirrors of the
-        // supports placed under it.
         private static bool CopiesLowerArm(Arm arm, Transform hiddenBone)
         {
             var copied = ElbowFixerUtility.CopiedBone(hiddenBone);
@@ -227,9 +213,7 @@ namespace KOZ39.ElbowFixer
             return copied == arm.Lower || arm.FindRebind(copied).ArmBone == arm.Lower;
         }
 
-        // Moves weights on a twist bone or a bone with a constraint onto the arm bone it sits on, adding the arm bone
-        // when the mesh does not list it. The bones keep their constraints for other meshes. A Modular Avatar copy of
-        // such a bone keeps its weights, and Create moves them onto mirrors.
+        // The bones keep their constraints for other meshes.
         private (Transform[] Bones, Matrix4x4[] Bindposes) RebindExistingTwist(
             Transform[] bones,
             Matrix4x4[] bindposes,
@@ -256,7 +240,7 @@ namespace KOZ39.ElbowFixer
                         blocker
                     );
 
-                    // The mirrors need the LowerArm even when only the copy uses the bone it copies.
+                    // Mirrors need the LowerArm even when only the copy uses the bone it copies.
                     if (isHiddenCopy)
                     {
                         armBone = arm.Lower;
@@ -303,7 +287,6 @@ namespace KOZ39.ElbowFixer
             return (boneList.ToArray(), bindposeList.ToArray());
         }
 
-        // Shared with the inspector. Checked at build time too, since another tool may have replaced the mesh.
         internal static string FindMeshProblem(SkinnedMeshRenderer renderer)
         {
             var mesh = renderer.sharedMesh;
@@ -374,7 +357,6 @@ namespace KOZ39.ElbowFixer
         private static bool IsFinite(Matrix4x4 matrix) =>
             Enumerable.Range(0, 16).All(i => float.IsFinite(matrix[i]));
 
-        // An unweighted vertex is left unchanged, so it skins the same as before.
         private static bool IsValidWeight(BoneWeight weight, Transform[] bones)
         {
             var slots = ForearmWeights.Slots(weight);
@@ -390,16 +372,12 @@ namespace KOZ39.ElbowFixer
                 ) && (sum == 0 || Mathf.Abs(sum - 1) < 0.0001f);
         }
 
-        // Shared with the auto add. The bindpose that makes a bone skin like the reference bone in the current pose.
-        // Deriving it from the reference's bindpose keeps the rest pose exact even when the current pose differs from
-        // the bind pose.
         internal static Matrix4x4 BindposeFrom(
             Transform bone,
             Transform reference,
             Matrix4x4 referenceBindpose
         ) => bone.worldToLocalMatrix * reference.localToWorldMatrix * referenceBindpose;
 
-        // A support starts at the LowerArm, so its bindpose comes from the LowerArm's.
         private Matrix4x4 SupportBindpose(
             Transform support,
             int source,

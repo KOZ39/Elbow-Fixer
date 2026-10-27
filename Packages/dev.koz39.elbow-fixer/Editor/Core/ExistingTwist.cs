@@ -7,14 +7,10 @@ using VRC.SDK3.Dynamics.Constraint.Components;
 
 namespace KOZ39.ElbowFixer
 {
-    // Shared by the build and the auto add, which checks clothes against their own arm bones before they are merged.
     internal sealed class ExistingTwist
     {
         private readonly ILookup<Transform, Transform[]> _sources;
 
-        // Position and scale constraints cannot twist the forearm. Modular Avatar adds scale
-        // constraints under the forearm to hide mesh sections that Shape Changer toggles.
-        // A VRC constraint can drive another object than the one it is on.
         internal ExistingTwist(GameObject avatarRoot)
         {
             var unityConstraints = avatarRoot
@@ -55,10 +51,6 @@ namespace KOZ39.ElbowFixer
 
         internal bool IsRotationDriven(Transform bone) => _sources.Contains(bone);
 
-        // Twist bones or constraints between a bone a mesh uses and the forearm would fight the rig
-        // for that mesh, and so would an upper arm bone that a constraint turns with the forearm.
-        // Objects attached under the hand, such as accessories, are not part of the forearm.
-        // Modular Avatar's hidden bones are named after a shape key, which may mention twist.
         internal Transform Find(Transform bone, Transform upper, Transform lower, Transform hand)
         {
             if (!bone.IsChildOf(upper) || (hand != null && bone.IsChildOf(hand)))
@@ -85,8 +77,7 @@ namespace KOZ39.ElbowFixer
                 );
         }
 
-        // Weights on a twist bone or a bone with a constraint move to the arm bone it sits on, so the rig twists them
-        // instead. A bone below such a bone, like a PhysBone chain, would lose its own motion, so it blocks the mesh.
+        // Rebinding would cost a bone under a twist bone, like a PhysBone chain, its motion.
         internal (Transform ArmBone, Transform Blocker) FindRebind(
             Transform bone,
             Transform upper,

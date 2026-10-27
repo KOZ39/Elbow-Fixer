@@ -12,15 +12,13 @@ namespace KOZ39.ElbowFixer
 {
     internal static class ElbowFixerBuilder
     {
-        // Runs on the NDMF build copy only. A mesh with a problem of its own goes to skip and stays as it is;
-        // returns null when no mesh is left to fix.
         internal static string Build(
             GameObject avatarRoot,
             SkinnedMeshRenderer[] renderers,
             Action<ElbowFixerException> skip
         )
         {
-            // Build copies can be far from the origin. Keep world-space rig and bindpose calculations precise.
+            // Build copies can be far from the origin, where world-space math loses precision.
             var position = avatarRoot.transform.position;
 
             try
@@ -55,7 +53,6 @@ namespace KOZ39.ElbowFixer
 
             var supports = arms.Select(TwistRig.Build).ToArray();
 
-            // Every support and mirror bone carries one VRC constraint, and every arm adds its reference objects.
             var boneCount =
                 supports.Sum(bones => bones.Length) + plans.Sum(plan => plan.MirrorCount);
             var report = new StringBuilder(
@@ -82,7 +79,6 @@ namespace KOZ39.ElbowFixer
             return report.ToString();
         }
 
-        // Problems found before the rig exists concern only this mesh, so they skip it instead of stopping the build.
         private static MeshWeightPlan TryPlan(
             SkinnedMeshRenderer renderer,
             Arm[] arms,
@@ -111,7 +107,6 @@ namespace KOZ39.ElbowFixer
             }
         }
 
-        // An animation that swaps the mesh would replace the fixed mesh at runtime.
         private static Dictionary<SkinnedMeshRenderer, AnimationClip> FindMeshSwaps(
             GameObject avatarRoot,
             SkinnedMeshRenderer[] renderers

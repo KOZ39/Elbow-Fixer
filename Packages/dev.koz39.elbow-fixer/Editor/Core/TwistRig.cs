@@ -1,4 +1,4 @@
-// Aim-stabilized support informed by Prefabulous Universal (MIT). See LICENSE.
+// Aim-stabilized support informed by Prefabulous Universal (MIT).
 using System.Linq;
 using UnityEngine;
 using VRC.Dynamics;
@@ -6,20 +6,15 @@ using VRC.SDK3.Dynamics.Constraint.Components;
 
 namespace KOZ39.ElbowFixer
 {
-    // Stable aims at the hand with its up toward a reference on the UpperArm, so it carries none of the forearm twist.
-    // Roll aims the same way with its up toward a reference on the Hand, so it carries the whole twist at the wrist:
-    // the LowerArm's and the Hand's, which a humanoid splits between them.
     internal static class TwistRig
     {
         internal const string NamePrefix = "ElbowFixer.";
 
-        // Stable, the twist bones and Roll.
         internal const int SupportCount = 6;
 
-        // Up and HandUp, which are not skinned.
         internal const int ReferenceCount = 2;
 
-        // Must match the bone order written by MeshWeightPlan.Apply: each arm's supports, then each mirror set.
+        // Must match MeshWeightPlan.Apply's bone order: each arm's supports, then each mirror set.
         internal static int[] WeightNodes(int boneCount, int group) =>
             Enumerable.Range(boneCount + group * SupportCount, SupportCount).ToArray();
 
@@ -42,7 +37,6 @@ namespace KOZ39.ElbowFixer
 
             AddAimConstraint(stable, arm.Hand, up, forearm.normalized);
 
-            // Placed straight off the wrist along the up direction, so bending the wrist either way does not turn Roll.
             var handUp = CreateChild(
                 $"{NamePrefix}HandUp.{arm.Suffix}",
                 arm.Hand,
@@ -75,7 +69,6 @@ namespace KOZ39.ElbowFixer
             return supports;
         }
 
-        // The hidden bone's NaN scale reaches the copies through the hierarchy, so they hide and show with it.
         internal static Transform[] Mirror(Transform hiddenBone, Transform[] supports) =>
             supports
                 .Select(support =>
@@ -122,8 +115,8 @@ namespace KOZ39.ElbowFixer
             aim.ZeroConstraint();
         }
 
-        // A single source's weight is normalized by the SDK, so only GlobalWeight can scale the twist. It blends the
-        // rotations, not the angle: 0.25 of a 180-degree twist gives 36.9 degrees, not 45.
+        // The SDK normalizes a single source's weight, so only GlobalWeight can scale the twist.
+        // It blends rotations, not angles: 0.25 of a 180-degree twist gives 36.9 degrees, not 45.
         private static void AddTwistConstraint(Transform twist, Transform source, float weight)
         {
             var constraint = twist.gameObject.AddComponent<VRCRotationConstraint>();

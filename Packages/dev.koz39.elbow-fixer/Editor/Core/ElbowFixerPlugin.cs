@@ -38,7 +38,6 @@ namespace KOZ39.ElbowFixer
                 var (meshes, skipped) = TargetMeshes.Select(avatarRoot, primaryFixer);
                 context.GetState<ElbowFixerState>().Meshes = meshes;
 
-                // A mesh the build cannot fix is left as is, so the upload goes on.
                 foreach (var (mesh, problem) in skipped)
                 {
                     Report(
@@ -67,7 +66,6 @@ namespace KOZ39.ElbowFixer
 
         private static void Build(BuildContext context)
         {
-            // Another tool may have deleted a mesh since Resolve.
             var meshes = context
                 .GetState<ElbowFixerState>()
                 .Meshes?.Where(mesh => mesh != null)
@@ -80,7 +78,6 @@ namespace KOZ39.ElbowFixer
 
             try
             {
-                // A skipped mesh only warns; a problem with the avatar or the rig still stops the upload.
                 var report = ElbowFixerBuilder.Build(
                     context.AvatarRootObject,
                     meshes,
@@ -101,7 +98,7 @@ namespace KOZ39.ElbowFixer
             }
         }
 
-        // NDMF links ObjectReference arguments; appended last, they leave the placeholders unchanged.
+        // NDMF links ObjectReference arguments; appended last, they leave placeholders unchanged.
         private static void Report(ErrorSeverity severity, string key, params object[] arguments) =>
             ErrorReport.ReportError(ElbowFixerLocalization.Localizer, severity, key, arguments);
 

@@ -12,7 +12,6 @@ namespace KOZ39.ElbowFixer
     {
         private SerializedProperty _targetMeshesProperty;
 
-        // Finding the meshes reads every vertex, so the skipped ones are kept from the last auto add.
         private (SkinnedMeshRenderer Mesh, Transform Blocker)[] _skippedMeshes = Array.Empty<(
             SkinnedMeshRenderer,
             Transform
@@ -141,7 +140,6 @@ namespace KOZ39.ElbowFixer
             serializedObject.ApplyModifiedProperties();
         }
 
-        // Only the cheap checks; the per-vertex ones stay in the build.
         private void DrawMeshWarnings(ElbowFixer fixer, GameObject avatarRoot)
         {
             var (meshes, skipped) = TargetMeshes.Select(avatarRoot, fixer);
@@ -151,13 +149,11 @@ namespace KOZ39.ElbowFixer
 
             foreach (var (mesh, problem) in problems)
             {
-                // The VRChat SDK's upload panel already reports Read/Write, with a button that fixes it.
                 if (problem == null || problem == MeshWeightPlan.MeshNotReadable)
                 {
                     continue;
                 }
 
-                // The build's MissingMesh text blames other tools, which only fits the build copy.
                 var key =
                     problem == MeshWeightPlan.MissingMesh ? "messages.NoMesh" : "errors." + problem;
                 EditorGUILayout.HelpBox(Text(key, mesh.name), MessageType.Warning);
@@ -166,7 +162,6 @@ namespace KOZ39.ElbowFixer
             DrawSkippedMeshes(fixer);
         }
 
-        // The meshes share one reason, so one line above the folded list gives it.
         private void DrawSkippedMeshes(ElbowFixer fixer)
         {
             var skipped = _skippedMeshes
@@ -182,7 +177,6 @@ namespace KOZ39.ElbowFixer
                 return;
             }
 
-            // A foldout's arrow sits left of the content, so one indent level lines it up with the button above.
             using (new EditorGUI.IndentLevelScope())
             {
                 _isSkippedListExpanded = EditorGUILayout.Foldout(
@@ -197,7 +191,6 @@ namespace KOZ39.ElbowFixer
                 return;
             }
 
-            // Read-only fields still ping their object when clicked, like the Script field.
             using (new EditorGUI.DisabledScope(true))
             {
                 using (new EditorGUI.IndentLevelScope())
@@ -212,7 +205,6 @@ namespace KOZ39.ElbowFixer
                 {
                     using (new EditorGUILayout.HorizontalScope())
                     {
-                        // One indent level, like the reason above.
                         GUILayout.Space(15f);
                         EditorGUILayout.ObjectField(mesh, typeof(SkinnedMeshRenderer), true);
                         EditorGUILayout.ObjectField(blocker, typeof(Transform), true);

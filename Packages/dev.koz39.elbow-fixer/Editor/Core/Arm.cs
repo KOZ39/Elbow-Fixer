@@ -63,7 +63,6 @@ namespace KOZ39.ElbowFixer
         internal readonly Transform Lower;
         internal readonly Transform Hand;
 
-        // Normal of the forward elbow bend plane; stays perpendicular to the forearm while bending.
         internal readonly Vector3 UpDirection;
 
         private readonly ExistingTwist _existingTwist;
@@ -104,7 +103,7 @@ namespace KOZ39.ElbowFixer
                 "AlreadyFixed"
             );
 
-            // Prefabulous can generate its twist bones after this build, so look for its component.
+            // ExistingTwist can miss twist bones Prefabulous adds later, so find its component.
             var prefabulousTwist = avatarRoot
                 .GetComponentsInChildren<MonoBehaviour>(true)
                 .FirstOrDefault(component =>
@@ -140,17 +139,14 @@ namespace KOZ39.ElbowFixer
                 name
             );
 
-            // The direct child offset avoids subtracting rounded world positions far from the origin.
             var forearm = lower.TransformVector(hand.localPosition);
             Require(forearm.magnitude > MinForearmLength, "ShortForearm", name);
 
-            // Ancestor scales also affect the arm, even above the avatar root.
             foreach (var t in hand.GetComponentsInParent<Transform>(true))
             {
                 Require(IsUniformPositive(t.localScale), "UnsupportedScale", t);
             }
 
-            // These move every mesh on the forearm, so they would fight the generated rig.
             Require(!existingTwist.IsRotationDriven(lower), "ExistingTwist", lower);
             Require(!existingTwist.IsRotationDriven(hand), "ExistingTwist", hand);
 

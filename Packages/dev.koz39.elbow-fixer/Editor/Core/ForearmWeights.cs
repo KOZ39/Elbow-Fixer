@@ -1,4 +1,4 @@
-// Forearm smoothing informed by Avatar Elbow Repair (MIT). See LICENSE.
+// Forearm smoothing informed by Avatar Elbow Repair (MIT).
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -20,7 +20,6 @@ namespace KOZ39.ElbowFixer
             _direction = axis / Length;
         }
 
-        // Callers check Length first.
         internal float Position(Vector3 vertex) =>
             Mathf.Clamp01(Vector3.Dot(vertex - _elbow, _direction) / Length);
     }
@@ -64,13 +63,9 @@ namespace KOZ39.ElbowFixer
             var influences = Others(weight, source);
             var last = nodes.Length - 1;
             var phase = t * last;
-            // The wrist itself, at t = 1, falls in the last segment.
             var first = Mathf.Min(Mathf.FloorToInt(phase), last - 1);
             var fraction = phase - first;
 
-            // Spreading over three nodes evens out the bulge each node leaves on a strongly twisted
-            // forearm. It needs three slots, so vertices with two or more other bones stay linear.
-            // It fades out toward the elbow and wrist, where the clamped kernel would shift the twist.
             var smoothing =
                 influences.Count <= 1
                     ? Mathf.SmoothStep(0, 1, Mathf.Min(phase, last - phase) * 2)
@@ -107,7 +102,6 @@ namespace KOZ39.ElbowFixer
             return fits;
         }
 
-        // Compromise for vertices where two nodes do not fit in the four influences.
         internal static BoneWeight Nearest(
             BoneWeight weight,
             int source,
