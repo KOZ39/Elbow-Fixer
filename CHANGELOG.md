@@ -38,9 +38,11 @@
     - 본 영향이 네 개를 넘거나 정점 위치·바인드 포즈·가중치가 잘못된 메시
 - 대상 메시 목록이 빈 Elbow Fixer는 빌드 시 오류 대신 NDMF 콘솔 경고
 - ‘대상 메시 자동 추가(실험적)’와 Setup 메뉴 사용 시 추가하는 메시
-    - Read/Write가 꺼진 팔뚝 메시 포함
-    - 팔뚝 가중치가 팔뚝 비틀림 본이나 Constraint가 있는 본에만 있는 메시 포함
-    - 팔뚝 비틀림 본이나 Constraint가 있는 본 아래의 본을 사용하는 메시 제외
+    - 포함
+        - Read/Write가 꺼진 팔뚝 메시
+        - 팔뚝 가중치가 팔뚝 비틀림 본이나 Constraint가 있는 본에만 있는 메시
+    - 제외
+        - 팔뚝 비틀림 본이나 Constraint가 있는 본 아래의 본을 사용하는 메시
 
 ### Fixed
 
@@ -59,8 +61,9 @@
 
 ### Fixed
 
-- MA Shape Changer로 팔뚝 메시를 숨기는 토글을 기본값으로 설정 시 빌드 오류
-- MA Shape Changer로 팔뚝 메시를 숨기는 토글 사용 시 해당 구간의 비틀림 보정 누락
+- MA Shape Changer로 팔뚝 메시를 숨기는 토글
+    - 기본값으로 설정 시 빌드 오류
+    - 사용 시 해당 구간의 비틀림 보정 누락
 - 팔뚝·손의 Position·Scale Constraint(VRC, Unity)를 비틀림 Constraint로 오인하는 문제
 - 가중치가 없는 정점이 있는 대상 메시 사용 시 빌드 오류
 - Prefabulous PA Generate Twist Bones와 함께 사용 시 팔뚝 비틀림 본 중복 감지 누락
