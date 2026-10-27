@@ -149,7 +149,7 @@ msgstr "'{0}' is skipped because it has no forearm weights. Remove it from the t
 
 #. {0}: mesh name, {1}: distance
 msgid "errors.RestPoseDrift"
-msgstr "'{0}' moved {1} mm in the rest pose. The build was stopped."
+msgstr "'{0}' is skipped because it moved {1} mm in the rest pose."
 
 #. {0}: mesh name
 msgid "errors.NonFiniteVertices"
@@ -157,7 +157,7 @@ msgstr "'{0}' is skipped because it has NaN or infinite vertex positions."
 
 #. {0}: mesh name
 msgid "errors.NonFiniteSkinning"
-msgstr "Skinning '{0}' produced NaN or infinite positions."
+msgstr "'{0}' is skipped because skinning it produced NaN or infinite positions."
 
 #. {0}: mesh name
 msgid "errors.MeshEditorOnly"

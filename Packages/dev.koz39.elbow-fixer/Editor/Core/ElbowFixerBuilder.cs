@@ -41,27 +41,32 @@ namespace KOZ39.ElbowFixer
         {
             var arms = Arm.Resolve(avatarRoot);
             var meshSwaps = FindMeshSwaps(avatarRoot, renderers);
+            var rigs = arms.Select(TwistRig.Build).ToArray();
+            var supports = rigs.Select(rig => rig.Supports).ToArray();
             var plans = renderers
-                .Select(renderer => TryPlan(renderer, arms, meshSwaps, skip))
+                .Select(renderer => TryPlan(renderer, arms, supports, meshSwaps, skip))
                 .Where(plan => plan != null)
+                .Select(plan => plan.Value)
                 .ToArray();
 
             if (plans.Length == 0)
             {
+                foreach (var root in rigs.SelectMany(rig => rig.Roots))
+                {
+                    UnityEngine.Object.DestroyImmediate(root.gameObject);
+                }
+
                 return null;
             }
 
-            var supports = arms.Select(TwistRig.Build).ToArray();
-
             var boneCount =
-                supports.Sum(bones => bones.Length) + plans.Sum(plan => plan.MirrorCount);
+                supports.Sum(bones => bones.Length) + plans.Sum(plan => plan.Plan.MirrorCount);
             var report = new StringBuilder(
                 Text("messages.BuildSummary", boneCount, arms.Length * TwistRig.ReferenceCount)
             );
 
-            foreach (var plan in plans)
+            foreach (var (plan, drift) in plans)
             {
-                var drift = plan.Apply(supports);
                 report
                     .AppendLine()
                     .Append(
@@ -79,9 +84,10 @@ namespace KOZ39.ElbowFixer
             return report.ToString();
         }
 
-        private static MeshWeightPlan TryPlan(
+        private static (MeshWeightPlan Plan, float Drift)? TryPlan(
             SkinnedMeshRenderer renderer,
             Arm[] arms,
+            Transform[][] supports,
             Dictionary<SkinnedMeshRenderer, AnimationClip> meshSwaps,
             Action<ElbowFixerException> skip
         )
@@ -97,7 +103,7 @@ namespace KOZ39.ElbowFixer
                 var plan = MeshWeightPlan.Create(renderer, arms);
                 Require(plan.RedistributedCount > 0, "NoForearmWeights", renderer);
 
-                return plan;
+                return (plan, plan.Apply(supports));
             }
             catch (ElbowFixerException e)
             {

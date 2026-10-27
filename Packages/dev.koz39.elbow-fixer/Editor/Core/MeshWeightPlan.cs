@@ -107,26 +107,43 @@ namespace KOZ39.ElbowFixer
                 }
             }
 
+            var mirrors = new List<Transform>();
+
             foreach (var (side, boneIndex) in _hiddenSections)
             {
                 foreach (var mirror in TwistRig.Mirror(bones[boneIndex], supports[side]))
                 {
                     bindposes.Add(SupportBindpose(mirror, boneIndex, bones, bindposes));
                     bones.Add(mirror);
+                    mirrors.Add(mirror);
                 }
             }
 
             var after = before
                 .Concat(SkinMatrices(bones.Skip(before.Length), bindposes.Skip(before.Length)))
                 .ToArray();
-            var drift = RestDrift(source.boneWeights, before, after);
+            float drift;
 
-            Require(
-                drift < MaxRestDrift,
-                "RestPoseDrift",
-                Renderer,
-                (drift * 1000).ToString("F5", CultureInfo.CurrentCulture)
-            );
+            try
+            {
+                drift = RestDrift(source.boneWeights, before, after);
+
+                Require(
+                    drift < MaxRestDrift,
+                    "RestPoseDrift",
+                    Renderer,
+                    (drift * 1000).ToString("F5", CultureInfo.CurrentCulture)
+                );
+            }
+            catch (ElbowFixerException)
+            {
+                foreach (var mirror in mirrors)
+                {
+                    UnityEngine.Object.DestroyImmediate(mirror.gameObject);
+                }
+
+                throw;
+            }
 
             var mesh = UnityEngine.Object.Instantiate(source);
             ObjectRegistry.RegisterReplacedObject(source, mesh);

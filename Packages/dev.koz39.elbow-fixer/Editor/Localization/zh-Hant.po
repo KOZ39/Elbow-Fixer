@@ -149,7 +149,7 @@ msgstr "「{0}」沒有前臂權重，因此不會被修正。請將其從目標
 
 #. {0}: 網格名稱, {1}: 距離
 msgid "errors.RestPoseDrift"
-msgstr "「{0}」在靜止姿勢下移動了 {1} mm。已中止建置。"
+msgstr "「{0}」在靜止姿勢下移動了 {1} mm，因此不會被修正。"
 
 #. {0}: 網格名稱
 msgid "errors.NonFiniteVertices"
@@ -157,7 +157,7 @@ msgstr "「{0}」的頂點位置包含 NaN 或無限大值，因此不會被修�
 
 #. {0}: 網格名稱
 msgid "errors.NonFiniteSkinning"
-msgstr "「{0}」的蒙皮結果位置包含 NaN 或無限大值。"
+msgstr "「{0}」的蒙皮結果位置包含 NaN 或無限大值，因此不會被修正。"
 
 #. {0}: 網格名稱
 msgid "errors.MeshEditorOnly"

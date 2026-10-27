@@ -18,7 +18,7 @@ namespace KOZ39.ElbowFixer
         internal static int[] WeightNodes(int boneCount, int group) =>
             Enumerable.Range(boneCount + group * SupportCount, SupportCount).ToArray();
 
-        internal static Transform[] Build(Arm arm)
+        internal static (Transform[] Supports, Transform[] Roots) Build(Arm arm)
         {
             var forearm = arm.Hand.position - arm.Lower.position;
             var upOffset = arm.UpDirection * forearm.magnitude;
@@ -66,7 +66,7 @@ namespace KOZ39.ElbowFixer
                 AddTwistConstraint(supports[i], roll, (float)i / (SupportCount - 1));
             }
 
-            return supports;
+            return (supports, new[] { stable, up, handUp, roll });
         }
 
         internal static Transform[] Mirror(Transform hiddenBone, Transform[] supports) =>

@@ -149,7 +149,7 @@ msgstr "'{0}'에 팔뚝 가중치가 없어 보정에서 제외됩니다. 대상
 
 #. {0}: 메시 이름, {1}: 거리
 msgid "errors.RestPoseDrift"
-msgstr "'{0}'이(가) 기본 자세에서 {1} mm 움직였습니다. 빌드를 중단했습니다."
+msgstr "'{0}'이(가) 기본 자세에서 {1} mm 움직여 보정에서 제외됩니다."
 
 #. {0}: 메시 이름
 msgid "errors.NonFiniteVertices"
@@ -157,7 +157,7 @@ msgstr "'{0}'의 정점 위치에 NaN이나 무한대 값이 있어 보정에서
 
 #. {0}: 메시 이름
 msgid "errors.NonFiniteSkinning"
-msgstr "'{0}'의 스키닝 결과 위치에 NaN이나 무한대 값이 있습니다."
+msgstr "'{0}'의 스키닝 결과 위치에 NaN이나 무한대 값이 있어 보정에서 제외됩니다."
 
 #. {0}: 메시 이름
 msgid "errors.MeshEditorOnly"

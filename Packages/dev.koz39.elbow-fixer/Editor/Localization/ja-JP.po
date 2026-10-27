@@ -149,7 +149,7 @@ msgstr "「{0}」に前腕のウェイトがないため補正から除外され
 
 #. {0}: メッシュ名, {1}: 距離
 msgid "errors.RestPoseDrift"
-msgstr "「{0}」が基本姿勢で{1} mm動きました。ビルドを中断しました。"
+msgstr "「{0}」が基本姿勢で{1} mm動くため補正から除外されます。"
 
 #. {0}: メッシュ名
 msgid "errors.NonFiniteVertices"
@@ -157,7 +157,7 @@ msgstr "「{0}」の頂点位置にNaNまたは無限大の値があるため補
 
 #. {0}: メッシュ名
 msgid "errors.NonFiniteSkinning"
-msgstr "「{0}」のスキニング結果の位置にNaNまたは無限大の値があります。"
+msgstr "「{0}」のスキニング結果の位置にNaNまたは無限大の値があるため補正から除外されます。"
 
 #. {0}: メッシュ名
 msgid "errors.MeshEditorOnly"
