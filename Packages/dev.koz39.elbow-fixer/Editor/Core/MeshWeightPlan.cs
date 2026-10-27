@@ -10,7 +10,9 @@ namespace KOZ39.ElbowFixer
 {
     internal sealed class MeshWeightPlan
     {
-        private const float MaxRestDrift = 0.00001f;
+        // Float error grows with the avatar's size, about 0.0003 mm per meter of height, so this
+        // lets avatars a few hundred meters tall through while still catching a wrong bindpose.
+        private const float MaxRestDrift = 0.0001f;
 
         internal const string MissingMesh = nameof(MissingMesh);
 
