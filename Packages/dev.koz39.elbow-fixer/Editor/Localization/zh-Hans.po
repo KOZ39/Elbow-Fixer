@@ -111,6 +111,10 @@ msgstr "动画 “{1}” 会将网格 “{0}” 替换为其他网格，因此�
 msgid "errors.MissingMesh"
 msgstr "“{0}” 没有网格，因此不会被修复。可能已被其他工具删除或合并。"
 
+#. {0}: 渲染器名称
+msgid "errors.MeshRemoved"
+msgstr "“{0}” 在构建过程中被删除，因此不会被修复。可能已被其他工具删除或替换。如果已被替换，请将替换后的网格而不是原网格添加到目标网格中。"
+
 #. {0}: 网格名称
 msgid "errors.MeshNotReadable"
 msgstr "“{0}” 未开启 Read/Write，因此不会被修复。请在导入设置中开启 Read/Write。"

@@ -111,6 +111,10 @@ msgstr "'{1}' 애니메이션이 '{0}' 메시를 다른 메시로 교체하므�
 msgid "errors.MissingMesh"
 msgstr "'{0}'에 메시가 없어 보정에서 제외됩니다. 다른 도구가 삭제하거나 병합했을 수 있습니다."
 
+#. {0}: 렌더러 이름
+msgid "errors.MeshRemoved"
+msgstr "'{0}'이(가) 빌드 중 삭제되어 보정에서 제외됩니다. 다른 도구가 삭제하거나 교체했을 수 있습니다. 교체한 메시라면 원본 대신 교체 메시를 대상 메시에 추가해 주세요."
+
 #. {0}: 메시 이름
 msgid "errors.MeshNotReadable"
 msgstr "'{0}'은(는) Read/Write가 꺼져 있어 보정에서 제외됩니다. 임포트 설정에서 Read/Write를 켜 주세요."

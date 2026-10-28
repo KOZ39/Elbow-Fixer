@@ -36,7 +36,9 @@ namespace KOZ39.ElbowFixer
             if (primaryFixer != null)
             {
                 var (meshes, skipped) = TargetMeshes.Select(avatarRoot, primaryFixer);
-                context.GetState<ElbowFixerState>().Meshes = meshes;
+                context.GetState<ElbowFixerState>().Meshes = meshes
+                    .Select(mesh => (mesh, mesh.name, ObjectRegistry.GetReference(mesh)))
+                    .ToArray();
 
                 foreach (var (mesh, problem) in skipped)
                 {
@@ -66,12 +68,24 @@ namespace KOZ39.ElbowFixer
 
         private static void Build(BuildContext context)
         {
-            var meshes = context
-                .GetState<ElbowFixerState>()
-                .Meshes?.Where(mesh => mesh != null)
+            var targets = context.GetState<ElbowFixerState>().Meshes;
+
+            if (targets == null)
+            {
+                return;
+            }
+
+            foreach (var (_, name, reference) in targets.Where(target => target.Mesh == null))
+            {
+                Report(ErrorSeverity.NonFatal, "errors.MeshRemoved", name, reference);
+            }
+
+            var meshes = targets
+                .Select(target => target.Mesh)
+                .Where(mesh => mesh != null)
                 .ToArray();
 
-            if (meshes == null || meshes.Length == 0)
+            if (meshes.Length == 0)
             {
                 return;
             }
@@ -107,7 +121,7 @@ namespace KOZ39.ElbowFixer
 
         private class ElbowFixerState
         {
-            public SkinnedMeshRenderer[] Meshes;
+            public (SkinnedMeshRenderer Mesh, string Name, ObjectReference Reference)[] Meshes;
         }
     }
 }
