@@ -9,9 +9,7 @@ namespace KOZ39.ElbowFixer
     internal static class TwistRig
     {
         internal const string NamePrefix = "ElbowFixer.";
-
         internal const int SupportCount = 6;
-
         internal const int ReferenceCount = 2;
 
         // Must match MeshWeightPlan.Apply's bone order: each arm's supports, then each mirror set.

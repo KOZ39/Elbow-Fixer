@@ -8,7 +8,6 @@ namespace KOZ39.ElbowFixer
     internal static class ElbowFixerUtility
     {
         private const string HiddenBonePrefix = "NaNimatedBone for ";
-
         private const string HiddenBufferPrefix = "NaNimatedBuffer";
 
         // NDMF builds the outermost avatar, so the inspector must judge fixers by that root.

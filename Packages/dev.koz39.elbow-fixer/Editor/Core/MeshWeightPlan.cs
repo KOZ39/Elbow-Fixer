@@ -15,7 +15,6 @@ namespace KOZ39.ElbowFixer
         private const float MaxRestDrift = 0.0001f;
 
         internal const string MissingMesh = nameof(MissingMesh);
-
         internal const string MeshNotReadable = nameof(MeshNotReadable);
 
         internal readonly SkinnedMeshRenderer Renderer;
