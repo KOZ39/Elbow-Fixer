@@ -23,9 +23,7 @@ namespace KOZ39.ElbowFixer
         private readonly int[] _lowerIndices;
         private readonly ForearmAxis[] _axes;
         private readonly List<(int Side, int BoneIndex)> _hiddenSections = new();
-
         private Transform[] _bones;
-
         private Matrix4x4[] _bindposes;
 
         internal int RedistributedCount { get; private set; }

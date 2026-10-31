@@ -62,9 +62,7 @@ namespace KOZ39.ElbowFixer
         internal readonly Transform Upper;
         internal readonly Transform Lower;
         internal readonly Transform Hand;
-
         internal readonly Vector3 UpDirection;
-
         private readonly ExistingTwist _existingTwist;
 
         private Arm(
