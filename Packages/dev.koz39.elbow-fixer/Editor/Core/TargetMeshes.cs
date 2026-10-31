@@ -12,6 +12,9 @@ namespace KOZ39.ElbowFixer
         private const float MinForearmCoverage = 0.3f;
         private const float RigidWeight = 0.999f;
 
+        private const string MergeArmatureType =
+            "nadena.dev.modular_avatar.core.ModularAvatarMergeArmature";
+
         internal static (
             SkinnedMeshRenderer[] Meshes,
             (SkinnedMeshRenderer Mesh, string Problem)[] Skipped
@@ -214,7 +217,7 @@ namespace KOZ39.ElbowFixer
                 var t in bone.GetComponentsInParent<Transform>(true).TakeWhile(t => t != upper)
             )
             {
-                var merged = avatarUpper.Find(AnimationUtility.CalculateTransformPath(t, upper));
+                var merged = avatarUpper.Find(MergedPath(t, upper));
 
                 if (merged == null)
                 {
@@ -245,7 +248,42 @@ namespace KOZ39.ElbowFixer
         }
 
         private static bool IsArmBone(Transform bone, Transform avatarBone) =>
-            bone != null && (bone == avatarBone || bone.name == avatarBone.name);
+            bone != null && (bone == avatarBone || MergedName(bone) == avatarBone.name);
+
+        private static string MergedPath(Transform bone, Transform root) =>
+            string.Join(
+                "/",
+                bone.GetComponentsInParent<Transform>(true)
+                    .TakeWhile(t => t != root)
+                    .Reverse()
+                    .Select(MergedName)
+            );
+
+        // Modular Avatar pairs outfit bones with avatar bones by name without the Merge Armature's
+        // prefix and suffix.
+        private static string MergedName(Transform bone)
+        {
+            var merge = bone.GetComponentsInParent<MonoBehaviour>(true)
+                .FirstOrDefault(component =>
+                    component != null && component.GetType().FullName == MergeArmatureType
+                );
+
+            if (merge == null)
+            {
+                return bone.name;
+            }
+
+            var prefix = merge.GetType().GetField("prefix")?.GetValue(merge) as string ?? "";
+            var suffix = merge.GetType().GetField("suffix")?.GetValue(merge) as string ?? "";
+            var name = bone.name;
+
+            return
+                name.Length > prefix.Length + suffix.Length
+                && name.StartsWith(prefix, StringComparison.Ordinal)
+                && name.EndsWith(suffix, StringComparison.Ordinal)
+                ? name.Substring(prefix.Length, name.Length - prefix.Length - suffix.Length)
+                : name;
+        }
 
         private static bool FollowsForearm(
             int[] sources,
