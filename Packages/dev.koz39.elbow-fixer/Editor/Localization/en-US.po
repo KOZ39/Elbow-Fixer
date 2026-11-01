@@ -9,6 +9,9 @@ msgstr "Target Meshes"
 msgid "labels.SkippedMeshes"
 msgstr "Skipped meshes ({0})"
 
+msgid "labels.SubdivideForearm"
+msgstr "Subdivide Forearms"
+
 msgid "labels.Left"
 msgstr "left"
 
@@ -20,6 +23,9 @@ msgstr "Meshes that should follow the forearm twist. Add the body and clothing s
 
 msgid "tooltips.AutoAdd"
 msgstr "Finds and adds meshes that should follow the forearm twist, such as the body and clothing sleeves. Rigid meshes such as bracelets and meshes that cover little of the forearm are skipped. Check the added meshes."
+
+msgid "tooltips.SubdivideForearm"
+msgstr "Subdivides the forearms of the body mesh among the target meshes so the surface still looks smooth when the hand twists far. However, this slightly increases the vertex count of the body mesh."
 
 msgid "buttons.Select"
 msgstr "Select"

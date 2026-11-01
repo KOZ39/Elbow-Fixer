@@ -140,6 +140,29 @@ namespace KOZ39.ElbowFixer
             return Pack(influences);
         }
 
+        internal static BoneWeight Mix(BoneWeight a, BoneWeight b)
+        {
+            var influences = new Dictionary<int, float>();
+
+            foreach (var (bone, weight) in Slots(a).Concat(Slots(b)))
+            {
+                Add(influences, bone, weight * 0.5f);
+            }
+
+            var strongest = influences
+                .OrderByDescending(influence => influence.Value)
+                .Take(MaxInfluences)
+                .ToArray();
+            var sum = strongest.Sum(influence => influence.Value);
+
+            return Pack(
+                strongest.ToDictionary(
+                    influence => influence.Key,
+                    influence => influence.Value / sum
+                )
+            );
+        }
+
         private static Dictionary<int, float> Others(BoneWeight weight, int source) =>
             Slots(weight)
                 .Where(slot => slot.Bone != source && slot.Weight > 0)

@@ -11,6 +11,7 @@ namespace KOZ39.ElbowFixer
     internal class ElbowFixerEditor : Editor
     {
         private SerializedProperty _targetMeshesProperty;
+        private SerializedProperty _subdivideForearmProperty;
 
         private (SkinnedMeshRenderer Mesh, Transform Blocker)[] _skippedMeshes = Array.Empty<(
             SkinnedMeshRenderer,
@@ -23,6 +24,9 @@ namespace KOZ39.ElbowFixer
         {
             _targetMeshesProperty = serializedObject.FindProperty(nameof(ElbowFixer.targetMeshes));
             _targetMeshesProperty.isExpanded = true;
+            _subdivideForearmProperty = serializedObject.FindProperty(
+                nameof(ElbowFixer.subdivideForearm)
+            );
         }
 
         public override void OnInspectorGUI()
@@ -108,6 +112,11 @@ namespace KOZ39.ElbowFixer
         private void DrawSettings(GameObject avatarRoot)
         {
             serializedObject.Update();
+
+            EditorGUILayout.PropertyField(
+                _subdivideForearmProperty,
+                new GUIContent(Text("labels.SubdivideForearm"), Text("tooltips.SubdivideForearm"))
+            );
 
             EditorGUILayout.PropertyField(
                 _targetMeshesProperty,

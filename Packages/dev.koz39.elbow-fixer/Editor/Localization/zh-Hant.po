@@ -9,6 +9,9 @@ msgstr "目標網格"
 msgid "labels.SkippedMeshes"
 msgstr "已排除的網格 ({0})"
 
+msgid "labels.SubdivideForearm"
+msgstr "細分前臂"
+
 msgid "labels.Left"
 msgstr "左"
 
@@ -20,6 +23,9 @@ msgstr "需要跟隨前臂扭轉的網格。請加入身體和衣袖，不要加
 
 msgid "tooltips.AutoAdd"
 msgstr "尋找並加入身體、衣袖等需要跟隨前臂扭轉的網格。手鐲等剛性網格和只覆蓋前臂一小部分的網格會被排除。請檢查加入的網格。"
+
+msgid "tooltips.SubdivideForearm"
+msgstr "細分目標網格中身體網格的前臂，使手部大幅扭轉時表面依然看起來平滑。但身體網格的頂點數會略有增加。"
 
 msgid "buttons.Select"
 msgstr "選擇"

@@ -9,6 +9,9 @@ msgstr "対象メッシュ"
 msgid "labels.SkippedMeshes"
 msgstr "除外されたメッシュ ({0})"
 
+msgid "labels.SubdivideForearm"
+msgstr "前腕を細分化"
+
 msgid "labels.Left"
 msgstr "左"
 
@@ -20,6 +23,9 @@ msgstr "前腕のねじれに追従させるメッシュです。ボディと服
 
 msgid "tooltips.AutoAdd"
 msgstr "ボディや服の袖のように前腕のねじれに追従させるメッシュを探して追加します。ブレスレットのような硬いメッシュや、前腕を少ししか覆わないメッシュは除外します。追加されたメッシュを確認してください。"
+
+msgid "tooltips.SubdivideForearm"
+msgstr "対象メッシュのうちボディメッシュの前腕を細分化し、手を大きくねじっても表面が滑らかに見えるようにします。ただし、ボディメッシュの頂点数がわずかに増えます。"
 
 msgid "buttons.Select"
 msgstr "選択"

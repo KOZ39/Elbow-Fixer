@@ -9,5 +9,6 @@ namespace KOZ39.ElbowFixer
     public class ElbowFixer : MonoBehaviour, IEditorOnly
     {
         public SkinnedMeshRenderer[] targetMeshes = Array.Empty<SkinnedMeshRenderer>();
+        public bool subdivideForearm = true;
     }
 }

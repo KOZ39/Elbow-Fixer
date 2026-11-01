@@ -36,7 +36,9 @@ namespace KOZ39.ElbowFixer
             if (primaryFixer != null)
             {
                 var (meshes, skipped) = TargetMeshes.Select(avatarRoot, primaryFixer);
-                context.GetState<ElbowFixerState>().Meshes = meshes
+                var state = context.GetState<ElbowFixerState>();
+                state.SubdivideForearm = primaryFixer.subdivideForearm;
+                state.Meshes = meshes
                     .Select(mesh => (mesh, mesh.name, ObjectRegistry.GetReference(mesh)))
                     .ToArray();
 
@@ -68,7 +70,8 @@ namespace KOZ39.ElbowFixer
 
         private static void Build(BuildContext context)
         {
-            var targets = context.GetState<ElbowFixerState>().Meshes;
+            var state = context.GetState<ElbowFixerState>();
+            var targets = state.Meshes;
 
             if (targets == null)
             {
@@ -95,6 +98,7 @@ namespace KOZ39.ElbowFixer
                 var report = ElbowFixerBuilder.Build(
                     context.AvatarRootObject,
                     meshes,
+                    state.SubdivideForearm,
                     e => Report(ErrorSeverity.NonFatal, e)
                 );
 
@@ -122,6 +126,7 @@ namespace KOZ39.ElbowFixer
         private class ElbowFixerState
         {
             public (SkinnedMeshRenderer Mesh, string Name, ObjectReference Reference)[] Meshes;
+            public bool SubdivideForearm;
         }
     }
 }

@@ -15,6 +15,7 @@ namespace KOZ39.ElbowFixer
         internal static string Build(
             GameObject avatarRoot,
             SkinnedMeshRenderer[] renderers,
+            bool subdivideForearm,
             Action<ElbowFixerException> skip
         )
         {
@@ -25,7 +26,7 @@ namespace KOZ39.ElbowFixer
             {
                 avatarRoot.transform.position = Vector3.zero;
 
-                return BuildAtOrigin(avatarRoot, renderers, skip);
+                return BuildAtOrigin(avatarRoot, renderers, subdivideForearm, skip);
             }
             finally
             {
@@ -36,6 +37,7 @@ namespace KOZ39.ElbowFixer
         private static string BuildAtOrigin(
             GameObject avatarRoot,
             SkinnedMeshRenderer[] renderers,
+            bool subdivideForearm,
             Action<ElbowFixerException> skip
         )
         {
@@ -60,7 +62,15 @@ namespace KOZ39.ElbowFixer
             var supports = rigs.Select(rig => rig.Supports).ToArray();
             var plans = renderers
                 .Select(renderer =>
-                    TryPlan(renderer, renderer == skin, arms, supports, meshSwaps, skip)
+                    TryPlan(
+                        renderer,
+                        renderer == skin,
+                        subdivideForearm && renderer == skin,
+                        arms,
+                        supports,
+                        meshSwaps,
+                        skip
+                    )
                 )
                 .Where(plan => plan != null)
                 .Select(plan => plan.Value)
@@ -110,6 +120,7 @@ namespace KOZ39.ElbowFixer
         private static (MeshWeightPlan Plan, float Drift)? TryPlan(
             SkinnedMeshRenderer renderer,
             bool isSkin,
+            bool subdivide,
             Arm[] arms,
             Transform[][] supports,
             Dictionary<SkinnedMeshRenderer, AnimationClip> meshSwaps,
@@ -124,7 +135,7 @@ namespace KOZ39.ElbowFixer
                     renderer,
                     clip
                 );
-                var plan = MeshWeightPlan.Create(renderer, arms, supports, isSkin);
+                var plan = MeshWeightPlan.Create(renderer, arms, supports, isSkin, subdivide);
                 Require(plan.RedistributedCount > 0, "NoForearmWeights", renderer);
 
                 return (plan, plan.Apply());

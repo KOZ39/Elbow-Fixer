@@ -9,6 +9,9 @@ msgstr "대상 메시"
 msgid "labels.SkippedMeshes"
 msgstr "제외된 메시 ({0})"
 
+msgid "labels.SubdivideForearm"
+msgstr "팔뚝 세분화"
+
 msgid "labels.Left"
 msgstr "왼쪽"
 
@@ -20,6 +23,9 @@ msgstr "팔뚝 비틀림을 따라가야 하는 메시입니다. 몸과 옷 소�
 
 msgid "tooltips.AutoAdd"
 msgstr "몸과 옷 소매처럼 팔뚝 비틀림을 따라가야 하는 메시를 찾아 추가합니다. 팔찌처럼 단단하거나 팔뚝을 조금만 덮는 메시는 제외합니다. 추가된 메시를 확인해 주세요."
+
+msgid "tooltips.SubdivideForearm"
+msgstr "대상 메시 중 몸 메시의 팔뚝을 세분화해 손을 크게 비틀어도 표면이 매끄럽게 보이도록 합니다. 다만 몸 메시의 정점 수가 소폭 증가합니다."
 
 msgid "buttons.Select"
 msgstr "선택"
