@@ -10,7 +10,6 @@ namespace KOZ39.ElbowFixer
     {
         private const int MinForearmVertices = 20;
         private const float MinForearmCoverage = 0.3f;
-        private const float RigidWeight = 0.999f;
 
         private const string MergeArmatureType =
             "nadena.dev.modular_avatar.core.ModularAvatarMergeArmature";
@@ -320,7 +319,7 @@ namespace KOZ39.ElbowFixer
 
                 var t = forearm.Position(vertices[v]);
                 count++;
-                blended |= weight < RigidWeight;
+                blended |= weight < ForearmWeights.RigidWeight;
                 min = Mathf.Min(min, t);
                 max = Mathf.Max(max, t);
             }

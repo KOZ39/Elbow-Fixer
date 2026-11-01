@@ -43,8 +43,23 @@ namespace KOZ39.ElbowFixer
             var meshSwaps = FindMeshSwaps(avatarRoot, renderers);
             var rigs = arms.Select(TwistRig.Build).ToArray();
             var supports = rigs.Select(rig => rig.Supports).ToArray();
+
+            // Sleeve cuffs often follow the fingers partly, so only the mesh with the most vertices
+            // fully on the fingers gets the skin twist.
+            var skin = renderers
+                .Select(renderer =>
+                    (
+                        Renderer: renderer,
+                        Count: MeshWeightPlan.RigidFingerVertexCount(renderer, arms)
+                    )
+                )
+                .OrderByDescending(candidate => candidate.Count)
+                .FirstOrDefault(candidate => candidate.Count > 0)
+                .Renderer;
             var plans = renderers
-                .Select(renderer => TryPlan(renderer, arms, supports, meshSwaps, skip))
+                .Select(renderer =>
+                    TryPlan(renderer, renderer == skin, arms, supports, meshSwaps, skip)
+                )
                 .Where(plan => plan != null)
                 .Select(plan => plan.Value)
                 .ToArray();
@@ -92,6 +107,7 @@ namespace KOZ39.ElbowFixer
 
         private static (MeshWeightPlan Plan, float Drift)? TryPlan(
             SkinnedMeshRenderer renderer,
+            bool isSkin,
             Arm[] arms,
             Transform[][] supports,
             Dictionary<SkinnedMeshRenderer, AnimationClip> meshSwaps,
@@ -106,7 +122,7 @@ namespace KOZ39.ElbowFixer
                     renderer,
                     clip
                 );
-                var plan = MeshWeightPlan.Create(renderer, arms);
+                var plan = MeshWeightPlan.Create(renderer, arms, isSkin);
                 Require(plan.RedistributedCount > 0, "NoForearmWeights", renderer);
 
                 return (plan, plan.Apply(supports));

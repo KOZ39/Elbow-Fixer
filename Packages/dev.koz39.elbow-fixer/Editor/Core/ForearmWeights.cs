@@ -27,6 +27,7 @@ namespace KOZ39.ElbowFixer
     internal static class ForearmWeights
     {
         internal const int MaxInfluences = 4;
+        internal const float RigidWeight = 0.999f;
 
         internal static (int Bone, float Weight)[] Slots(BoneWeight weight) =>
             new (int Bone, float Weight)[]

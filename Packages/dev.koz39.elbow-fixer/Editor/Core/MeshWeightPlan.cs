@@ -22,6 +22,8 @@ namespace KOZ39.ElbowFixer
         private readonly BoneWeight[] _weights;
         private readonly int[] _lowerIndices;
         private readonly ForearmAxis[] _axes;
+        private readonly bool _isSkin;
+        private readonly int[] _nodes;
         private readonly List<(int Side, int BoneIndex)> _hiddenSections = new();
         private Transform[] _bones;
         private Matrix4x4[] _bindposes;
@@ -29,13 +31,14 @@ namespace KOZ39.ElbowFixer
         internal int RedistributedCount { get; private set; }
         internal int NearestCount { get; private set; }
 
-        internal int MirrorCount => _hiddenSections.Count * TwistRig.SupportCount;
+        internal int MirrorCount => _hiddenSections.Count * _nodes.Length;
 
         private MeshWeightPlan(
             SkinnedMeshRenderer renderer,
             Vector3[] vertices,
             BoneWeight[] weights,
-            int armCount
+            int armCount,
+            bool isSkin
         )
         {
             Renderer = renderer;
@@ -43,9 +46,11 @@ namespace KOZ39.ElbowFixer
             _weights = weights;
             _lowerIndices = Enumerable.Repeat(-1, armCount).ToArray();
             _axes = new ForearmAxis[armCount];
+            _isSkin = isSkin;
+            _nodes = TwistRig.Nodes(isSkin);
         }
 
-        internal static MeshWeightPlan Create(SkinnedMeshRenderer renderer, Arm[] arms)
+        internal static MeshWeightPlan Create(SkinnedMeshRenderer renderer, Arm[] arms, bool isSkin)
         {
             var problem = FindMeshProblem(renderer);
             Require(problem == null, problem, renderer);
@@ -57,7 +62,7 @@ namespace KOZ39.ElbowFixer
             var weights = mesh.boneWeights;
             Validate(renderer, mesh, bones, bindposes, vertices, weights);
 
-            var plan = new MeshWeightPlan(renderer, vertices, weights, arms.Length);
+            var plan = new MeshWeightPlan(renderer, vertices, weights, arms.Length, isSkin);
             (bones, bindposes) = plan.RebindExistingTwist(bones, bindposes, arms);
             plan._bones = bones;
             plan._bindposes = bindposes;
@@ -76,11 +81,14 @@ namespace KOZ39.ElbowFixer
                         continue;
                     }
 
-                    var group = arms.Length + plan._hiddenSections.Count;
+                    var first =
+                        bones.Length
+                        + arms.Length * TwistRig.SupportCount
+                        + plan._hiddenSections.Count * plan._nodes.Length;
                     plan._hiddenSections.Add((side, boneIndex));
                     plan.Redistribute(
                         boneIndex,
-                        TwistRig.WeightNodes(bones.Length, group),
+                        plan.WeightNodes(Enumerable.Range(first, plan._nodes.Length), boneIndex),
                         plan._axes[side]
                     );
                 }
@@ -110,7 +118,12 @@ namespace KOZ39.ElbowFixer
 
             foreach (var (side, boneIndex) in _hiddenSections)
             {
-                foreach (var mirror in TwistRig.Mirror(bones[boneIndex], supports[side]))
+                foreach (
+                    var mirror in TwistRig.Mirror(
+                        bones[boneIndex],
+                        _nodes.Select(node => supports[side][node])
+                    )
+                )
                 {
                     bindposes.Add(SupportBindpose(mirror, boneIndex, bones, bindposes));
                     bones.Add(mirror);
@@ -157,6 +170,9 @@ namespace KOZ39.ElbowFixer
             return drift;
         }
 
+        private int[] WeightNodes(IEnumerable<int> supports, int source) =>
+            (_isSkin ? supports : supports.Append(source)).ToArray();
+
         private void RedistributeLower(int side, Arm arm, Transform[] bones, Matrix4x4[] bindposes)
         {
             var lowerIndex = Array.IndexOf(bones, arm.Lower);
@@ -180,7 +196,12 @@ namespace KOZ39.ElbowFixer
                 "InvalidBindpose",
                 Renderer
             );
-            Redistribute(lowerIndex, TwistRig.WeightNodes(bones.Length, side), _axes[side]);
+            var first = bones.Length + side * TwistRig.SupportCount;
+            Redistribute(
+                lowerIndex,
+                WeightNodes(_nodes.Select(node => first + node), lowerIndex),
+                _axes[side]
+            );
         }
 
         private void Redistribute(int source, int[] nodes, ForearmAxis forearm)
@@ -301,6 +322,27 @@ namespace KOZ39.ElbowFixer
             }
 
             return (boneList.ToArray(), bindposeList.ToArray());
+        }
+
+        internal static int RigidFingerVertexCount(SkinnedMeshRenderer renderer, Arm[] arms)
+        {
+            if (FindMeshProblem(renderer) != null)
+            {
+                return 0;
+            }
+
+            var isFinger = renderer
+                .bones.Select(bone =>
+                    bone != null && arms.Any(arm => bone != arm.Hand && bone.IsChildOf(arm.Hand))
+                )
+                .ToArray();
+
+            return renderer.sharedMesh.boneWeights.Count(weight =>
+                ForearmWeights
+                    .Slots(weight)
+                    .Where(slot => slot.Bone < isFinger.Length && isFinger[slot.Bone])
+                    .Sum(slot => slot.Weight) >= ForearmWeights.RigidWeight
+            );
         }
 
         internal static string FindMeshProblem(SkinnedMeshRenderer renderer)
