@@ -41,8 +41,6 @@ namespace KOZ39.ElbowFixer
         {
             var arms = Arm.Resolve(avatarRoot);
             var meshSwaps = FindMeshSwaps(avatarRoot, renderers);
-            var rigs = arms.Select(TwistRig.Build).ToArray();
-            var supports = rigs.Select(rig => rig.Supports).ToArray();
 
             // Sleeve cuffs often follow the fingers partly, so only the mesh with the most vertices
             // fully on the fingers gets the skin twist.
@@ -56,6 +54,10 @@ namespace KOZ39.ElbowFixer
                 .OrderByDescending(candidate => candidate.Count)
                 .FirstOrDefault(candidate => candidate.Count > 0)
                 .Renderer;
+            var hasSkin = skin != null;
+            var hasClothing = renderers.Any(renderer => renderer != skin);
+            var rigs = arms.Select(arm => TwistRig.Build(arm, hasSkin, hasClothing)).ToArray();
+            var supports = rigs.Select(rig => rig.Supports).ToArray();
             var plans = renderers
                 .Select(renderer =>
                     TryPlan(renderer, renderer == skin, arms, supports, meshSwaps, skip)
@@ -81,8 +83,8 @@ namespace KOZ39.ElbowFixer
                 Text(
                     "messages.BuildSummary",
                     boneCount,
-                    boneCount + arms.Length,
-                    arms.Length * TwistRig.ReferenceCount
+                    hasSkin ? boneCount + arms.Length : boneCount,
+                    arms.Length * TwistRig.ReferenceCount(hasSkin)
                 )
             );
 
@@ -122,10 +124,10 @@ namespace KOZ39.ElbowFixer
                     renderer,
                     clip
                 );
-                var plan = MeshWeightPlan.Create(renderer, arms, isSkin);
+                var plan = MeshWeightPlan.Create(renderer, arms, supports, isSkin);
                 Require(plan.RedistributedCount > 0, "NoForearmWeights", renderer);
 
-                return (plan, plan.Apply(supports));
+                return (plan, plan.Apply());
             }
             catch (ElbowFixerException e)
             {

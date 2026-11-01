@@ -10,20 +10,27 @@ namespace KOZ39.ElbowFixer
     internal static class TwistRig
     {
         internal const string NamePrefix = "ElbowFixer.";
-        internal const int SupportCount = SkinNodeCount + SleeveNodeCount;
-        internal const int ReferenceCount = 3;
 
         private const int SkinNodeCount = 9;
         private const int SleeveNodeCount = 3;
 
         // Must match Build's support order: Stable, the skin twists, then the sleeve twists.
         // Clothing gets only the LowerArm's own twist, so it skips the nodes that carry the hand's.
-        internal static int[] Nodes(bool isSkin) =>
+        internal static int[] Nodes(bool isSkin, int supportCount) =>
             isSkin
                 ? Enumerable.Range(0, SkinNodeCount).ToArray()
-                : Enumerable.Range(SkinNodeCount, SleeveNodeCount).Prepend(0).ToArray();
+                : Enumerable
+                    .Range(supportCount - SleeveNodeCount, SleeveNodeCount)
+                    .Prepend(0)
+                    .ToArray();
 
-        internal static (Transform[] Supports, Transform[] Roots) Build(Arm arm)
+        internal static int ReferenceCount(bool hasSkin) => hasSkin ? 3 : 1;
+
+        internal static (Transform[] Supports, Transform[] Roots) Build(
+            Arm arm,
+            bool hasSkin,
+            bool hasClothing
+        )
         {
             var forearm = arm.Hand.position - arm.Lower.position;
             var upOffset = arm.UpDirection * forearm.magnitude;
@@ -42,24 +49,35 @@ namespace KOZ39.ElbowFixer
 
             AddAimConstraint(stable, arm.Hand, up, forearm.normalized);
 
-            var handUp = CreateChild(
-                $"{NamePrefix}HandUp.{arm.Suffix}",
-                arm.Hand,
-                arm.Hand.position + upOffset,
-                arm.Hand.rotation
-            );
-            var roll = CreateChild(
-                $"{NamePrefix}Roll.{arm.Suffix}",
-                arm.Lower,
-                arm.Lower.position,
-                arm.Lower.rotation
-            );
-            AddAimConstraint(roll, arm.Hand, handUp, forearm.normalized);
-            var supports = CreateSkinTwists(arm, stable, roll)
-                .Concat(CreateSleeveTwists(arm, stable))
-                .ToArray();
+            var supports = new[] { stable };
+            var roots = new List<Transform> { stable, up };
 
-            return (supports, new[] { stable, up, handUp, roll });
+            if (hasSkin)
+            {
+                var handUp = CreateChild(
+                    $"{NamePrefix}HandUp.{arm.Suffix}",
+                    arm.Hand,
+                    arm.Hand.position + upOffset,
+                    arm.Hand.rotation
+                );
+                var roll = CreateChild(
+                    $"{NamePrefix}Roll.{arm.Suffix}",
+                    arm.Lower,
+                    arm.Lower.position,
+                    arm.Lower.rotation
+                );
+                AddAimConstraint(roll, arm.Hand, handUp, forearm.normalized);
+                roots.Add(handUp);
+                roots.Add(roll);
+                supports = CreateSkinTwists(arm, stable, roll);
+            }
+
+            if (hasClothing)
+            {
+                supports = supports.Concat(CreateSleeveTwists(arm, stable)).ToArray();
+            }
+
+            return (supports, roots.ToArray());
         }
 
         internal static Transform[] Mirror(Transform hiddenBone, IEnumerable<Transform> supports) =>

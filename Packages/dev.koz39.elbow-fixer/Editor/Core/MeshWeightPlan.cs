@@ -22,8 +22,8 @@ namespace KOZ39.ElbowFixer
         private readonly BoneWeight[] _weights;
         private readonly int[] _lowerIndices;
         private readonly ForearmAxis[] _axes;
+        private readonly Transform[][] _supports;
         private readonly bool _isSkin;
-        private readonly int[] _nodes;
         private readonly List<(int Side, int BoneIndex)> _hiddenSections = new();
         private Transform[] _bones;
         private Matrix4x4[] _bindposes;
@@ -31,26 +31,31 @@ namespace KOZ39.ElbowFixer
         internal int RedistributedCount { get; private set; }
         internal int NearestCount { get; private set; }
 
-        internal int MirrorCount => _hiddenSections.Count * _nodes.Length;
+        internal int MirrorCount => _hiddenSections.Sum(section => Nodes(section.Side).Length);
 
         private MeshWeightPlan(
             SkinnedMeshRenderer renderer,
             Vector3[] vertices,
             BoneWeight[] weights,
-            int armCount,
+            Transform[][] supports,
             bool isSkin
         )
         {
             Renderer = renderer;
             _vertices = vertices;
             _weights = weights;
-            _lowerIndices = Enumerable.Repeat(-1, armCount).ToArray();
-            _axes = new ForearmAxis[armCount];
+            _lowerIndices = Enumerable.Repeat(-1, supports.Length).ToArray();
+            _axes = new ForearmAxis[supports.Length];
+            _supports = supports;
             _isSkin = isSkin;
-            _nodes = TwistRig.Nodes(isSkin);
         }
 
-        internal static MeshWeightPlan Create(SkinnedMeshRenderer renderer, Arm[] arms, bool isSkin)
+        internal static MeshWeightPlan Create(
+            SkinnedMeshRenderer renderer,
+            Arm[] arms,
+            Transform[][] supports,
+            bool isSkin
+        )
         {
             var problem = FindMeshProblem(renderer);
             Require(problem == null, problem, renderer);
@@ -62,7 +67,7 @@ namespace KOZ39.ElbowFixer
             var weights = mesh.boneWeights;
             Validate(renderer, mesh, bones, bindposes, vertices, weights);
 
-            var plan = new MeshWeightPlan(renderer, vertices, weights, arms.Length, isSkin);
+            var plan = new MeshWeightPlan(renderer, vertices, weights, supports, isSkin);
             (bones, bindposes) = plan.RebindExistingTwist(bones, bindposes, arms);
             plan._bones = bones;
             plan._bindposes = bindposes;
@@ -71,6 +76,8 @@ namespace KOZ39.ElbowFixer
             {
                 plan.RedistributeLower(side, arms[side], bones, bindposes);
             }
+
+            var mirrorIndex = bones.Length + supports.Sum(arm => arm.Length);
 
             for (var side = 0; side < arms.Length; side++)
             {
@@ -81,23 +88,21 @@ namespace KOZ39.ElbowFixer
                         continue;
                     }
 
-                    var first =
-                        bones.Length
-                        + arms.Length * TwistRig.SupportCount
-                        + plan._hiddenSections.Count * plan._nodes.Length;
+                    var nodeCount = plan.Nodes(side).Length;
                     plan._hiddenSections.Add((side, boneIndex));
                     plan.Redistribute(
                         boneIndex,
-                        plan.WeightNodes(Enumerable.Range(first, plan._nodes.Length), boneIndex),
+                        plan.WeightNodes(Enumerable.Range(mirrorIndex, nodeCount), boneIndex),
                         plan._axes[side]
                     );
+                    mirrorIndex += nodeCount;
                 }
             }
 
             return plan;
         }
 
-        internal float Apply(Transform[][] supports)
+        internal float Apply()
         {
             var source = Renderer.sharedMesh;
             var bones = _bones.ToList();
@@ -105,9 +110,9 @@ namespace KOZ39.ElbowFixer
             var before = SkinMatrices(bones, bindposes).ToArray();
 
             // Order must match the weight nodes from Create: supports, then mirrors.
-            for (var side = 0; side < supports.Length; side++)
+            for (var side = 0; side < _supports.Length; side++)
             {
-                foreach (var support in supports[side])
+                foreach (var support in _supports[side])
                 {
                     bindposes.Add(SupportBindpose(support, _lowerIndices[side], bones, bindposes));
                     bones.Add(support);
@@ -121,7 +126,7 @@ namespace KOZ39.ElbowFixer
                 foreach (
                     var mirror in TwistRig.Mirror(
                         bones[boneIndex],
-                        _nodes.Select(node => supports[side][node])
+                        Nodes(side).Select(node => _supports[side][node])
                     )
                 )
                 {
@@ -170,6 +175,8 @@ namespace KOZ39.ElbowFixer
             return drift;
         }
 
+        private int[] Nodes(int side) => TwistRig.Nodes(_isSkin, _supports[side].Length);
+
         private int[] WeightNodes(IEnumerable<int> supports, int source) =>
             (_isSkin ? supports : supports.Append(source)).ToArray();
 
@@ -196,10 +203,10 @@ namespace KOZ39.ElbowFixer
                 "InvalidBindpose",
                 Renderer
             );
-            var first = bones.Length + side * TwistRig.SupportCount;
+            var first = bones.Length + _supports.Take(side).Sum(arm => arm.Length);
             Redistribute(
                 lowerIndex,
-                WeightNodes(_nodes.Select(node => first + node), lowerIndex),
+                WeightNodes(Nodes(side).Select(node => first + node), lowerIndex),
                 _axes[side]
             );
         }
