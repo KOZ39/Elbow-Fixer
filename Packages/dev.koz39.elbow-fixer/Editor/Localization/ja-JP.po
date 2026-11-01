@@ -50,9 +50,9 @@ msgstr "「{0}」にメッシュがありません。対象メッシュから外
 msgid "messages.PlanSummary"
 msgstr "{0}：頂点{1}個を再配分（最も近い区間を使用{2}個）"
 
-#. {0}: スキニング用ボーンとVRC Constraintの数, {1}: 参照オブジェクトの数
+#. {0}: スキニング用ボーンの数, {1}: VRC Constraintの数, {2}: 参照オブジェクトの数
 msgid "messages.BuildSummary"
-msgstr "スキニング用ボーン{0}本、VRC Constraint{0}個、参照オブジェクト{1}個を追加しました。"
+msgstr "スキニング用ボーン{0}本、VRC Constraint{1}個、参照オブジェクト{2}個を追加しました。"
 
 #. {0}: メッシュ名, {1}: 距離
 msgid "messages.RestPoseDrift"

@@ -9,8 +9,8 @@ namespace KOZ39.ElbowFixer
     internal static class TwistRig
     {
         internal const string NamePrefix = "ElbowFixer.";
-        internal const int SupportCount = 6;
-        internal const int ReferenceCount = 2;
+        internal const int SupportCount = 9;
+        internal const int ReferenceCount = 3;
 
         // Must match MeshWeightPlan.Apply's bone order: each arm's supports, then each mirror set.
         internal static int[] WeightNodes(int boneCount, int group) =>
@@ -49,22 +49,7 @@ namespace KOZ39.ElbowFixer
             );
             AddAimConstraint(roll, arm.Hand, handUp, forearm.normalized);
 
-            var supports = new Transform[SupportCount];
-            supports[0] = stable;
-            supports[SupportCount - 1] = roll;
-
-            for (var i = 1; i < SupportCount - 1; i++)
-            {
-                supports[i] = CreateChild(
-                    $"{NamePrefix}Twist{i}.{arm.Suffix}",
-                    stable,
-                    arm.Lower.position,
-                    arm.Lower.rotation
-                );
-                AddTwistConstraint(supports[i], roll, (float)i / (SupportCount - 1));
-            }
-
-            return (supports, new[] { stable, up, handUp, roll });
+            return (CreateSkinTwists(arm, stable, roll), new[] { stable, up, handUp, roll });
         }
 
         internal static Transform[] Mirror(Transform hiddenBone, Transform[] supports) =>
@@ -77,11 +62,40 @@ namespace KOZ39.ElbowFixer
                         support.position,
                         support.rotation
                     );
-                    AddTwistConstraint(mirror, support, 1);
+                    AddRotationConstraint(mirror, support);
 
                     return mirror;
                 })
                 .ToArray();
+
+        private static Transform[] CreateSkinTwists(Arm arm, Transform stable, Transform roll)
+        {
+            var last = SupportCount - 1;
+            var twists = new Transform[SupportCount];
+            twists[0] = stable;
+
+            // Blending from the LowerArm instead of Stable keeps the twist from flipping when the
+            // hand turns past 180 degrees.
+            twists[last] = CreateTwist(arm, stable, $"Twist{last}", arm.Lower, roll);
+
+            // Two equal sources blend to the exact midpoint, while a GlobalWeight fraction spaces
+            // the twist unevenly and thins the forearm between bones.
+            for (var step = last / 2; step > 0; step /= 2)
+            {
+                for (var i = step; i < last; i += step * 2)
+                {
+                    twists[i] = CreateTwist(
+                        arm,
+                        stable,
+                        $"Twist{i}",
+                        twists[i - step],
+                        twists[i + step]
+                    );
+                }
+            }
+
+            return twists;
+        }
 
         private static Transform CreateChild(
             string name,
@@ -113,13 +127,33 @@ namespace KOZ39.ElbowFixer
             aim.ZeroConstraint();
         }
 
-        // The SDK normalizes a single source's weight, so only GlobalWeight can scale the twist.
-        // It blends rotations, not angles: 0.25 of a 180-degree twist gives 36.9 degrees, not 45.
-        private static void AddTwistConstraint(Transform twist, Transform source, float weight)
+        private static Transform CreateTwist(
+            Arm arm,
+            Transform stable,
+            string name,
+            params Transform[] sources
+        )
         {
-            var constraint = twist.gameObject.AddComponent<VRCRotationConstraint>();
-            constraint.Sources.Add(new VRCConstraintSource(source, 1));
-            constraint.GlobalWeight = weight;
+            var twist = CreateChild(
+                $"{NamePrefix}{name}.{arm.Suffix}",
+                stable,
+                arm.Lower.position,
+                arm.Lower.rotation
+            );
+            AddRotationConstraint(twist, sources);
+
+            return twist;
+        }
+
+        private static void AddRotationConstraint(Transform bone, params Transform[] sources)
+        {
+            var constraint = bone.gameObject.AddComponent<VRCRotationConstraint>();
+
+            foreach (var source in sources)
+            {
+                constraint.Sources.Add(new VRCConstraintSource(source, 1));
+            }
+
             constraint.ZeroConstraint();
         }
     }

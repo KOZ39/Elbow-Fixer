@@ -50,9 +50,9 @@ msgstr "'{0}' has no mesh. Remove it from the target meshes."
 msgid "messages.PlanSummary"
 msgstr "{0}: {1} vertices redistributed ({2} using the nearest segment)"
 
-#. {0}: skin bone and VRC constraint count, {1}: reference object count
+#. {0}: skin bone count, {1}: VRC constraint count, {2}: reference object count
 msgid "messages.BuildSummary"
-msgstr "Added {0} skin bones, {0} VRC constraints and {1} reference objects."
+msgstr "Added {0} skin bones, {1} VRC constraints and {2} reference objects."
 
 #. {0}: mesh name, {1}: distance
 msgid "messages.RestPoseDrift"

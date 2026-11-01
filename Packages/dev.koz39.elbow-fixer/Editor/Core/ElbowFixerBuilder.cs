@@ -61,8 +61,14 @@ namespace KOZ39.ElbowFixer
 
             var boneCount =
                 supports.Sum(bones => bones.Length) + plans.Sum(plan => plan.Plan.MirrorCount);
+            // Each arm's Roll is a reference object with an aim constraint but no skin weights.
             var report = new StringBuilder(
-                Text("messages.BuildSummary", boneCount, arms.Length * TwistRig.ReferenceCount)
+                Text(
+                    "messages.BuildSummary",
+                    boneCount,
+                    boneCount + arms.Length,
+                    arms.Length * TwistRig.ReferenceCount
+                )
             );
 
             foreach (var (plan, drift) in plans)

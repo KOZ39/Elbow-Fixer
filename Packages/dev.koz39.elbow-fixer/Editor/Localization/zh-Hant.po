@@ -50,9 +50,9 @@ msgstr "「{0}」沒有網格。請將其從目標網格中移除。"
 msgid "messages.PlanSummary"
 msgstr "{0}：重新分配 {1} 個頂點（使用最近分段 {2} 個）"
 
-#. {0}: 蒙皮骨骼和 VRC Constraint 數量, {1}: 參考物件數量
+#. {0}: 蒙皮骨骼數量, {1}: VRC Constraint 數量, {2}: 參考物件數量
 msgid "messages.BuildSummary"
-msgstr "已加入 {0} 個蒙皮骨骼、{0} 個 VRC Constraint 和 {1} 個參考物件。"
+msgstr "已加入 {0} 個蒙皮骨骼、{1} 個 VRC Constraint 和 {2} 個參考物件。"
 
 #. {0}: 網格名稱, {1}: 距離
 msgid "messages.RestPoseDrift"
