@@ -14,7 +14,7 @@ namespace KOZ39.ElbowFixer
         // lets avatars a few hundred meters tall through while still catching a wrong bindpose.
         private const float MaxRestDrift = 0.0001f;
 
-        private const float MaxRingSpacing = 0.05f;
+        private const float MaxRingSpacing = 0.08f;
         private const int MaxSubdivisionLevels = 3;
 
         internal const string MissingMesh = nameof(MissingMesh);
