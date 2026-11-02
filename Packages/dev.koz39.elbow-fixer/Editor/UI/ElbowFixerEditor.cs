@@ -118,6 +118,8 @@ namespace KOZ39.ElbowFixer
                 new GUIContent(Text("labels.SubdivideForearm"), Text("tooltips.SubdivideForearm"))
             );
 
+            EditorGUILayout.Space();
+
             EditorGUILayout.PropertyField(
                 _targetMeshesProperty,
                 new GUIContent(Text("labels.TargetMeshes"), Text("tooltips.TargetMeshes")),
