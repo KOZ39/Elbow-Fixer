@@ -121,10 +121,12 @@ namespace KOZ39.ElbowFixer
             return twist == bone ? (bone.IsChildOf(lower) ? lower : upper, null) : (null, twist);
         }
 
-        // Modular Avatar can leave an outfit's lower arm as a child of the avatar's,
-        // and the sleeve weights then sit on a bone that only follows the LowerArm.
+        // Modular Avatar keeps an outfit bone it doesn't merge, such as one with other components,
+        // under the avatar bone its name matches.
+        // Sleeve weights on a kept lower arm then sit on a bone that only follows the LowerArm.
         private bool IsLowerArmCopy(Transform bone, Transform lower, Transform hand) =>
             bone.parent == lower
+            && bone.name.Contains(lower.name, StringComparison.Ordinal)
             && !ElbowFixerUtility.IsHiddenBone(bone)
             && !IsRotationDriven(bone)
             && !_physBoneDriven.Contains(bone)
