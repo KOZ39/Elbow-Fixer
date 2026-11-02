@@ -235,7 +235,15 @@ namespace KOZ39.ElbowFixer
                                 > MaxRingSpacing
                         )
             );
-            _vertices = _subdivision.Positions;
+            var positions = _subdivision.Positions;
+
+            if (positions.Length == mesh.vertexCount)
+            {
+                _subdivision = null;
+                return;
+            }
+
+            _vertices = positions;
             _weights = _subdivision.Weights;
         }
 
