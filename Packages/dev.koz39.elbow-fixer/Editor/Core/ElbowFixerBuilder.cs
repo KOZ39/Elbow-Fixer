@@ -12,6 +12,8 @@ namespace KOZ39.ElbowFixer
 {
     internal static class ElbowFixerBuilder
     {
+        private const float MinSkinShare = 0.5f;
+
         internal static string Build(
             GameObject avatarRoot,
             SkinnedMeshRenderer[] renderers,
@@ -44,25 +46,14 @@ namespace KOZ39.ElbowFixer
             var arms = Arm.Resolve(avatarRoot);
             var meshSwaps = FindMeshSwaps(avatarRoot, renderers);
 
-            // Sleeve cuffs often follow the fingers partly, so only the mesh with the most vertices
-            // fully on the fingers gets the skin twist.
-            var skin = renderers
-                .Select(renderer =>
-                    (
-                        Renderer: renderer,
-                        Count: MeshWeightPlan.RigidFingerVertexCount(renderer, arms)
-                    )
-                )
-                .OrderByDescending(candidate => candidate.Count)
-                .FirstOrDefault(candidate => candidate.Count > 0)
-                .Renderer;
-            var hasSkin = skin != null;
-            var hasClothing = renderers.Any(renderer => renderer != skin);
+            var skins = FindSkins(renderers, arms);
+            var hasSkin = skins.Count > 0;
+            var hasClothing = renderers.Any(renderer => !skins.Contains(renderer));
             var plans = renderers
                 .Select(renderer =>
                     TryPlan(
                         renderer,
-                        renderer == skin,
+                        skins.Contains(renderer),
                         subdivideForearm,
                         arms,
                         hasSkin,
@@ -151,6 +142,38 @@ namespace KOZ39.ElbowFixer
             }
 
             return report.ToString();
+        }
+
+        private static HashSet<SkinnedMeshRenderer> FindSkins(
+            SkinnedMeshRenderer[] renderers,
+            Arm[] arms
+        )
+        {
+            // Cuffs follow the fingers only partly, which the share filters out.
+            // The Hand bone counts only when no mesh uses finger bones, because cuffs are often
+            // fully on it.
+            foreach (var includeHand in new[] { false, true })
+            {
+                var counts = renderers
+                    .Select(renderer =>
+                        (
+                            Renderer: renderer,
+                            Count: MeshWeightPlan.RigidHandVertexCount(renderer, arms, includeHand)
+                        )
+                    )
+                    .ToArray();
+                var max = counts.Max(candidate => candidate.Count);
+
+                if (max > 0)
+                {
+                    return counts
+                        .Where(candidate => candidate.Count >= MinSkinShare * max)
+                        .Select(candidate => candidate.Renderer)
+                        .ToHashSet();
+                }
+            }
+
+            return new();
         }
 
         private static MeshWeightPlan TryPlan(

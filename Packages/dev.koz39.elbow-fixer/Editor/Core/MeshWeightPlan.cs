@@ -402,23 +402,30 @@ namespace KOZ39.ElbowFixer
             return (boneList.ToArray(), bindposeList.ToArray());
         }
 
-        internal static int RigidFingerVertexCount(SkinnedMeshRenderer renderer, Arm[] arms)
+        internal static int RigidHandVertexCount(
+            SkinnedMeshRenderer renderer,
+            Arm[] arms,
+            bool includeHand
+        )
         {
             if (FindMeshProblem(renderer) != null)
             {
                 return 0;
             }
 
-            var isFinger = renderer
+            var isHand = renderer
                 .bones.Select(bone =>
-                    bone != null && arms.Any(arm => bone != arm.Hand && bone.IsChildOf(arm.Hand))
+                    bone != null
+                    && arms.Any(arm =>
+                        (includeHand || bone != arm.Hand) && bone.IsChildOf(arm.Hand)
+                    )
                 )
                 .ToArray();
 
             return renderer.sharedMesh.boneWeights.Count(weight =>
                 ForearmWeights
                     .Slots(weight)
-                    .Where(slot => slot.Bone < isFinger.Length && isFinger[slot.Bone])
+                    .Where(slot => slot.Bone < isHand.Length && isHand[slot.Bone])
                     .Sum(slot => slot.Weight) >= ForearmWeights.RigidWeight
             );
         }
