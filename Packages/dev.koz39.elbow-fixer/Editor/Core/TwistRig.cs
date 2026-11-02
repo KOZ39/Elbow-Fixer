@@ -14,7 +14,7 @@ namespace KOZ39.ElbowFixer
         private const int SkinNodeCount = 9;
         private const int SleeveNodeCount = 3;
 
-        // Must match Build's support order: Stable, the skin twists, then the sleeve twists.
+        // Must match Build and SupportCount: Stable, the skin twists, then the sleeve twists.
         // Clothing gets only the LowerArm's own twist, so it skips the nodes that carry the hand's.
         internal static int[] Nodes(bool isSkin, int supportCount) =>
             isSkin
@@ -23,6 +23,9 @@ namespace KOZ39.ElbowFixer
                     .Range(supportCount - SleeveNodeCount, SleeveNodeCount)
                     .Prepend(0)
                     .ToArray();
+
+        internal static int SupportCount(bool hasSkin, bool hasClothing) =>
+            (hasSkin ? SkinNodeCount : 1) + (hasClothing ? SleeveNodeCount : 0);
 
         internal static int ReferenceCount(bool hasSkin) => hasSkin ? 3 : 1;
 

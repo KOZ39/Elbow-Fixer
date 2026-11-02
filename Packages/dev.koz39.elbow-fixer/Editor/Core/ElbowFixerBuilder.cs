@@ -58,25 +58,60 @@ namespace KOZ39.ElbowFixer
                 .Renderer;
             var hasSkin = skin != null;
             var hasClothing = renderers.Any(renderer => renderer != skin);
-            var rigs = arms.Select(arm => TwistRig.Build(arm, hasSkin, hasClothing)).ToArray();
-            var supports = rigs.Select(rig => rig.Supports).ToArray();
             var plans = renderers
                 .Select(renderer =>
                     TryPlan(
                         renderer,
                         renderer == skin,
-                        subdivideForearm && renderer == skin,
+                        subdivideForearm,
                         arms,
-                        supports,
+                        hasSkin,
+                        hasClothing,
                         meshSwaps,
                         skip
                     )
                 )
                 .Where(plan => plan != null)
-                .Select(plan => plan.Value)
                 .ToArray();
 
+            var survivingSkin = plans.Any(plan => plan.IsSkin);
+            var survivingClothing = plans.Any(plan => !plan.IsSkin);
+
+            if (survivingSkin != hasSkin || survivingClothing != hasClothing)
+            {
+                hasSkin = survivingSkin;
+                hasClothing = survivingClothing;
+                plans = plans
+                    .Select(plan =>
+                        TryPlan(
+                            plan.Renderer,
+                            plan.IsSkin,
+                            subdivideForearm,
+                            arms,
+                            hasSkin,
+                            hasClothing,
+                            meshSwaps,
+                            skip
+                        )
+                    )
+                    .Where(plan => plan != null)
+                    .ToArray();
+            }
+
             if (plans.Length == 0)
+            {
+                return null;
+            }
+
+            var rigs = arms.Select(arm => TwistRig.Build(arm, hasSkin, hasClothing)).ToArray();
+            var supports = rigs.Select(rig => rig.Supports).ToArray();
+            var applied = plans
+                .Select(plan => TryApply(plan, supports, skip))
+                .Where(result => result != null)
+                .Select(result => result.Value)
+                .ToArray();
+
+            if (applied.Length == 0)
             {
                 foreach (var root in rigs.SelectMany(rig => rig.Roots))
                 {
@@ -87,7 +122,8 @@ namespace KOZ39.ElbowFixer
             }
 
             var boneCount =
-                supports.Sum(bones => bones.Length) + plans.Sum(plan => plan.Plan.MirrorCount);
+                supports.Sum(bones => bones.Length)
+                + applied.Sum(result => result.Plan.MirrorCount);
             // Each arm's Roll is a reference object with an aim constraint but no skin weights.
             var report = new StringBuilder(
                 Text(
@@ -98,7 +134,7 @@ namespace KOZ39.ElbowFixer
                 )
             );
 
-            foreach (var (plan, drift) in plans)
+            foreach (var (plan, drift) in applied)
             {
                 report
                     .AppendLine()
@@ -117,12 +153,13 @@ namespace KOZ39.ElbowFixer
             return report.ToString();
         }
 
-        private static (MeshWeightPlan Plan, float Drift)? TryPlan(
+        private static MeshWeightPlan TryPlan(
             SkinnedMeshRenderer renderer,
             bool isSkin,
-            bool subdivide,
+            bool subdivideForearm,
             Arm[] arms,
-            Transform[][] supports,
+            bool hasSkin,
+            bool hasClothing,
             Dictionary<SkinnedMeshRenderer, AnimationClip> meshSwaps,
             Action<ElbowFixerException> skip
         )
@@ -135,10 +172,37 @@ namespace KOZ39.ElbowFixer
                     renderer,
                     clip
                 );
-                var plan = MeshWeightPlan.Create(renderer, arms, supports, isSkin, subdivide);
+                var supportCounts = Enumerable
+                    .Repeat(TwistRig.SupportCount(hasSkin, hasClothing), arms.Length)
+                    .ToArray();
+                var plan = MeshWeightPlan.Create(
+                    renderer,
+                    arms,
+                    supportCounts,
+                    isSkin,
+                    subdivideForearm && isSkin
+                );
                 Require(plan.RedistributedCount > 0, "NoForearmWeights", renderer);
 
-                return (plan, plan.Apply());
+                return plan;
+            }
+            catch (ElbowFixerException e)
+            {
+                skip(e);
+
+                return null;
+            }
+        }
+
+        private static (MeshWeightPlan Plan, float Drift)? TryApply(
+            MeshWeightPlan plan,
+            Transform[][] supports,
+            Action<ElbowFixerException> skip
+        )
+        {
+            try
+            {
+                return (plan, plan.Apply(supports));
             }
             catch (ElbowFixerException e)
             {
