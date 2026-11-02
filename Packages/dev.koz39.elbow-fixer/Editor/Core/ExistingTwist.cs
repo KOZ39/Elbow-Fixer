@@ -39,6 +39,7 @@ namespace KOZ39.ElbowFixer
                 )
                 .Select(constraint =>
                     (
+                        // A VRC constraint can drive another object than the one it is on.
                         Driven: constraint.TargetTransform != null
                             ? constraint.TargetTransform
                             : constraint.transform,
