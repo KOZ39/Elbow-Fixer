@@ -54,7 +54,15 @@ msgstr "「{0}」にメッシュがありません。対象メッシュから外
 
 #. {0}: メッシュ名, {1}: 頂点数, {2}: 最も近い区間を使用した頂点数
 msgid "messages.PlanSummary"
-msgstr "{0}：頂点{1}個を再配分（最も近い区間を使用{2}個）"
+msgstr "{0}：服のメッシュ、頂点{1}個を再配分（最も近い区間を使用{2}個）"
+
+#. {0}: メッシュ名, {1}: 頂点数, {2}: 最も近い区間を使用した頂点数
+msgid "messages.SkinPlanSummary"
+msgstr "{0}：ボディメッシュ、頂点{1}個を再配分（最も近い区間を使用{2}個）"
+
+#. {0}: メッシュ名, {1}: 頂点数
+msgid "messages.SubdivisionSummary"
+msgstr "{0}：細分化で頂点{1}個を追加"
 
 #. {0}: スキニング用ボーンの数, {1}: VRC Constraintの数, {2}: 参照オブジェクトの数
 msgid "messages.BuildSummary"

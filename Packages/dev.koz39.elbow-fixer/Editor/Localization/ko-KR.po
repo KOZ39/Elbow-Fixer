@@ -54,7 +54,15 @@ msgstr "'{0}'에 메시가 없습니다. 대상 메시에서 제거해 주세요
 
 #. {0}: 메시 이름, {1}: 정점 수, {2}: 가장 가까운 구간을 사용한 정점 수
 msgid "messages.PlanSummary"
-msgstr "{0}: 정점 {1}개 재분배(가장 가까운 구간 사용 {2}개)"
+msgstr "{0}: 옷 메시, 정점 {1}개 재분배(가장 가까운 구간 사용 {2}개)"
+
+#. {0}: 메시 이름, {1}: 정점 수, {2}: 가장 가까운 구간을 사용한 정점 수
+msgid "messages.SkinPlanSummary"
+msgstr "{0}: 몸 메시, 정점 {1}개 재분배(가장 가까운 구간 사용 {2}개)"
+
+#. {0}: 메시 이름, {1}: 정점 수
+msgid "messages.SubdivisionSummary"
+msgstr "{0}: 세분화로 정점 {1}개 추가"
 
 #. {0}: 스키닝 본 수, {1}: VRC Constraint 수, {2}: 참조 오브젝트 수
 msgid "messages.BuildSummary"

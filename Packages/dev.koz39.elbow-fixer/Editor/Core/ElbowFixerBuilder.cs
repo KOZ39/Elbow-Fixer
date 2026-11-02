@@ -131,12 +131,27 @@ namespace KOZ39.ElbowFixer
                     .AppendLine()
                     .Append(
                         Text(
-                            "messages.PlanSummary",
+                            plan.IsSkin ? "messages.SkinPlanSummary" : "messages.PlanSummary",
                             plan.Renderer.name,
                             plan.RedistributedCount,
                             plan.NearestCount
                         )
-                    )
+                    );
+
+                if (plan.AddedVertexCount > 0)
+                {
+                    report
+                        .AppendLine()
+                        .Append(
+                            Text(
+                                "messages.SubdivisionSummary",
+                                plan.Renderer.name,
+                                plan.AddedVertexCount
+                            )
+                        );
+                }
+
+                report
                     .AppendLine()
                     .Append(Text("messages.RestPoseDrift", plan.Renderer.name, drift * 1000));
             }

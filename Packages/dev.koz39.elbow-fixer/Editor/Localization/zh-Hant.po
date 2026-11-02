@@ -54,7 +54,15 @@ msgstr "「{0}」沒有網格。請將其從目標網格中移除。"
 
 #. {0}: 網格名稱, {1}: 頂點數, {2}: 使用最近分段的頂點數
 msgid "messages.PlanSummary"
-msgstr "{0}：重新分配 {1} 個頂點（使用最近分段 {2} 個）"
+msgstr "{0}：衣服網格，重新分配 {1} 個頂點（使用最近分段 {2} 個）"
+
+#. {0}: 網格名稱, {1}: 頂點數, {2}: 使用最近分段的頂點數
+msgid "messages.SkinPlanSummary"
+msgstr "{0}：身體網格，重新分配 {1} 個頂點（使用最近分段 {2} 個）"
+
+#. {0}: 網格名稱, {1}: 頂點數
+msgid "messages.SubdivisionSummary"
+msgstr "{0}：細分新增 {1} 個頂點"
 
 #. {0}: 蒙皮骨骼數量, {1}: VRC Constraint 數量, {2}: 參考物件數量
 msgid "messages.BuildSummary"

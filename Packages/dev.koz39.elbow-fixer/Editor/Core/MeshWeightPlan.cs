@@ -34,6 +34,7 @@ namespace KOZ39.ElbowFixer
 
         internal int RedistributedCount { get; private set; }
         internal int NearestCount { get; private set; }
+        internal int AddedVertexCount { get; private set; }
 
         internal bool IsSkin => _isSkin;
 
@@ -245,6 +246,7 @@ namespace KOZ39.ElbowFixer
                 return;
             }
 
+            AddedVertexCount = positions.Length - mesh.vertexCount;
             _vertices = positions;
             _weights = _subdivision.Weights;
         }
