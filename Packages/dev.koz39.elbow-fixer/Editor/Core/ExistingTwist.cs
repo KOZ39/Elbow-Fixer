@@ -16,6 +16,8 @@ namespace KOZ39.ElbowFixer
         private readonly ILookup<Transform, Transform[]> _sources;
         private readonly HashSet<Transform> _physBoneDriven;
 
+        // Position and scale constraints cannot twist the forearm. Modular Avatar adds scale
+        // constraints under the forearm to hide mesh sections that Shape Changer toggles.
         internal ExistingTwist(GameObject avatarRoot)
         {
             var unityConstraints = avatarRoot
@@ -72,6 +74,7 @@ namespace KOZ39.ElbowFixer
 
         internal bool IsRotationDriven(Transform bone) => _sources.Contains(bone);
 
+        // Modular Avatar's hidden bones are named after a shape key, which may mention twist.
         internal Transform Find(Transform bone, Transform upper, Transform lower, Transform hand)
         {
             if (!bone.IsChildOf(upper) || (hand != null && bone.IsChildOf(hand)))
