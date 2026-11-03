@@ -1,5 +1,4 @@
 // Aim-stabilized support informed by Prefabulous Universal (MIT).
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using VRC.Dynamics;
@@ -11,29 +10,10 @@ namespace KOZ39.ElbowFixer
     {
         internal const string NamePrefix = "ElbowFixer.";
 
-        private const int SkinNodeCount = 9;
-        private const int SleeveNodeCount = 3;
+        internal const int SupportCount = 9;
+        internal const int ReferenceCount = 3;
 
-        // Must match Build and SupportCount: Stable, the skin twists, then the sleeve twists.
-        // Clothing gets only the LowerArm's own twist, so it skips the nodes that carry the hand's.
-        internal static int[] Nodes(bool isSkin, int supportCount) =>
-            isSkin
-                ? Enumerable.Range(0, SkinNodeCount).ToArray()
-                : Enumerable
-                    .Range(supportCount - SleeveNodeCount, SleeveNodeCount)
-                    .Prepend(0)
-                    .ToArray();
-
-        internal static int SupportCount(bool hasSkin, bool hasClothing) =>
-            (hasSkin ? SkinNodeCount : 1) + (hasClothing ? SleeveNodeCount : 0);
-
-        internal static int ReferenceCount(bool hasSkin) => hasSkin ? 3 : 1;
-
-        internal static (Transform[] Supports, Transform[] Roots) Build(
-            Arm arm,
-            bool hasSkin,
-            bool hasClothing
-        )
+        internal static (Transform[] Supports, Transform[] Roots) Build(Arm arm)
         {
             var forearm = arm.Hand.position - arm.Lower.position;
             var upOffset = arm.UpDirection * forearm.magnitude;
@@ -52,38 +32,24 @@ namespace KOZ39.ElbowFixer
 
             AddAimConstraint(stable, arm.Hand, up, forearm.normalized);
 
-            var supports = new[] { stable };
-            var roots = new List<Transform> { stable, up };
+            var handUp = CreateChild(
+                $"{NamePrefix}HandUp.{arm.Suffix}",
+                arm.Hand,
+                arm.Hand.position + upOffset,
+                arm.Hand.rotation
+            );
+            var roll = CreateChild(
+                $"{NamePrefix}Roll.{arm.Suffix}",
+                arm.Lower,
+                arm.Lower.position,
+                arm.Lower.rotation
+            );
+            AddAimConstraint(roll, arm.Hand, handUp, forearm.normalized);
 
-            if (hasSkin)
-            {
-                var handUp = CreateChild(
-                    $"{NamePrefix}HandUp.{arm.Suffix}",
-                    arm.Hand,
-                    arm.Hand.position + upOffset,
-                    arm.Hand.rotation
-                );
-                var roll = CreateChild(
-                    $"{NamePrefix}Roll.{arm.Suffix}",
-                    arm.Lower,
-                    arm.Lower.position,
-                    arm.Lower.rotation
-                );
-                AddAimConstraint(roll, arm.Hand, handUp, forearm.normalized);
-                roots.Add(handUp);
-                roots.Add(roll);
-                supports = CreateSkinTwists(arm, stable, roll);
-            }
-
-            if (hasClothing)
-            {
-                supports = supports.Concat(CreateSleeveTwists(arm, stable)).ToArray();
-            }
-
-            return (supports, roots.ToArray());
+            return (CreateTwists(arm, stable, roll), new[] { stable, up, handUp, roll });
         }
 
-        internal static Transform[] Mirror(Transform hiddenBone, IEnumerable<Transform> supports) =>
+        internal static Transform[] Mirror(Transform hiddenBone, Transform[] supports) =>
             supports
                 .Select(support =>
                 {
@@ -99,10 +65,10 @@ namespace KOZ39.ElbowFixer
                 })
                 .ToArray();
 
-        private static Transform[] CreateSkinTwists(Arm arm, Transform stable, Transform roll)
+        private static Transform[] CreateTwists(Arm arm, Transform stable, Transform roll)
         {
-            var last = SkinNodeCount - 1;
-            var twists = new Transform[SkinNodeCount];
+            var last = SupportCount - 1;
+            var twists = new Transform[SupportCount];
             twists[0] = stable;
 
             // Blending from the LowerArm instead of Stable keeps the twist from flipping when the
@@ -126,18 +92,6 @@ namespace KOZ39.ElbowFixer
             }
 
             return twists;
-        }
-
-        private static Transform[] CreateSleeveTwists(Arm arm, Transform stable)
-        {
-            var middle = CreateTwist(arm, stable, "SleeveTwist2", stable, arm.Lower);
-
-            return new[]
-            {
-                CreateTwist(arm, stable, "SleeveTwist1", stable, middle),
-                middle,
-                CreateTwist(arm, stable, "SleeveTwist3", middle, arm.Lower),
-            };
         }
 
         private static Transform CreateChild(

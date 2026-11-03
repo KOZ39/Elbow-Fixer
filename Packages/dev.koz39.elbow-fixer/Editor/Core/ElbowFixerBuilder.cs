@@ -47,8 +47,6 @@ namespace KOZ39.ElbowFixer
             var meshSwaps = FindMeshSwaps(avatarRoot, renderers);
 
             var skins = FindSkins(renderers, arms);
-            var hasSkin = skins.Count > 0;
-            var hasClothing = renderers.Any(renderer => !skins.Contains(renderer));
             var plans = renderers
                 .Select(renderer =>
                     TryPlan(
@@ -56,8 +54,6 @@ namespace KOZ39.ElbowFixer
                         skins.Contains(renderer),
                         subdivideForearm,
                         arms,
-                        hasSkin,
-                        hasClothing,
                         meshSwaps,
                         skip
                     )
@@ -65,36 +61,12 @@ namespace KOZ39.ElbowFixer
                 .Where(plan => plan != null)
                 .ToArray();
 
-            var survivingSkin = plans.Any(plan => plan.IsSkin);
-            var survivingClothing = plans.Any(plan => !plan.IsSkin);
-
-            if (survivingSkin != hasSkin || survivingClothing != hasClothing)
-            {
-                hasSkin = survivingSkin;
-                hasClothing = survivingClothing;
-                plans = plans
-                    .Select(plan =>
-                        TryPlan(
-                            plan.Renderer,
-                            plan.IsSkin,
-                            subdivideForearm,
-                            arms,
-                            hasSkin,
-                            hasClothing,
-                            meshSwaps,
-                            skip
-                        )
-                    )
-                    .Where(plan => plan != null)
-                    .ToArray();
-            }
-
             if (plans.Length == 0)
             {
                 return null;
             }
 
-            var rigs = arms.Select(arm => TwistRig.Build(arm, hasSkin, hasClothing)).ToArray();
+            var rigs = arms.Select(TwistRig.Build).ToArray();
             var supports = rigs.Select(rig => rig.Supports).ToArray();
             var applied = plans
                 .Select(plan => TryApply(plan, supports, skip))
@@ -120,8 +92,8 @@ namespace KOZ39.ElbowFixer
                 Text(
                     "messages.BuildSummary",
                     boneCount,
-                    hasSkin ? boneCount + arms.Length : boneCount,
-                    arms.Length * TwistRig.ReferenceCount(hasSkin)
+                    boneCount + arms.Length,
+                    arms.Length * TwistRig.ReferenceCount
                 )
             );
 
@@ -196,8 +168,6 @@ namespace KOZ39.ElbowFixer
             bool isSkin,
             bool subdivideForearm,
             Arm[] arms,
-            bool hasSkin,
-            bool hasClothing,
             Dictionary<SkinnedMeshRenderer, AnimationClip> meshSwaps,
             Action<ElbowFixerException> skip
         )
@@ -210,13 +180,9 @@ namespace KOZ39.ElbowFixer
                     renderer,
                     clip
                 );
-                var supportCounts = Enumerable
-                    .Repeat(TwistRig.SupportCount(hasSkin, hasClothing), arms.Length)
-                    .ToArray();
                 var plan = MeshWeightPlan.Create(
                     renderer,
                     arms,
-                    supportCounts,
                     isSkin,
                     subdivideForearm && isSkin
                 );
