@@ -19,7 +19,8 @@ namespace KOZ39.ElbowFixer
         private readonly List<BoneWeight> _weights;
         private readonly List<int>[] _indices;
         private readonly MeshTopology[] _topologies;
-        private readonly List<BlendShapeFrame> _blendShapeFrames = new();
+        private readonly Mesh _source;
+        private readonly List<(int First, int Second)> _midpointEdges = new();
         private readonly Dictionary<(int, int), int> _midpoints = new();
 
         internal Vector3[] Positions => _positions.ToArray();
@@ -27,6 +28,7 @@ namespace KOZ39.ElbowFixer
 
         internal ForearmSubdivision(Mesh mesh, BoneWeight[] weights)
         {
+            _source = mesh;
             mesh.GetVertices(_positions);
             mesh.GetNormals(_normals);
             mesh.GetTangents(_tangents);
@@ -34,27 +36,19 @@ namespace KOZ39.ElbowFixer
 
             for (var channel = 0; channel < UVChannelCount; channel++)
             {
-                _uvs[channel] = new List<Vector4>();
+                _uvs[channel] = new();
                 _uvDimensions[channel] = mesh.GetVertexAttributeDimension(
                     VertexAttribute.TexCoord0 + channel
                 );
                 mesh.GetUVs(channel, _uvs[channel]);
             }
 
-            _weights = new List<BoneWeight>(weights);
+            _weights = new(weights);
             _indices = Enumerable
                 .Range(0, mesh.subMeshCount)
                 .Select(subMesh => new List<int>(mesh.GetIndices(subMesh)))
                 .ToArray();
             _topologies = Enumerable.Range(0, mesh.subMeshCount).Select(mesh.GetTopology).ToArray();
-
-            for (var shape = 0; shape < mesh.blendShapeCount; shape++)
-            {
-                for (var frame = 0; frame < mesh.GetBlendShapeFrameCount(shape); frame++)
-                {
-                    _blendShapeFrames.Add(new BlendShapeFrame(mesh, shape, frame));
-                }
-            }
         }
 
         internal void Subdivide(
@@ -132,16 +126,53 @@ namespace KOZ39.ElbowFixer
             }
 
             target.boneWeights = weights;
+            WriteBlendShapes(target);
+        }
 
-            foreach (var frame in _blendShapeFrames)
+        private void WriteBlendShapes(Mesh target)
+        {
+            var sourceVertices = new Vector3[_source.vertexCount];
+            var sourceNormals = new Vector3[_source.vertexCount];
+            var sourceTangents = new Vector3[_source.vertexCount];
+            var vertices = new Vector3[_positions.Count];
+            var normals = new Vector3[_positions.Count];
+            var tangents = new Vector3[_positions.Count];
+
+            for (var shape = 0; shape < _source.blendShapeCount; shape++)
             {
-                target.AddBlendShapeFrame(
-                    frame.Name,
-                    frame.Weight,
-                    frame.Vertices.ToArray(),
-                    frame.Normals.ToArray(),
-                    frame.Tangents.ToArray()
-                );
+                var name = _source.GetBlendShapeName(shape);
+
+                for (var frame = 0; frame < _source.GetBlendShapeFrameCount(shape); frame++)
+                {
+                    _source.GetBlendShapeFrameVertices(
+                        shape,
+                        frame,
+                        sourceVertices,
+                        sourceNormals,
+                        sourceTangents
+                    );
+                    FillMidpoints(sourceVertices, vertices);
+                    FillMidpoints(sourceNormals, normals);
+                    FillMidpoints(sourceTangents, tangents);
+                    target.AddBlendShapeFrame(
+                        name,
+                        _source.GetBlendShapeFrameWeight(shape, frame),
+                        vertices,
+                        normals,
+                        tangents
+                    );
+                }
+            }
+        }
+
+        private void FillMidpoints(Vector3[] source, Vector3[] result)
+        {
+            source.CopyTo(result, 0);
+
+            for (var i = 0; i < _midpointEdges.Count; i++)
+            {
+                var (first, second) = _midpointEdges[i];
+                result[source.Length + i] = (result[first] + result[second]) * 0.5f;
             }
         }
 
@@ -271,43 +302,9 @@ namespace KOZ39.ElbowFixer
             }
 
             _weights.Add(ForearmWeights.Mix(_weights[a], _weights[b]));
-
-            foreach (var frame in _blendShapeFrames)
-            {
-                frame.AddMidpoint(a, b);
-            }
+            _midpointEdges.Add((a, b));
 
             return index;
-        }
-
-        private sealed class BlendShapeFrame
-        {
-            internal readonly string Name;
-            internal readonly float Weight;
-            internal readonly List<Vector3> Vertices;
-            internal readonly List<Vector3> Normals;
-            internal readonly List<Vector3> Tangents;
-
-            internal BlendShapeFrame(Mesh mesh, int shape, int frame)
-            {
-                Name = mesh.GetBlendShapeName(shape);
-                Weight = mesh.GetBlendShapeFrameWeight(shape, frame);
-
-                var vertices = new Vector3[mesh.vertexCount];
-                var normals = new Vector3[mesh.vertexCount];
-                var tangents = new Vector3[mesh.vertexCount];
-                mesh.GetBlendShapeFrameVertices(shape, frame, vertices, normals, tangents);
-                Vertices = new List<Vector3>(vertices);
-                Normals = new List<Vector3>(normals);
-                Tangents = new List<Vector3>(tangents);
-            }
-
-            internal void AddMidpoint(int a, int b)
-            {
-                Vertices.Add((Vertices[a] + Vertices[b]) * 0.5f);
-                Normals.Add((Normals[a] + Normals[b]) * 0.5f);
-                Tangents.Add((Tangents[a] + Tangents[b]) * 0.5f);
-            }
         }
     }
 }
