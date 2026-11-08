@@ -37,8 +37,10 @@ namespace KOZ39.ElbowFixer
         internal static Transform CopiedBone(Transform hiddenBone) =>
             hiddenBone
                 .GetComponentsInParent<Transform>(true)
-                .Skip(1)
-                .First(t => !t.name.StartsWith(HiddenBufferPrefix, StringComparison.Ordinal));
+                .First(t =>
+                    t != hiddenBone
+                    && !t.name.StartsWith(HiddenBufferPrefix, StringComparison.Ordinal)
+                );
 
         internal static bool IsIncluded(Transform target, Transform avatarRoot) =>
             BelongsToAvatar(target, avatarRoot) && !IsEditorOnly(target, avatarRoot);

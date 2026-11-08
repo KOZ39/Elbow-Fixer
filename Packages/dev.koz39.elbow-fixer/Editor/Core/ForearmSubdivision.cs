@@ -174,9 +174,9 @@ namespace KOZ39.ElbowFixer
             var corners = new[] { a, b, c };
             var split = Enumerable
                 .Range(0, 3)
-                .Select(k =>
+                .Select(edge =>
                 {
-                    var (first, second) = (corners[k], corners[(k + 1) % 3]);
+                    var (first, second) = (corners[edge], corners[(edge + 1) % 3]);
 
                     return splits(
                         _positions[first],
@@ -194,16 +194,16 @@ namespace KOZ39.ElbowFixer
                     break;
                 case 1:
                 {
-                    var k = Array.IndexOf(split, true);
-                    var (first, second, third) = Rotate(corners, k);
+                    var edge = Array.IndexOf(split, true);
+                    var (first, second, third) = Rotate(corners, edge);
                     var midpoint = Midpoint(first, second);
                     result.AddRange(new[] { first, midpoint, third, midpoint, second, third });
                     break;
                 }
                 case 2:
                 {
-                    var k = split[2] ? (split[0] ? 2 : 1) : 0;
-                    var (first, second, third) = Rotate(corners, k);
+                    var edge = split[2] ? (split[0] ? 2 : 1) : 0;
+                    var (first, second, third) = Rotate(corners, edge);
                     var firstMidpoint = Midpoint(first, second);
                     var secondMidpoint = Midpoint(second, third);
                     result.AddRange(

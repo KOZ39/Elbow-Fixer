@@ -185,7 +185,7 @@ namespace KOZ39.ElbowFixer
                 .Concat(Enumerable.Repeat(new KeyValuePair<int, float>(0, 0), MaxInfluences))
                 .ToArray();
 
-            return new BoneWeight
+            return new()
             {
                 boneIndex0 = sorted[0].Key,
                 weight0 = sorted[0].Value,

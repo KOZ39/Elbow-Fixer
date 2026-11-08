@@ -195,6 +195,59 @@ namespace KOZ39.ElbowFixer
             return drift;
         }
 
+        internal static int RigidHandVertexCount(
+            SkinnedMeshRenderer renderer,
+            Arm[] arms,
+            bool includeHand
+        )
+        {
+            if (FindMeshProblem(renderer) != null)
+            {
+                return 0;
+            }
+
+            var isHand = renderer
+                .bones.Select(bone =>
+                    bone != null
+                    && arms.Any(arm =>
+                        (includeHand || bone != arm.Hand) && bone.IsChildOf(arm.Hand)
+                    )
+                )
+                .ToArray();
+
+            return renderer.sharedMesh.boneWeights.Count(weight =>
+                ForearmWeights
+                    .Slots(weight)
+                    .Where(slot => slot.Bone < isHand.Length && isHand[slot.Bone])
+                    .Sum(slot => slot.Weight) >= ForearmWeights.RigidWeight
+            );
+        }
+
+        internal static string FindMeshProblem(SkinnedMeshRenderer renderer)
+        {
+            var mesh = renderer.sharedMesh;
+
+            if (mesh == null)
+            {
+                return MissingMesh;
+            }
+
+            if (!mesh.isReadable)
+            {
+                return MeshNotReadable;
+            }
+
+            return renderer.quality == SkinQuality.Auto || renderer.quality == SkinQuality.Bone4
+                ? null
+                : "SkinQuality";
+        }
+
+        internal static Matrix4x4 BindposeFrom(
+            Transform bone,
+            Transform reference,
+            Matrix4x4 referenceBindpose
+        ) => bone.worldToLocalMatrix * reference.localToWorldMatrix * referenceBindpose;
+
         private void Subdivide(Mesh mesh)
         {
             var sources = _lowerIndices
@@ -208,7 +261,7 @@ namespace KOZ39.ElbowFixer
                 )
                 .ToArray();
 
-            _subdivision = new ForearmSubdivision(mesh, _weights);
+            _subdivision = new(mesh, _weights);
             _subdivision.Subdivide(
                 MaxSubdivisionLevels,
                 (first, firstWeight, second, secondWeight) =>
@@ -257,7 +310,7 @@ namespace KOZ39.ElbowFixer
                 arm.Name
             );
             _lowerIndices[side] = lowerIndex;
-            _axes[side] = new ForearmAxis(bindposes[lowerIndex], arm.Hand.localPosition);
+            _axes[side] = new(bindposes[lowerIndex], arm.Hand.localPosition);
 
             Require(
                 float.IsFinite(_axes[side].Length) && _axes[side].Length > 0,
@@ -386,53 +439,6 @@ namespace KOZ39.ElbowFixer
             return (boneList.ToArray(), bindposeList.ToArray());
         }
 
-        internal static int RigidHandVertexCount(
-            SkinnedMeshRenderer renderer,
-            Arm[] arms,
-            bool includeHand
-        )
-        {
-            if (FindMeshProblem(renderer) != null)
-            {
-                return 0;
-            }
-
-            var isHand = renderer
-                .bones.Select(bone =>
-                    bone != null
-                    && arms.Any(arm =>
-                        (includeHand || bone != arm.Hand) && bone.IsChildOf(arm.Hand)
-                    )
-                )
-                .ToArray();
-
-            return renderer.sharedMesh.boneWeights.Count(weight =>
-                ForearmWeights
-                    .Slots(weight)
-                    .Where(slot => slot.Bone < isHand.Length && isHand[slot.Bone])
-                    .Sum(slot => slot.Weight) >= ForearmWeights.RigidWeight
-            );
-        }
-
-        internal static string FindMeshProblem(SkinnedMeshRenderer renderer)
-        {
-            var mesh = renderer.sharedMesh;
-
-            if (mesh == null)
-            {
-                return MissingMesh;
-            }
-
-            if (!mesh.isReadable)
-            {
-                return MeshNotReadable;
-            }
-
-            return renderer.quality == SkinQuality.Auto || renderer.quality == SkinQuality.Bone4
-                ? null
-                : "SkinQuality";
-        }
-
         private static void Validate(
             SkinnedMeshRenderer renderer,
             Mesh mesh,
@@ -498,12 +504,6 @@ namespace KOZ39.ElbowFixer
                     )
                 ) && (sum == 0 || Mathf.Abs(sum - 1) < 0.0001f);
         }
-
-        internal static Matrix4x4 BindposeFrom(
-            Transform bone,
-            Transform reference,
-            Matrix4x4 referenceBindpose
-        ) => bone.worldToLocalMatrix * reference.localToWorldMatrix * referenceBindpose;
 
         private Matrix4x4 SupportBindpose(
             Transform support,

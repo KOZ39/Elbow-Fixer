@@ -11,14 +11,14 @@ namespace KOZ39.ElbowFixer
     {
         internal static readonly ArmSide[] All =
         {
-            new ArmSide(
+            new(
                 "L",
                 "labels.Left",
                 HumanBodyBones.LeftUpperArm,
                 HumanBodyBones.LeftLowerArm,
                 HumanBodyBones.LeftHand
             ),
-            new ArmSide(
+            new(
                 "R",
                 "labels.Right",
                 HumanBodyBones.RightUpperArm,
@@ -118,6 +118,9 @@ namespace KOZ39.ElbowFixer
                 .ToArray();
         }
 
+        internal (Transform ArmBone, Transform Blocker) FindRebind(Transform bone) =>
+            _existingTwist.FindRebind(bone, Upper, Lower, Hand);
+
         private static Arm ResolveSide(
             Transform avatarRoot,
             Animator animator,
@@ -151,15 +154,12 @@ namespace KOZ39.ElbowFixer
             var upDirection = Vector3.Cross(forearm.normalized, avatarRoot.forward);
             Require(upDirection.magnitude > 0.1f, lower, "ForearmParallel", name);
 
-            return new Arm(side, name, upper, lower, hand, upDirection.normalized, existingTwist);
+            return new(side, name, upper, lower, hand, upDirection.normalized, existingTwist);
         }
 
         private static bool IsUniformPositive(Vector3 scale) =>
             scale.x > 0
             && Mathf.Abs(scale.x - scale.y) < ScaleTolerance * scale.x
             && Mathf.Abs(scale.x - scale.z) < ScaleTolerance * scale.x;
-
-        internal (Transform ArmBone, Transform Blocker) FindRebind(Transform bone) =>
-            _existingTwist.FindRebind(bone, Upper, Lower, Hand);
     }
 }
