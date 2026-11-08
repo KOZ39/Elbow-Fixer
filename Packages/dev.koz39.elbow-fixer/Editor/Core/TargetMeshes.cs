@@ -85,7 +85,7 @@ namespace KOZ39.ElbowFixer
 
                 // Outside play mode the editor can read a mesh even without Read/Write.
                 if (
-                    !ElbowFixerUtility.IsIncluded(renderer.transform, avatarRoot.transform)
+                    FindSelectionProblem(renderer, avatarRoot.transform) != null
                     || mesh == null
                     || (!mesh.isReadable && EditorApplication.isPlaying)
                 )
