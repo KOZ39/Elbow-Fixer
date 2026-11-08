@@ -23,6 +23,7 @@ namespace KOZ39.ElbowFixer
         internal readonly SkinnedMeshRenderer Renderer;
         private readonly int[] _lowerIndices;
         private readonly ForearmAxis[] _axes;
+        private readonly List<int> _skinnedSides = new();
         private readonly List<(int Side, int BoneIndex)> _hiddenSections = new();
         private Vector3[] _vertices;
         private BoneWeight[] _weights;
@@ -93,26 +94,26 @@ namespace KOZ39.ElbowFixer
                 plan.Subdivide(mesh);
             }
 
+            var firstNode = bones.Length;
+
             for (var side = 0; side < arms.Length; side++)
             {
                 var lowerIndex = plan._lowerIndices[side];
 
-                if (lowerIndex >= 0)
+                if (
+                    lowerIndex >= 0
+                    && plan.Redistribute(lowerIndex, Nodes(firstNode), plan._axes[side])
+                )
                 {
-                    plan.Redistribute(
-                        lowerIndex,
-                        Nodes(bones.Length + side * TwistRig.SupportCount),
-                        plan._axes[side]
-                    );
+                    plan._skinnedSides.Add(side);
+                    firstNode += TwistRig.SupportCount;
                 }
             }
 
-            var mirrorIndex = bones.Length + arms.Length * TwistRig.SupportCount;
-
             foreach (var (side, boneIndex) in plan._hiddenSections)
             {
-                plan.Redistribute(boneIndex, Nodes(mirrorIndex), plan._axes[side]);
-                mirrorIndex += TwistRig.SupportCount;
+                plan.Redistribute(boneIndex, Nodes(firstNode), plan._axes[side]);
+                firstNode += TwistRig.SupportCount;
             }
 
             return plan;
@@ -126,11 +127,13 @@ namespace KOZ39.ElbowFixer
             var before = SkinMatrices(bones, bindposes).ToArray();
 
             // Order must match the weight nodes from Create: supports, then mirrors.
-            for (var side = 0; side < supports.Length; side++)
+            foreach (var side in _skinnedSides)
             {
+                var lowerIndex = _lowerIndices[side];
+
                 foreach (var support in supports[side])
                 {
-                    bindposes.Add(SupportBindpose(support, _lowerIndices[side], bones, bindposes));
+                    bindposes.Add(BindposeFrom(support, bones[lowerIndex], bindposes[lowerIndex]));
                     bones.Add(support);
                 }
             }
@@ -141,7 +144,7 @@ namespace KOZ39.ElbowFixer
             {
                 foreach (var mirror in TwistRig.Mirror(bones[boneIndex], supports[side]))
                 {
-                    bindposes.Add(SupportBindpose(mirror, boneIndex, bones, bindposes));
+                    bindposes.Add(BindposeFrom(mirror, bones[boneIndex], bindposes[boneIndex]));
                     bones.Add(mirror);
                     mirrors.Add(mirror);
                 }
@@ -319,8 +322,10 @@ namespace KOZ39.ElbowFixer
             );
         }
 
-        private void Redistribute(int source, int[] nodes, ForearmAxis forearm)
+        private bool Redistribute(int source, int[] nodes, ForearmAxis forearm)
         {
+            var previousCount = RedistributedCount;
+
             for (var v = 0; v < _vertices.Length; v++)
             {
                 var sourceWeight = ForearmWeights.SourceWeight(_weights[v], source);
@@ -350,6 +355,8 @@ namespace KOZ39.ElbowFixer
                 _weights[v] = weight;
                 RedistributedCount++;
             }
+
+            return RedistributedCount > previousCount;
         }
 
         private bool IsHiddenSectionOf(int side, Arm arm, Transform candidate) =>
@@ -504,16 +511,6 @@ namespace KOZ39.ElbowFixer
                     )
                 ) && (sum == 0 || Mathf.Abs(sum - 1) < 0.0001f);
         }
-
-        private Matrix4x4 SupportBindpose(
-            Transform support,
-            int source,
-            List<Transform> bones,
-            List<Matrix4x4> bindposes
-        ) =>
-            source >= 0
-                ? BindposeFrom(support, bones[source], bindposes[source])
-                : support.worldToLocalMatrix * Renderer.transform.localToWorldMatrix;
 
         private static IEnumerable<Matrix4x4> SkinMatrices(
             IEnumerable<Transform> bones,
