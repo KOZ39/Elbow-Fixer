@@ -110,8 +110,8 @@ namespace KOZ39.ElbowFixer
                         continue;
                     }
 
-                    var (sources, bindpose, forearmBlocker) = forearm.Value;
-                    follows |= FollowsForearm(sources, bindpose, arm.Hand, vertices, weights);
+                    var (sources, bindpose, hand, forearmBlocker) = forearm.Value;
+                    follows |= FollowsForearm(sources, bindpose, hand, vertices, weights);
                     blocker ??= forearmBlocker;
                 }
 
@@ -133,7 +133,12 @@ namespace KOZ39.ElbowFixer
             return (targets.ToArray(), skipped.ToArray());
         }
 
-        private static (int[] Sources, Matrix4x4 Bindpose, Transform Blocker)? FindForearm(
+        private static (
+            int[] Sources,
+            Matrix4x4 Bindpose,
+            Transform Hand,
+            Transform Blocker
+        )? FindForearm(
             Transform[] bones,
             Matrix4x4[] bindposes,
             Transform[] usedBones,
@@ -187,7 +192,7 @@ namespace KOZ39.ElbowFixer
                     ? bindposes[lowerIndex]
                     : MeshWeightPlan.BindposeFrom(lower, bones[sources[0]], bindposes[sources[0]]);
 
-            return (sources, bindpose, blocker);
+            return (sources, bindpose, hand != null ? hand : arm.Hand, blocker);
         }
 
         private static (Transform ArmBone, Transform Blocker) FindRebind(
