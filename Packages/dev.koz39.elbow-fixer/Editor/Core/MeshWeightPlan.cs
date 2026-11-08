@@ -23,6 +23,7 @@ namespace KOZ39.ElbowFixer
         internal readonly SkinnedMeshRenderer Renderer;
         private readonly int[] _lowerIndices;
         private readonly ForearmAxis[] _axes;
+        private readonly HashSet<int>[] _lowerPhysBones;
         private readonly List<int> _skinnedSides = new();
         private readonly List<(int Side, int BoneIndex)> _hiddenSections = new();
         private Vector3[] _vertices;
@@ -51,6 +52,7 @@ namespace KOZ39.ElbowFixer
             _weights = weights;
             _lowerIndices = Enumerable.Repeat(-1, armCount).ToArray();
             _axes = new ForearmAxis[armCount];
+            _lowerPhysBones = new HashSet<int>[armCount];
             IsSkin = isSkin;
         }
 
@@ -79,6 +81,10 @@ namespace KOZ39.ElbowFixer
             for (var side = 0; side < arms.Length; side++)
             {
                 plan.ResolveLower(side, arms[side], bones, bindposes);
+                plan._lowerPhysBones[side] = Enumerable
+                    .Range(0, bones.Length)
+                    .Where(i => bones[i] != null && arms[side].IsLowerPhysBone(bones[i]))
+                    .ToHashSet();
 
                 for (var boneIndex = 0; boneIndex < bones.Length; boneIndex++)
                 {
@@ -100,10 +106,7 @@ namespace KOZ39.ElbowFixer
             {
                 var lowerIndex = plan._lowerIndices[side];
 
-                if (
-                    lowerIndex >= 0
-                    && plan.Redistribute(lowerIndex, Nodes(firstNode), plan._axes[side])
-                )
+                if (lowerIndex >= 0 && plan.Redistribute(side, lowerIndex, Nodes(firstNode)))
                 {
                     plan._skinnedSides.Add(side);
                     firstNode += TwistRig.SupportCount;
@@ -112,7 +115,7 @@ namespace KOZ39.ElbowFixer
 
             foreach (var (side, boneIndex) in plan._hiddenSections)
             {
-                plan.Redistribute(boneIndex, Nodes(firstNode), plan._axes[side]);
+                plan.Redistribute(side, boneIndex, Nodes(firstNode));
                 firstNode += TwistRig.SupportCount;
             }
 
@@ -322,7 +325,7 @@ namespace KOZ39.ElbowFixer
             );
         }
 
-        private bool Redistribute(int source, int[] nodes, ForearmAxis forearm)
+        private bool Redistribute(int side, int source, int[] nodes)
         {
             var previousCount = RedistributedCount;
 
@@ -335,7 +338,15 @@ namespace KOZ39.ElbowFixer
                     continue;
                 }
 
-                var t = forearm.Position(_vertices[v]);
+                var physBoneWeight = ForearmWeights
+                    .Slots(_weights[v])
+                    .Where(slot => slot.Weight > 0 && _lowerPhysBones[side].Contains(slot.Bone))
+                    .Sum(slot => slot.Weight);
+
+                // A PhysBone chain under the LowerArm turns far more than the nodes near the elbow,
+                // and mixing them pulls the vertex toward the forearm axis.
+                var t = _axes[side].Position(_vertices[v]);
+                t += (1 - t) * physBoneWeight / (sourceWeight + physBoneWeight);
 
                 if (
                     !ForearmWeights.TryRedistribute(

@@ -121,6 +121,9 @@ namespace KOZ39.ElbowFixer
         internal (Transform ArmBone, Transform Blocker) FindRebind(Transform bone) =>
             _existingTwist.FindRebind(bone, Upper, Lower, Hand);
 
+        internal bool IsLowerPhysBone(Transform bone) =>
+            bone.IsChildOf(Lower) && _existingTwist.IsPhysBoneDriven(bone);
+
         private static Arm ResolveSide(
             Transform avatarRoot,
             Animator animator,

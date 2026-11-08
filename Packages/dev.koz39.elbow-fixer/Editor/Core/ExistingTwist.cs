@@ -74,6 +74,8 @@ namespace KOZ39.ElbowFixer
 
         internal bool IsRotationDriven(Transform bone) => _sources.Contains(bone);
 
+        internal bool IsPhysBoneDriven(Transform bone) => _physBoneDriven.Contains(bone);
+
         // Modular Avatar's hidden bones are named after a shape key, which may mention twist.
         internal Transform Find(Transform bone, Transform upper, Transform lower, Transform hand)
         {
