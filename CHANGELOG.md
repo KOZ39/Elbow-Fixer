@@ -1,5 +1,11 @@
 # 변경 내역
 
+## Unreleased
+
+### Fixed
+
+- Modular Avatar가 병합하지 않은 팔뚝 본에 위치 오차가 있는 의상의 비틀림 보정 누락
+
 ## v0.6.0 (2026-11-04)
 
 ### Changed

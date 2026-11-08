@@ -11,7 +11,7 @@ namespace KOZ39.ElbowFixer
 {
     internal sealed class ExistingTwist
     {
-        private const float CopyTolerance = 0.01f;
+        private const float CopyTolerance = 0.02f;
 
         private readonly ILookup<Transform, Transform[]> _sources;
         private readonly HashSet<Transform> _physBoneDriven;
