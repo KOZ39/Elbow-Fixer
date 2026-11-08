@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Setup 메뉴 사용 시 제외된 메시의 콘솔 경고를 UI 언어로 표시
+
 ### Fixed
 
 - Modular Avatar가 병합하지 않은 팔뚝 본에 위치 오차가 있는 의상의 비틀림 보정 누락

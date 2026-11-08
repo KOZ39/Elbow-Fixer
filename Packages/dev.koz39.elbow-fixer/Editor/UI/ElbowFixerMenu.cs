@@ -125,7 +125,7 @@ namespace KOZ39.ElbowFixer
             foreach (var (mesh, blocker) in skipped)
             {
                 Debug.LogWarning(
-                    $"{ElbowFixerPackageInfo.LogPrefix} Skipped mesh '{mesh.name}': it uses a bone under '{blocker.name}', a forearm twist bone or a bone with a constraint.",
+                    $"{ElbowFixerPackageInfo.LogPrefix} {ElbowFixerLocalization.Text("messages.SetupSkippedMesh", mesh.name, blocker.name)}",
                     mesh
                 );
             }

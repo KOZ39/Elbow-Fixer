@@ -48,6 +48,10 @@ msgstr "存在多个 Elbow Fixer 组件。此组件将被忽略。"
 msgid "messages.SkippedExistingTwist"
 msgstr "这些网格使用了前臂扭转骨骼或带 Constraint 的骨骼下方的骨骼，因此未添加。"
 
+#. {0}: 网格名称, {1}: 骨骼名称
+msgid "messages.SetupSkippedMesh"
+msgstr "网格 “{0}” 使用了前臂扭转骨骼或带 Constraint 的骨骼 “{1}” 下方的骨骼，因此未添加。"
+
 #. {0}: 渲染器名称
 msgid "messages.NoMesh"
 msgstr "“{0}” 没有网格。请将其从目标网格中移除。"

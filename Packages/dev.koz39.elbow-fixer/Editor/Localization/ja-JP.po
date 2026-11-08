@@ -48,6 +48,10 @@ msgstr "Elbow Fixerコンポーネントが複数あります。このコンポ�
 msgid "messages.SkippedExistingTwist"
 msgstr "前腕のねじれボーンまたはConstraintがあるボーンの下のボーンを使うため、追加しませんでした。"
 
+#. {0}: メッシュ名, {1}: ボーン名
+msgid "messages.SetupSkippedMesh"
+msgstr "メッシュ「{0}」は前腕のねじれボーンまたはConstraintがあるボーン「{1}」の下のボーンを使うため、追加しませんでした。"
+
 #. {0}: レンダラー名
 msgid "messages.NoMesh"
 msgstr "「{0}」にメッシュがありません。対象メッシュから外してください。"

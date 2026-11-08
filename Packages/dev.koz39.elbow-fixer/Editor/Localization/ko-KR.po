@@ -48,6 +48,10 @@ msgstr "Elbow Fixer 컴포넌트가 여러 개 있습니다. 이 컴포넌트는
 msgid "messages.SkippedExistingTwist"
 msgstr "팔뚝 비틀림 본이나 Constraint가 있는 본 아래의 본을 사용해 추가하지 않았습니다."
 
+#. {0}: 메시 이름, {1}: 본 이름
+msgid "messages.SetupSkippedMesh"
+msgstr "'{0}' 메시가 팔뚝 비틀림 본이나 Constraint가 있는 '{1}' 본 아래의 본을 사용해 추가하지 않았습니다."
+
 #. {0}: 렌더러 이름
 msgid "messages.NoMesh"
 msgstr "'{0}'에 메시가 없습니다. 대상 메시에서 제거해 주세요."

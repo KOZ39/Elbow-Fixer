@@ -48,6 +48,10 @@ msgstr "Multiple Elbow Fixer components were found. This component will be ignor
 msgid "messages.SkippedExistingTwist"
 msgstr "Not added because they use a bone under a forearm twist bone or a bone with a constraint."
 
+#. {0}: mesh name, {1}: bone name
+msgid "messages.SetupSkippedMesh"
+msgstr "Mesh '{0}' is not added because it uses a bone under '{1}', a forearm twist bone or a bone with a constraint."
+
 #. {0}: renderer name
 msgid "messages.NoMesh"
 msgstr "'{0}' has no mesh. Remove it from the target meshes."
