@@ -2,6 +2,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
+using static KOZ39.ElbowFixer.ElbowFixerLocalization;
 
 namespace KOZ39.ElbowFixer
 {
@@ -122,7 +123,7 @@ namespace KOZ39.ElbowFixer
             foreach (var (mesh, blocker) in skipped)
             {
                 Debug.LogWarning(
-                    $"{ElbowFixerPackageInfo.LogPrefix} {ElbowFixerLocalization.Text("messages.SetupSkippedMesh", mesh.name, blocker.name)}",
+                    $"{ElbowFixerPackageInfo.LogPrefix} {Text("messages.SetupSkippedMesh", mesh.name, blocker.name)}",
                     mesh
                 );
             }
