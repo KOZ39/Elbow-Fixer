@@ -24,7 +24,7 @@ namespace KOZ39.ElbowFixer
                 return;
             }
 
-            var targets = GetTargetAvatars(context);
+            var targets = GetTargetAvatars();
 
             if (targets.Length == 0)
             {
@@ -62,13 +62,10 @@ namespace KOZ39.ElbowFixer
             }
         }
 
-        private static GameObject[] GetTargetAvatars(GameObject context = null) =>
+        private static GameObject[] GetTargetAvatars() =>
             Selection
-                .gameObjects.Append(context)
-                .Where(target => target != null)
-                .Where(target => !PrefabUtility.IsPartOfPrefabAsset(target))
+                .gameObjects.Where(target => !PrefabUtility.IsPartOfPrefabAsset(target))
                 .Where(target => target.TryGetComponent<VRCAvatarDescriptor>(out _))
-                .Distinct()
                 .ToArray();
 
         private static GameObject LoadPrefab()
