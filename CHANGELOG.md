@@ -121,7 +121,7 @@
 - 보정된 메시에 대한 다른 도구의 NDMF 콘솔 오류가 원본 메시를 가리키지 않는 문제
 - 대상 메시가 아닌 의상의 비틀림 본이나 Constraint 때문에 빌드가 중단되는 문제
 - 팔뚝을 따라 회전하는 위팔의 Constraint가 있는 본을 사용하는 대상 메시가 보정 후 더 오므라드는 문제
-- MA Merge Armature로 병합한 의상의 팔뚝 메시를 MA Shape Changer나 MA Mesh Cutter로 숨기는 토글 사용 시 해당 구간의 비틀림 보정 누락
+- MA Merge Armature로 병합한 의상의 팔뚝 메시에서 MA Shape Changer나 MA Mesh Cutter 토글로 숨기는 구간의 비틀림 보정 누락
 
 ## v0.2.0 (2026-10-19)
 
@@ -133,9 +133,9 @@
 
 ### Fixed
 
-- MA Shape Changer로 팔뚝 메시를 숨기는 토글
-    - 기본값으로 설정 시 빌드 오류
-    - 사용 시 해당 구간의 비틀림 보정 누락
+- MA Shape Changer 토글로 숨기는 팔뚝 메시
+    - 토글을 기본값으로 설정 시 빌드 오류
+    - 숨기는 구간의 비틀림 보정 누락
 - 팔뚝·손의 Position·Scale Constraint(VRC, Unity)를 비틀림 Constraint로 오인하는 문제
 - 가중치가 없는 정점이 있는 대상 메시 사용 시 빌드 오류
 - Prefabulous PA Generate Twist Bones와 함께 사용 시 팔뚝 비틀림 본 중복 감지 누락
