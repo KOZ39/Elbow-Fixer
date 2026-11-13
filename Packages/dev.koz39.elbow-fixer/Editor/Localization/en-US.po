@@ -31,7 +31,7 @@ msgid "buttons.Select"
 msgstr "Select"
 
 msgid "buttons.AutoAdd"
-msgstr "Auto-Add Target Meshes (Experimental)"
+msgstr "Auto-Add Target Meshes"
 
 msgid "messages.NoAvatar"
 msgstr "Move this component under an avatar with a VRC Avatar Descriptor."

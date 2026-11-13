@@ -31,7 +31,7 @@ msgid "buttons.Select"
 msgstr "選択"
 
 msgid "buttons.AutoAdd"
-msgstr "対象メッシュを自動追加（実験的）"
+msgstr "対象メッシュを自動追加"
 
 msgid "messages.NoAvatar"
 msgstr "VRC Avatar Descriptorがあるアバターの下にこのコンポーネントを移動してください。"

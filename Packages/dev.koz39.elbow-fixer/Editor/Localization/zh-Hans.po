@@ -31,7 +31,7 @@ msgid "buttons.Select"
 msgstr "选择"
 
 msgid "buttons.AutoAdd"
-msgstr "自动添加目标网格（实验性）"
+msgstr "自动添加目标网格"
 
 msgid "messages.NoAvatar"
 msgstr "请将此组件移到带有 VRC Avatar Descriptor 的 Avatar 下。"

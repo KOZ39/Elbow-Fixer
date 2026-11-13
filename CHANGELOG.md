@@ -6,6 +6,8 @@
 
 - MA Shape Changer나 MA Mesh Cutter 토글로 숨기는 구간마다 생성하는 비틀림 본
     - 9개 → 사용하는 것만
+- ‘대상 메시 자동 추가’ 버튼
+    - 실험적 기능 → 정식 기능
 
 ### Fixed
 

@@ -16,7 +16,7 @@ Click "Add to VCC" on the [VPM listing](https://koz39.github.io/vpm-listing/) to
 ## How to Use
 
 1. Right-click your avatar in the Hierarchy and select Elbow Fixer > Setup.
-2. The body and clothing sleeves are added to Target Meshes automatically. This is still experimental, so you need to check the list in the Inspector.
+2. The body and clothing sleeves are added to Target Meshes automatically. Check the list in the Inspector.
 3. Elbow Fixer is applied automatically when the avatar is built.
 
 ## Notes
