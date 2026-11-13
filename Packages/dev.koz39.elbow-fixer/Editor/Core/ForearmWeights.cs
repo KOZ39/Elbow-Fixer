@@ -1,4 +1,5 @@
 // Forearm smoothing informed by Avatar Elbow Repair (MIT).
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -47,21 +48,21 @@ namespace KOZ39.ElbowFixer
                 .Distinct()
                 .ToArray();
 
-        internal static float SourceWeight(BoneWeight weight, int source) =>
+        internal static float SourceWeight(BoneWeight weight, HashSet<int> sources) =>
             Slots(weight)
-                .Where(slot => slot.Bone == source && slot.Weight > 0)
+                .Where(slot => slot.Weight > 0 && sources.Contains(slot.Bone))
                 .Sum(slot => slot.Weight);
 
         internal static bool TryRedistribute(
             BoneWeight weight,
-            int source,
+            HashSet<int> sources,
             float sourceWeight,
             int[] nodes,
             float t,
             out BoneWeight result
         )
         {
-            var influences = Others(weight, source);
+            var influences = Others(weight, sources);
             var last = nodes.Length - 1;
             var phase = t * last;
             var first = Mathf.Min(Mathf.FloorToInt(phase), last - 1);
@@ -105,13 +106,13 @@ namespace KOZ39.ElbowFixer
 
         internal static BoneWeight Nearest(
             BoneWeight weight,
-            int source,
+            HashSet<int> sources,
             float sourceWeight,
             int[] nodes,
             float t
         )
         {
-            var influences = Others(weight, source);
+            var influences = Others(weight, sources);
             Add(influences, nodes[Mathf.RoundToInt(t * (nodes.Length - 1))], sourceWeight);
 
             return Pack(influences);
@@ -140,6 +141,50 @@ namespace KOZ39.ElbowFixer
             return Pack(influences);
         }
 
+        internal static BoneWeight KeepHidden(
+            BoneWeight weight,
+            int[] hidden,
+            int[] nodes,
+            int[][] mirrors
+        )
+        {
+            const float Share = 0.001f;
+            var influences = Slots(weight)
+                .Where(slot => slot.Weight > 0)
+                .ToDictionary(slot => slot.Bone, slot => slot.Weight);
+            var shared = Math.Min(hidden.Length, MaxInfluences - influences.Count);
+
+            for (var i = shared; i < hidden.Length; i++)
+            {
+                var heaviest = influences
+                    .Where(influence => nodes.Contains(influence.Key))
+                    .OrderByDescending(influence => influence.Value)
+                    .Select(influence => influence.Key)
+                    .DefaultIfEmpty(-1)
+                    .First();
+
+                if (heaviest < 0)
+                {
+                    break;
+                }
+
+                influences[mirrors[i][Array.IndexOf(nodes, heaviest)]] = influences[heaviest];
+                influences.Remove(heaviest);
+            }
+
+            foreach (var bone in influences.Keys.ToArray())
+            {
+                influences[bone] *= 1 - Share * shared;
+            }
+
+            for (var i = 0; i < shared; i++)
+            {
+                influences[hidden[i]] = Share;
+            }
+
+            return Pack(influences);
+        }
+
         internal static BoneWeight Mix(BoneWeight a, BoneWeight b)
         {
             var influences = new Dictionary<int, float>();
@@ -163,9 +208,9 @@ namespace KOZ39.ElbowFixer
             );
         }
 
-        private static Dictionary<int, float> Others(BoneWeight weight, int source) =>
+        private static Dictionary<int, float> Others(BoneWeight weight, HashSet<int> sources) =>
             Slots(weight)
-                .Where(slot => slot.Bone != source && slot.Weight > 0)
+                .Where(slot => !sources.Contains(slot.Bone) && slot.Weight > 0)
                 .GroupBy(slot => slot.Bone)
                 .ToDictionary(group => group.Key, group => group.Sum(slot => slot.Weight));
 

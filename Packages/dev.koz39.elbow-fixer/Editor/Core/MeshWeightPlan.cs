@@ -26,6 +26,7 @@ namespace KOZ39.ElbowFixer
         private readonly HashSet<int>[] _lowerPhysBones;
         private readonly List<int> _skinnedSides = new();
         private readonly List<(int Side, int BoneIndex)> _hiddenSections = new();
+        private readonly Dictionary<int, int> _hiddenCopies = new();
         private readonly Dictionary<int, Matrix4x4> _restCorrections = new();
         private readonly Vector3[] _normals;
         private readonly Vector4[] _tangents;
@@ -100,28 +101,51 @@ namespace KOZ39.ElbowFixer
                 }
             }
 
+            for (var boneIndex = 0; boneIndex < bones.Length; boneIndex++)
+            {
+                var copied =
+                    bones[boneIndex] != null && ElbowFixerUtility.IsHiddenBone(bones[boneIndex])
+                        ? Array.IndexOf(bones, ElbowFixerUtility.CopiedBone(bones[boneIndex]))
+                        : -1;
+
+                if (
+                    copied >= 0
+                    && plan._hiddenSections.All(section => section.BoneIndex != boneIndex)
+                )
+                {
+                    plan._hiddenCopies[boneIndex] = copied;
+                }
+            }
+
             if (subdivide)
             {
                 plan.Subdivide(mesh);
             }
 
             var firstNode = bones.Length;
+            var supportNodes = new int[arms.Length][];
 
             for (var side = 0; side < arms.Length; side++)
             {
-                var lowerIndex = plan._lowerIndices[side];
-
-                if (lowerIndex >= 0 && plan.Redistribute(side, lowerIndex, Nodes(firstNode)))
+                if (plan._lowerIndices[side] >= 0 && plan.HasSourceWeight(side))
                 {
                     plan._skinnedSides.Add(side);
+                    supportNodes[side] = Nodes(firstNode);
                     firstNode += TwistRig.SupportCount;
                 }
             }
 
-            foreach (var (side, boneIndex) in plan._hiddenSections)
+            var mirrorNodes = new Dictionary<int, int[]>();
+
+            foreach (var (_, boneIndex) in plan._hiddenSections)
             {
-                plan.Redistribute(side, boneIndex, Nodes(firstNode));
+                mirrorNodes[boneIndex] = Nodes(firstNode);
                 firstNode += TwistRig.SupportCount;
+            }
+
+            foreach (var side in plan._skinnedSides)
+            {
+                plan.Redistribute(side, supportNodes[side], mirrorNodes);
             }
 
             return plan;
@@ -275,16 +299,7 @@ namespace KOZ39.ElbowFixer
 
         private void Subdivide(Mesh mesh)
         {
-            var sources = _lowerIndices
-                .Select(
-                    (lowerIndex, side) =>
-                        _hiddenSections
-                            .Where(section => section.Side == side)
-                            .Select(section => section.BoneIndex)
-                            .Append(lowerIndex)
-                            .ToHashSet()
-                )
-                .ToArray();
+            var sources = Enumerable.Range(0, _lowerIndices.Length).Select(Sources).ToArray();
 
             _subdivision = new(mesh, _vertices, _normals, _tangents, _weights);
             _subdivision.Subdivide(
@@ -319,6 +334,20 @@ namespace KOZ39.ElbowFixer
         private static bool UsesAny(BoneWeight weight, HashSet<int> bones) =>
             ForearmWeights.Slots(weight).Any(slot => slot.Weight > 0 && bones.Contains(slot.Bone));
 
+        private HashSet<int> Sources(int side) =>
+            _hiddenSections
+                .Where(section => section.Side == side)
+                .Select(section => section.BoneIndex)
+                .Append(_lowerIndices[side])
+                .ToHashSet();
+
+        private bool HasSourceWeight(int side)
+        {
+            var sources = Sources(side);
+
+            return _weights.Any(weight => UsesAny(weight, sources));
+        }
+
         private void ResolveLower(int side, Arm arm, Transform[] bones, Matrix4x4[] bindposes)
         {
             var lowerIndex = Array.IndexOf(bones, arm.Lower);
@@ -344,18 +373,22 @@ namespace KOZ39.ElbowFixer
             );
         }
 
-        private bool Redistribute(int side, int source, int[] nodes)
+        private void Redistribute(int side, int[] nodes, Dictionary<int, int[]> mirrorNodes)
         {
-            var previousCount = RedistributedCount;
+            var sources = Sources(side);
 
             for (var v = 0; v < _vertices.Length; v++)
             {
-                var sourceWeight = ForearmWeights.SourceWeight(_weights[v], source);
+                var sourceWeight = ForearmWeights.SourceWeight(_weights[v], sources);
 
                 if (sourceWeight <= 0)
                 {
                     continue;
                 }
+
+                // A hidden copy moves with the bone it copies until hidden, so giving it that
+                // bone's weight keeps this vertex in step with the unhidden copy beside it.
+                _weights[v] = MergeIntoHiddenCopies(_weights[v]);
 
                 var physBoneWeight = ForearmWeights
                     .Slots(_weights[v])
@@ -370,7 +403,7 @@ namespace KOZ39.ElbowFixer
                 if (
                     !ForearmWeights.TryRedistribute(
                         _weights[v],
-                        source,
+                        sources,
                         sourceWeight,
                         nodes,
                         t,
@@ -378,15 +411,55 @@ namespace KOZ39.ElbowFixer
                     )
                 )
                 {
-                    weight = ForearmWeights.Nearest(_weights[v], source, sourceWeight, nodes, t);
+                    weight = ForearmWeights.Nearest(_weights[v], sources, sourceWeight, nodes, t);
                     NearestCount++;
+                }
+
+                var hidden = ForearmWeights
+                    .Slots(_weights[v])
+                    .Where(slot =>
+                        slot.Weight > 0
+                        && sources.Contains(slot.Bone)
+                        && mirrorNodes.ContainsKey(slot.Bone)
+                    )
+                    .OrderByDescending(slot => slot.Weight)
+                    .Select(slot => slot.Bone)
+                    .Distinct()
+                    .ToArray();
+
+                // Any weight on a hidden bone or its mirror lets Modular Avatar hide the vertex, so
+                // every hidden bone the vertex uses keeps some.
+                // A small share barely changes the twist, so the unhidden copy beside it stays put.
+                // Without a free slot, a node moves to the mirror instead.
+                if (hidden.Length > 0)
+                {
+                    weight = ForearmWeights.KeepHidden(
+                        weight,
+                        hidden,
+                        nodes,
+                        hidden.Select(bone => mirrorNodes[bone]).ToArray()
+                    );
                 }
 
                 _weights[v] = weight;
                 RedistributedCount++;
             }
+        }
 
-            return RedistributedCount > previousCount;
+        private BoneWeight MergeIntoHiddenCopies(BoneWeight weight)
+        {
+            var targets = new Dictionary<int, int>();
+
+            foreach (
+                var slot in ForearmWeights
+                    .Slots(weight)
+                    .Where(slot => slot.Weight > 0 && _hiddenCopies.ContainsKey(slot.Bone))
+            )
+            {
+                targets.TryAdd(_hiddenCopies[slot.Bone], slot.Bone);
+            }
+
+            return ForearmWeights.Rebind(weight, targets);
         }
 
         private bool IsHiddenSectionOf(int side, Arm arm, Transform candidate) =>
