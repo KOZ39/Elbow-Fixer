@@ -23,7 +23,7 @@
 
 - Elbow FixerはPrefabulousのPA Generate Twist Bonesと併用できません。アバターに両方が含まれている場合、ビルドはエラーで中断されます。
 
-## 参考資料
+## クレジット
 
-- [Prefabulous Universal - Generate Twist Bones](https://docs.hai-vr.dev/docs/products/prefabulous/universal/generate-twist-bones)
-- [Avatar Elbow Repair](https://koimoe.booth.pm/items/8844538)
+- [Prefabulous Universal](https://docs.hai-vr.dev/docs/products/prefabulous/universal/generate-twist-bones)のAim Constraintによるねじれ安定化
+- [Avatar Elbow Repair](https://koimoe.booth.pm/items/8844538)の前腕ウェイトスムージング

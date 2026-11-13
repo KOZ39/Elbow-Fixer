@@ -23,7 +23,7 @@ Click "Add to VCC" on the [VPM listing](https://koz39.github.io/vpm-listing/) to
 
 - Elbow Fixer cannot be used with PA Generate Twist Bones from Prefabulous. If both are added to the avatar, the build stops with an error.
 
-## References
+## Credits
 
-- [Prefabulous Universal - Generate Twist Bones](https://docs.hai-vr.dev/docs/products/prefabulous/universal/generate-twist-bones)
-- [Avatar Elbow Repair](https://koimoe.booth.pm/items/8844538)
+- [Prefabulous Universal](https://docs.hai-vr.dev/docs/products/prefabulous/universal/generate-twist-bones) for aim-stabilized twist support
+- [Avatar Elbow Repair](https://koimoe.booth.pm/items/8844538) for forearm weight smoothing
