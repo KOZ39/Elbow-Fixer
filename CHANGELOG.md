@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- MA Shape Changer나 MA Mesh Cutter 토글로 숨기는 구간마다 생성하는 비틀림 본
+    - 9개 → 사용하는 것만
+
 ### Fixed
 
 - 바인드 포즈와 자세가 다른 팔뚝 비틀림 본이나 Constraint가 있는 본을 사용하는 메시를 기본 자세 오차로 보정에서 제외하는 문제

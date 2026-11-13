@@ -49,21 +49,18 @@ namespace KOZ39.ElbowFixer
             return (CreateTwists(arm, stable, roll), new[] { stable, up, handUp, roll });
         }
 
-        internal static Transform[] Mirror(Transform hiddenBone, Transform[] supports) =>
-            supports
-                .Select(support =>
-                {
-                    var mirror = CreateChild(
-                        $"{support.name}.Hidden",
-                        hiddenBone,
-                        support.position,
-                        support.rotation
-                    );
-                    AddRotationConstraint(mirror, support);
+        internal static Transform Mirror(Transform hiddenBone, Transform support)
+        {
+            var mirror = CreateChild(
+                $"{support.name}.Hidden",
+                hiddenBone,
+                support.position,
+                support.rotation
+            );
+            AddRotationConstraint(mirror, support);
 
-                    return mirror;
-                })
-                .ToArray();
+            return mirror;
+        }
 
         private static Transform[] CreateTwists(Arm arm, Transform stable, Transform roll)
         {

@@ -39,9 +39,8 @@ namespace KOZ39.ElbowFixer
         internal int RedistributedCount { get; private set; }
         internal int NearestCount { get; private set; }
         internal int AddedVertexCount { get; private set; }
+        internal int MirrorCount { get; private set; }
         internal bool IsSkin { get; }
-
-        internal int MirrorCount => _hiddenSections.Count * TwistRig.SupportCount;
 
         private MeshWeightPlan(
             SkinnedMeshRenderer renderer,
@@ -170,17 +169,35 @@ namespace KOZ39.ElbowFixer
                 }
             }
 
+            var used = _weights
+                .SelectMany(ForearmWeights.Slots)
+                .Where(slot => slot.Weight > 0)
+                .Select(slot => slot.Bone)
+                .ToHashSet();
             var mirrors = new List<Transform>();
+            var renumbered = new Dictionary<int, int>();
+            var node = bones.Count;
 
             foreach (var (side, boneIndex) in _hiddenSections)
             {
-                foreach (var mirror in TwistRig.Mirror(bones[boneIndex], supports[side]))
+                var keptNodes = Enumerable.Range(node, TwistRig.SupportCount).Where(used.Contains);
+
+                foreach (var keptNode in keptNodes)
                 {
+                    var mirror = TwistRig.Mirror(bones[boneIndex], supports[side][keptNode - node]);
+                    renumbered[keptNode] = bones.Count;
                     bindposes.Add(BindposeFrom(mirror, bones[boneIndex], bindposes[boneIndex]));
                     bones.Add(mirror);
                     mirrors.Add(mirror);
                 }
+
+                node += TwistRig.SupportCount;
             }
+
+            _weights = _weights
+                .Select(weight => ForearmWeights.Rebind(weight, renumbered))
+                .ToArray();
+            MirrorCount = mirrors.Count;
 
             var after = before
                 .Concat(SkinMatrices(bones.Skip(before.Length), bindposes.Skip(before.Length)))
