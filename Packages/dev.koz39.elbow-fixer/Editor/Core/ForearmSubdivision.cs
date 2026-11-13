@@ -26,12 +26,18 @@ namespace KOZ39.ElbowFixer
         internal Vector3[] Positions => _positions.ToArray();
         internal BoneWeight[] Weights => _weights.ToArray();
 
-        internal ForearmSubdivision(Mesh mesh, BoneWeight[] weights)
+        internal ForearmSubdivision(
+            Mesh mesh,
+            Vector3[] positions,
+            Vector3[] normals,
+            Vector4[] tangents,
+            BoneWeight[] weights
+        )
         {
             _source = mesh;
-            mesh.GetVertices(_positions);
-            mesh.GetNormals(_normals);
-            mesh.GetTangents(_tangents);
+            _positions.AddRange(positions);
+            _normals.AddRange(normals);
+            _tangents.AddRange(tangents);
             mesh.GetColors(_colors);
 
             for (var channel = 0; channel < UVChannelCount; channel++)
@@ -86,7 +92,11 @@ namespace KOZ39.ElbowFixer
             }
         }
 
-        internal void Write(Mesh target, BoneWeight[] weights)
+        internal void Write(
+            Mesh target,
+            BoneWeight[] weights,
+            IReadOnlyDictionary<int, Matrix4x4> corrections
+        )
         {
             target.Clear();
             target.ClearBlendShapes();
@@ -126,37 +136,42 @@ namespace KOZ39.ElbowFixer
             }
 
             target.boneWeights = weights;
-            WriteBlendShapes(target);
+            WriteBlendShapes(_source, target, corrections, _midpointEdges);
         }
 
-        private void WriteBlendShapes(Mesh target)
+        internal static void WriteBlendShapes(
+            Mesh source,
+            Mesh target,
+            IReadOnlyDictionary<int, Matrix4x4> corrections,
+            IReadOnlyList<(int First, int Second)> midpointEdges
+        )
         {
-            var sourceVertices = new Vector3[_source.vertexCount];
-            var sourceNormals = new Vector3[_source.vertexCount];
-            var sourceTangents = new Vector3[_source.vertexCount];
-            var vertices = new Vector3[_positions.Count];
-            var normals = new Vector3[_positions.Count];
-            var tangents = new Vector3[_positions.Count];
+            var sourceVertices = new Vector3[source.vertexCount];
+            var sourceNormals = new Vector3[source.vertexCount];
+            var sourceTangents = new Vector3[source.vertexCount];
+            var vertices = new Vector3[target.vertexCount];
+            var normals = new Vector3[target.vertexCount];
+            var tangents = new Vector3[target.vertexCount];
 
-            for (var shape = 0; shape < _source.blendShapeCount; shape++)
+            for (var shape = 0; shape < source.blendShapeCount; shape++)
             {
-                var name = _source.GetBlendShapeName(shape);
+                var name = source.GetBlendShapeName(shape);
 
-                for (var frame = 0; frame < _source.GetBlendShapeFrameCount(shape); frame++)
+                for (var frame = 0; frame < source.GetBlendShapeFrameCount(shape); frame++)
                 {
-                    _source.GetBlendShapeFrameVertices(
+                    source.GetBlendShapeFrameVertices(
                         shape,
                         frame,
                         sourceVertices,
                         sourceNormals,
                         sourceTangents
                     );
-                    FillMidpoints(sourceVertices, vertices);
-                    FillMidpoints(sourceNormals, normals);
-                    FillMidpoints(sourceTangents, tangents);
+                    FillDeltas(sourceVertices, vertices, corrections, midpointEdges);
+                    FillDeltas(sourceNormals, normals, corrections, midpointEdges);
+                    FillDeltas(sourceTangents, tangents, corrections, midpointEdges);
                     target.AddBlendShapeFrame(
                         name,
-                        _source.GetBlendShapeFrameWeight(shape, frame),
+                        source.GetBlendShapeFrameWeight(shape, frame),
                         vertices,
                         normals,
                         tangents
@@ -165,13 +180,23 @@ namespace KOZ39.ElbowFixer
             }
         }
 
-        private void FillMidpoints(Vector3[] source, Vector3[] result)
+        private static void FillDeltas(
+            Vector3[] source,
+            Vector3[] result,
+            IReadOnlyDictionary<int, Matrix4x4> corrections,
+            IReadOnlyList<(int First, int Second)> midpointEdges
+        )
         {
             source.CopyTo(result, 0);
 
-            for (var i = 0; i < _midpointEdges.Count; i++)
+            foreach (var (vertex, correction) in corrections)
             {
-                var (first, second) = _midpointEdges[i];
+                result[vertex] = correction.MultiplyVector(result[vertex]);
+            }
+
+            for (var i = 0; i < midpointEdges.Count; i++)
+            {
+                var (first, second) = midpointEdges[i];
                 result[source.Length + i] = (result[first] + result[second]) * 0.5f;
             }
         }

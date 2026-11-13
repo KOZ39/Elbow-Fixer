@@ -26,6 +26,9 @@ namespace KOZ39.ElbowFixer
         private readonly HashSet<int>[] _lowerPhysBones;
         private readonly List<int> _skinnedSides = new();
         private readonly List<(int Side, int BoneIndex)> _hiddenSections = new();
+        private readonly Dictionary<int, Matrix4x4> _restCorrections = new();
+        private readonly Vector3[] _normals;
+        private readonly Vector4[] _tangents;
         private Vector3[] _vertices;
         private BoneWeight[] _weights;
         private ForearmSubdivision _subdivision;
@@ -48,6 +51,8 @@ namespace KOZ39.ElbowFixer
         )
         {
             Renderer = renderer;
+            _normals = renderer.sharedMesh.normals;
+            _tangents = renderer.sharedMesh.tangents;
             _vertices = vertices;
             _weights = weights;
             _lowerIndices = Enumerable.Repeat(-1, armCount).ToArray();
@@ -160,7 +165,7 @@ namespace KOZ39.ElbowFixer
 
             try
             {
-                drift = RestDrift(source.boneWeights, before, after);
+                drift = RestDrift(source.boneWeights, source.vertices, before, after);
 
                 Require(
                     drift < MaxRestDrift,
@@ -185,11 +190,25 @@ namespace KOZ39.ElbowFixer
 
             if (_subdivision == null)
             {
+                mesh.vertices = _vertices;
+                mesh.normals = _normals;
+                mesh.tangents = _tangents;
                 mesh.boneWeights = _weights;
+
+                if (_restCorrections.Count > 0)
+                {
+                    mesh.ClearBlendShapes();
+                    ForearmSubdivision.WriteBlendShapes(
+                        source,
+                        mesh,
+                        _restCorrections,
+                        Array.Empty<(int, int)>()
+                    );
+                }
             }
             else
             {
-                _subdivision.Write(mesh, _weights);
+                _subdivision.Write(mesh, _weights, _restCorrections);
             }
 
             mesh.bindposes = bindposes.ToArray();
@@ -267,7 +286,7 @@ namespace KOZ39.ElbowFixer
                 )
                 .ToArray();
 
-            _subdivision = new(mesh, _weights);
+            _subdivision = new(mesh, _vertices, _normals, _tangents, _weights);
             _subdivision.Subdivide(
                 MaxSubdivisionLevels,
                 (first, firstWeight, second, secondWeight) =>
@@ -448,9 +467,37 @@ namespace KOZ39.ElbowFixer
 
             if (rebind.Count > 0)
             {
+                var skin = SkinMatrices(boneList, bindposeList).ToArray();
+
                 for (var v = 0; v < _weights.Length; v++)
                 {
-                    _weights[v] = ForearmWeights.Rebind(_weights[v], rebind);
+                    var rebound = ForearmWeights.Rebind(_weights[v], rebind);
+
+                    if (rebound == _weights[v])
+                    {
+                        continue;
+                    }
+
+                    // A twist bone can rest away from its bindpose relative to the arm bone,
+                    // so the vertex moves and turns to look the same in the rest pose.
+                    var correction =
+                        BlendedSkin(skin, rebound).inverse * BlendedSkin(skin, _weights[v]);
+                    _restCorrections[v] = correction;
+                    _vertices[v] = correction.MultiplyPoint3x4(_vertices[v]);
+
+                    if (_normals.Length > 0)
+                    {
+                        _normals[v] = correction.MultiplyVector(_normals[v]).normalized;
+                    }
+
+                    if (_tangents.Length > 0)
+                    {
+                        Vector4 tangent = correction.MultiplyVector(_tangents[v]).normalized;
+                        tangent.w = _tangents[v].w;
+                        _tangents[v] = tangent;
+                    }
+
+                    _weights[v] = rebound;
                 }
             }
 
@@ -533,13 +580,18 @@ namespace KOZ39.ElbowFixer
                     bone != null ? bone.localToWorldMatrix * bindpose : Matrix4x4.identity
             );
 
-        private float RestDrift(BoneWeight[] oldWeights, Matrix4x4[] before, Matrix4x4[] after)
+        private float RestDrift(
+            BoneWeight[] oldWeights,
+            Vector3[] oldVertices,
+            Matrix4x4[] before,
+            Matrix4x4[] after
+        )
         {
             var drift = 0f;
 
             for (var i = 0; i < oldWeights.Length; i++)
             {
-                var oldPosition = Skin(before, oldWeights[i], _vertices[i]);
+                var oldPosition = Skin(before, oldWeights[i], oldVertices[i]);
                 var newPosition = Skin(after, _weights[i], _vertices[i]);
                 var distance = Vector3.Distance(oldPosition, newPosition);
                 Require(float.IsFinite(distance), "NonFiniteSkinning", Renderer);
@@ -550,12 +602,21 @@ namespace KOZ39.ElbowFixer
         }
 
         private static Vector3 Skin(Matrix4x4[] matrices, BoneWeight weight, Vector3 vertex) =>
-            ForearmWeights
-                .Slots(weight)
-                .Where(slot => slot.Weight > 0)
-                .Aggregate(
-                    Vector3.zero,
-                    (sum, slot) => sum + matrices[slot.Bone].MultiplyPoint3x4(vertex) * slot.Weight
-                );
+            BlendedSkin(matrices, weight).MultiplyPoint3x4(vertex);
+
+        private static Matrix4x4 BlendedSkin(Matrix4x4[] matrices, BoneWeight weight)
+        {
+            var blended = new Matrix4x4();
+
+            foreach (var slot in ForearmWeights.Slots(weight).Where(slot => slot.Weight > 0))
+            {
+                for (var i = 0; i < 16; i++)
+                {
+                    blended[i] += matrices[slot.Bone][i] * slot.Weight;
+                }
+            }
+
+            return blended;
+        }
     }
 }
