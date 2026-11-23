@@ -11,7 +11,7 @@ namespace KOZ39.ElbowFixer
         internal const string NamePrefix = "ElbowFixer.";
 
         internal const int SupportCount = 9;
-        internal const int ReferenceCount = 3;
+        internal const int ReferenceCount = 4;
 
         internal static (Transform[] Supports, Transform[] Roots) Build(Arm arm)
         {
@@ -47,8 +47,18 @@ namespace KOZ39.ElbowFixer
                 arm.Lower.rotation
             );
             AddAimConstraint(roll, arm.Hand, handUp, forearm.normalized);
+            var halfLower = CreateChild(
+                $"{NamePrefix}HalfLower.{arm.Suffix}",
+                arm.Lower,
+                arm.Lower.position,
+                arm.Lower.rotation
+            );
+            AddRotationConstraint(halfLower, false, stable, arm.Lower);
 
-            return (CreateTwists(arm, stable, roll), new[] { stable, up, handUp, roll });
+            return (
+                CreateTwists(arm, stable, halfLower, handUp, roll),
+                new[] { stable, up, handUp, roll, halfLower }
+            );
         }
 
         internal static int NodeAt(Arm arm, Vector3 position)
@@ -60,13 +70,7 @@ namespace KOZ39.ElbowFixer
         }
 
         internal static Transform CreateBetween(Arm arm, Transform[] supports, int node) =>
-            CreateTwist(
-                arm,
-                supports[0],
-                $"Twist{node}.5",
-                (supports[node], 1),
-                (supports[node + 1], 1)
-            );
+            CreateTwist(arm, supports[0], $"Twist{node}.5", supports[node], supports[node + 1]);
 
         internal static Transform Mirror(Transform hiddenBone, Transform support)
         {
@@ -76,69 +80,54 @@ namespace KOZ39.ElbowFixer
                 support.position,
                 support.rotation
             );
-            AddRotationConstraint(mirror, (support, 1));
+            AddRotationConstraint(mirror, false, support);
 
             return mirror;
         }
 
-        private static Transform[] CreateTwists(Arm arm, Transform stable, Transform roll)
+        private static Transform[] CreateTwists(
+            Arm arm,
+            Transform stable,
+            Transform halfLower,
+            Transform handUp,
+            Transform roll
+        )
         {
             var last = SupportCount - 1;
+            var middle = last / 2;
             var twists = new Transform[SupportCount];
             twists[0] = stable;
+            twists[last] = CreateTwist(arm, stable, $"Twist{last}", roll);
 
-            twists[last] = CreateTwist(arm, stable, $"Twist{last}", (roll, 1));
+            // HandUp never turns against the Hand, so in local space it halves Roll's turn against
+            // the LowerArm.
+            // Adding that to HalfLower keeps each blend below a half turn even when the LowerArm
+            // turns with the hand.
+            twists[middle] = CreateChild(
+                $"{NamePrefix}Twist{middle}.{arm.Suffix}",
+                halfLower,
+                arm.Lower.position,
+                arm.Lower.rotation
+            );
+            AddRotationConstraint(twists[middle], true, handUp, roll);
 
-            // The node nearest the LowerArm's share of the hand twist follows the LowerArm, so each
-            // blend stays below a half turn for longer.
-            // Off that share, a little of the nearer end brings the node back to its own share.
-            var share = arm.LowerArmTwist * last;
-            var anchor = Mathf.Clamp(Mathf.RoundToInt(share), 1, last - 1);
-            var anchorSources =
-                Mathf.Approximately(share, anchor) ? new[] { (arm.Lower, 1f) }
-                : share > anchor
-                    ? new[] { (stable, (share - anchor) / share), (arm.Lower, anchor / share) }
-                : new[]
-                {
-                    (arm.Lower, (last - anchor) / (last - share)),
-                    (twists[last], (anchor - share) / (last - share)),
-                };
-            twists[anchor] = CreateTwist(arm, stable, $"Twist{anchor}", anchorSources);
-            Fill(0, anchor);
-            Fill(anchor, last);
-
-            return twists;
-
-            // Two equal sources blend to the exact midpoint, but unequal weights land a little off
-            // their share, so they split only spans that can't be halved.
-            void Fill(int from, int to)
+            // Two equal sources blend to the exact midpoint, while a GlobalWeight fraction spaces
+            // the twist unevenly and thins the forearm between bones.
+            for (var step = middle / 2; step > 0; step /= 2)
             {
-                if (to - from > 1 && (to - from) % 2 == 0)
-                {
-                    var middle = (from + to) / 2;
-                    twists[middle] = CreateTwist(
-                        arm,
-                        stable,
-                        $"Twist{middle}",
-                        (twists[from], 1),
-                        (twists[to], 1)
-                    );
-                    Fill(from, middle);
-                    Fill(middle, to);
-                    return;
-                }
-
-                for (var i = from + 1; i < to; i++)
+                for (var i = step; i < last; i += step * 2)
                 {
                     twists[i] = CreateTwist(
                         arm,
                         stable,
                         $"Twist{i}",
-                        (twists[from], (float)(to - i) / (to - from)),
-                        (twists[to], (float)(i - from) / (to - from))
+                        twists[i - step],
+                        twists[i + step]
                     );
                 }
             }
+
+            return twists;
         }
 
         private static Transform CreateChild(
@@ -175,7 +164,7 @@ namespace KOZ39.ElbowFixer
             Arm arm,
             Transform stable,
             string name,
-            params (Transform Source, float Weight)[] sources
+            params Transform[] sources
         )
         {
             var twist = CreateChild(
@@ -184,21 +173,23 @@ namespace KOZ39.ElbowFixer
                 arm.Lower.position,
                 arm.Lower.rotation
             );
-            AddRotationConstraint(twist, sources);
+            AddRotationConstraint(twist, false, sources);
 
             return twist;
         }
 
         private static void AddRotationConstraint(
             Transform bone,
-            params (Transform Source, float Weight)[] sources
+            bool solveInLocalSpace,
+            params Transform[] sources
         )
         {
             var constraint = bone.gameObject.AddComponent<VRCRotationConstraint>();
+            constraint.SolveInLocalSpace = solveInLocalSpace;
 
-            foreach (var (source, weight) in sources)
+            foreach (var source in sources)
             {
-                constraint.Sources.Add(new VRCConstraintSource(source, weight));
+                constraint.Sources.Add(new VRCConstraintSource(source, 1));
             }
 
             constraint.ZeroConstraint();
