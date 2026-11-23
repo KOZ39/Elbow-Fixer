@@ -91,6 +91,11 @@ namespace KOZ39.ElbowFixer
                                 carriers[hungObject].All(carrier => carrier == renderer)
                             )
                             .ToHashSet(),
+                        bone =>
+                            animators != null
+                            && animators
+                                .AnimationIndex.GetClipsForObjectPath(VirtualPath(bone))
+                                .Any(),
                         meshSwaps,
                         skip
                     )
@@ -307,6 +312,7 @@ namespace KOZ39.ElbowFixer
             bool subdivideForearm,
             Arm[] arms,
             HashSet<Transform> movableRoots,
+            Func<Transform, bool> isAnimated,
             Dictionary<SkinnedMeshRenderer, string> meshSwaps,
             Action<ElbowFixerException> skip
         )
@@ -324,7 +330,8 @@ namespace KOZ39.ElbowFixer
                     arms,
                     isSkin,
                     subdivideForearm && isSkin,
-                    movableRoots
+                    movableRoots,
+                    isAnimated
                 );
                 Require(plan.RedistributedCount > 0, "NoForearmWeights", renderer);
 
