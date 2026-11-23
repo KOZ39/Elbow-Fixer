@@ -128,13 +128,12 @@ namespace KOZ39.ElbowFixer
             var betweenCount = MoveHungObjects(arms, hung, carriers, supports, applied);
             var boneCount =
                 supports.Sum(bones => bones.Length) + applied.Sum(plan => plan.MirrorCount);
-            // Each arm's Roll and HalfLower and each ribbon's half-node twist have constraints but
-            // no weights.
+            // HalfLower and each ribbon's half-node twist have constraints but no weights.
             var report = new StringBuilder(
                 Text(
                     "messages.BuildSummary",
                     boneCount,
-                    boneCount + arms.Length * 2 + betweenCount,
+                    boneCount + arms.Length + betweenCount,
                     arms.Length * TwistRig.ReferenceCount + betweenCount
                 )
             );
