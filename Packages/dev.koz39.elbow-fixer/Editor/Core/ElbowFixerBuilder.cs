@@ -70,8 +70,7 @@ namespace KOZ39.ElbowFixer
             var supports = rigs.Select(rig => rig.Supports).ToArray();
             var applied = plans
                 .Select(plan => TryApply(plan, supports, skip))
-                .Where(result => result != null)
-                .Select(result => result.Value)
+                .Where(plan => plan != null)
                 .ToArray();
 
             if (applied.Length == 0)
@@ -85,8 +84,7 @@ namespace KOZ39.ElbowFixer
             }
 
             var boneCount =
-                supports.Sum(bones => bones.Length)
-                + applied.Sum(result => result.Plan.MirrorCount);
+                supports.Sum(bones => bones.Length) + applied.Sum(plan => plan.MirrorCount);
             // Each arm's Roll is a reference object with an aim constraint but no skin weights.
             var report = new StringBuilder(
                 Text(
@@ -97,35 +95,22 @@ namespace KOZ39.ElbowFixer
                 )
             );
 
-            foreach (var (plan, drift) in applied)
+            foreach (var plan in applied)
             {
                 report
                     .AppendLine()
                     .Append(
-                        Text(
-                            plan.IsSkin ? "messages.SkinPlanSummary" : "messages.PlanSummary",
-                            plan.Renderer.name,
-                            plan.RedistributedCount,
-                            plan.NearestCount
-                        )
-                    );
-
-                if (plan.AddedVertexCount > 0)
-                {
-                    report
-                        .AppendLine()
-                        .Append(
-                            Text(
+                        plan.AddedVertexCount > 0
+                            ? Text(
                                 "messages.SubdivisionSummary",
                                 plan.Renderer.name,
                                 plan.AddedVertexCount
                             )
-                        );
-                }
-
-                report
-                    .AppendLine()
-                    .Append(Text("messages.RestPoseDrift", plan.Renderer.name, drift * 1000));
+                            : Text(
+                                plan.IsSkin ? "messages.SkinPlanSummary" : "messages.PlanSummary",
+                                plan.Renderer.name
+                            )
+                    );
             }
 
             return report.ToString();
@@ -198,7 +183,7 @@ namespace KOZ39.ElbowFixer
             }
         }
 
-        private static (MeshWeightPlan Plan, float Drift)? TryApply(
+        private static MeshWeightPlan TryApply(
             MeshWeightPlan plan,
             Transform[][] supports,
             Action<ElbowFixerException> skip
@@ -206,7 +191,9 @@ namespace KOZ39.ElbowFixer
         {
             try
             {
-                return (plan, plan.Apply(supports));
+                plan.Apply(supports);
+
+                return plan;
             }
             catch (ElbowFixerException e)
             {

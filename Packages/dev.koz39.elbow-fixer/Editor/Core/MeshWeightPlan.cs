@@ -37,7 +37,6 @@ namespace KOZ39.ElbowFixer
         private Matrix4x4[] _bindposes;
 
         internal int RedistributedCount { get; private set; }
-        internal int NearestCount { get; private set; }
         internal int AddedVertexCount { get; private set; }
         internal int MirrorCount { get; private set; }
         internal bool IsSkin { get; }
@@ -150,7 +149,7 @@ namespace KOZ39.ElbowFixer
             return plan;
         }
 
-        internal float Apply(Transform[][] supports)
+        internal void Apply(Transform[][] supports)
         {
             var source = Renderer.sharedMesh;
             var bones = _bones.ToList();
@@ -202,11 +201,10 @@ namespace KOZ39.ElbowFixer
             var after = before
                 .Concat(SkinMatrices(bones.Skip(before.Length), bindposes.Skip(before.Length)))
                 .ToArray();
-            float drift;
 
             try
             {
-                drift = RestDrift(source.boneWeights, source.vertices, before, after);
+                var drift = RestDrift(source.boneWeights, source.vertices, before, after);
 
                 Require(
                     drift < MaxRestDrift,
@@ -257,8 +255,6 @@ namespace KOZ39.ElbowFixer
             Renderer.bones = bones.ToArray();
             Renderer.sharedMesh = mesh;
             Renderer.quality = SkinQuality.Bone4;
-
-            return drift;
         }
 
         internal static int RigidHandVertexCount(
@@ -429,7 +425,6 @@ namespace KOZ39.ElbowFixer
                 )
                 {
                     weight = ForearmWeights.Nearest(_weights[v], sources, sourceWeight, nodes, t);
-                    NearestCount++;
                 }
 
                 var hidden = ForearmWeights

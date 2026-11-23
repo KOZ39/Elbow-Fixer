@@ -56,25 +56,21 @@ msgstr "网格 “{0}” 使用了前臂扭转骨骼或带 Constraint 的骨骼 
 msgid "messages.NoMesh"
 msgstr "“{0}” 没有网格。请将其从目标网格中移除。"
 
-#. {0}: 网格名称, {1}: 顶点数, {2}: 使用最近分段的顶点数
+#. {0}: 网格名称
 msgid "messages.PlanSummary"
-msgstr "{0}：衣服网格，重新分配 {1} 个顶点（使用最近分段 {2} 个）"
+msgstr "{0}：衣服网格"
 
-#. {0}: 网格名称, {1}: 顶点数, {2}: 使用最近分段的顶点数
+#. {0}: 网格名称
 msgid "messages.SkinPlanSummary"
-msgstr "{0}：身体网格，重新分配 {1} 个顶点（使用最近分段 {2} 个）"
+msgstr "{0}：身体网格"
 
 #. {0}: 网格名称, {1}: 顶点数
 msgid "messages.SubdivisionSummary"
-msgstr "{0}：细分新增 {1} 个顶点"
+msgstr "{0}：身体网格，细分新增 {1} 个顶点"
 
 #. {0}: 蒙皮骨骼数量, {1}: VRC Constraint 数量, {2}: 参考对象数量
 msgid "messages.BuildSummary"
 msgstr "已添加 {0} 个蒙皮骨骼、{1} 个 VRC Constraint 和 {2} 个参考对象。"
-
-#. {0}: 网格名称, {1}: 距离
-msgid "messages.RestPoseDrift"
-msgstr "{0}：静止姿势误差 {1:F5} mm"
 
 msgid "errors.InvalidAvatar"
 msgstr "Avatar 根对象需要 VRC Avatar Descriptor 和有效的 Humanoid Animator。"

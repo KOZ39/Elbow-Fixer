@@ -56,25 +56,21 @@ msgstr "メッシュ「{0}」は前腕のねじれボーンまたはConstraint�
 msgid "messages.NoMesh"
 msgstr "「{0}」にメッシュがありません。対象メッシュから外してください。"
 
-#. {0}: メッシュ名, {1}: 頂点数, {2}: 最も近い区間を使用した頂点数
+#. {0}: メッシュ名
 msgid "messages.PlanSummary"
-msgstr "{0}：服のメッシュ、頂点{1}個を再配分（最も近い区間を使用{2}個）"
+msgstr "{0}：服のメッシュ"
 
-#. {0}: メッシュ名, {1}: 頂点数, {2}: 最も近い区間を使用した頂点数
+#. {0}: メッシュ名
 msgid "messages.SkinPlanSummary"
-msgstr "{0}：ボディメッシュ、頂点{1}個を再配分（最も近い区間を使用{2}個）"
+msgstr "{0}：ボディメッシュ"
 
 #. {0}: メッシュ名, {1}: 頂点数
 msgid "messages.SubdivisionSummary"
-msgstr "{0}：細分化で頂点{1}個を追加"
+msgstr "{0}：ボディメッシュ、細分化で頂点{1}個を追加"
 
 #. {0}: スキニング用ボーンの数, {1}: VRC Constraintの数, {2}: 参照オブジェクトの数
 msgid "messages.BuildSummary"
 msgstr "スキニング用ボーン{0}本、VRC Constraint{1}個、参照オブジェクト{2}個を追加しました。"
-
-#. {0}: メッシュ名, {1}: 距離
-msgid "messages.RestPoseDrift"
-msgstr "{0}：基本姿勢の誤差{1:F5} mm"
 
 msgid "errors.InvalidAvatar"
 msgstr "アバターのルートにVRC Avatar Descriptorと有効なHumanoid Animatorが必要です。"
