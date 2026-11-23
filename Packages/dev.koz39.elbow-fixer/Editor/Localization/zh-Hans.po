@@ -25,7 +25,7 @@ msgid "tooltips.AutoAdd"
 msgstr "查找并添加身体、衣袖等需要跟随前臂扭转的网格。手镯等刚性网格和只覆盖前臂一小部分的网格会被排除。请检查添加的网格。"
 
 msgid "tooltips.SubdivideForearm"
-msgstr "细分目标网格中身体网格的前臂，使手部大幅扭转时表面依然看起来平滑。但身体网格的顶点数会略有增加。"
+msgstr "（推荐：开启）细分目标网格中身体网格的前臂，使手部大幅扭转时表面依然看起来平滑。但身体网格的顶点数会略有增加。"
 
 msgid "buttons.Select"
 msgstr "选择"
