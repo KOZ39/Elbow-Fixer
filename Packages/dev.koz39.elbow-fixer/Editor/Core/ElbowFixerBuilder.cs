@@ -268,6 +268,21 @@ namespace KOZ39.ElbowFixer
                         true
                     );
                 }
+
+                // A chain that only planned sleeves weight turns with the node their mixed vertices
+                // use, so the two keep step even when IK turns the LowerArm with the whole hand.
+                foreach (
+                    var hungObject in hung[side]
+                        .Except(movable)
+                        .Where(arm.IsPhysBoneRoot)
+                        .Where(hungObject =>
+                            carriersBefore[hungObject].All(appliedRenderers.Contains)
+                            && appliedCarriers[hungObject].Any()
+                        )
+                )
+                {
+                    hungObject.SetParent(supports[side][TwistRig.LowerArmNode(arm)], true);
+                }
             }
 
             return betweens.Count;
