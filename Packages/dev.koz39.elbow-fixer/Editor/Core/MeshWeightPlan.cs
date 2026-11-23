@@ -71,7 +71,8 @@ namespace KOZ39.ElbowFixer
             Arm[] arms,
             bool isSkin,
             bool subdivide,
-            HashSet<Transform> movableRoots
+            HashSet<Transform> movableRoots,
+            Func<Transform, bool> isAnimated
         )
         {
             var problem = FindMeshProblem(renderer);
@@ -85,7 +86,7 @@ namespace KOZ39.ElbowFixer
             Validate(renderer, mesh, bones, bindposes, vertices, weights);
 
             var plan = new MeshWeightPlan(renderer, vertices, weights, arms.Length, isSkin);
-            (bones, bindposes) = plan.RebindExistingTwist(bones, bindposes, arms);
+            (bones, bindposes) = plan.RebindExistingTwist(bones, bindposes, arms, isAnimated);
             plan._bones = bones;
             plan._bindposes = bindposes;
 
@@ -767,7 +768,8 @@ namespace KOZ39.ElbowFixer
         private (Transform[] Bones, Matrix4x4[] Bindposes) RebindExistingTwist(
             Transform[] bones,
             Matrix4x4[] bindposes,
-            Arm[] arms
+            Arm[] arms,
+            Func<Transform, bool> isAnimated
         )
         {
             var boneList = bones.ToList();
@@ -791,7 +793,13 @@ namespace KOZ39.ElbowFixer
                     );
 
                     // Mirrors need the LowerArm even when only the copy uses the bone it copies.
-                    if (isHiddenCopy)
+                    // A plain bone on the LowerArm, such as a support bone missing its constraint,
+                    // turns all its vertices by one amount instead of spreading the twist.
+                    // An animated one, such as a bone scaled to hide a part, keeps its animation.
+                    if (
+                        isHiddenCopy
+                        || (armBone == null && arm.IsPlainLowerChild(bone) && !isAnimated(bone))
+                    )
                     {
                         armBone = arm.Lower;
                     }
