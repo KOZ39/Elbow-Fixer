@@ -16,6 +16,7 @@ namespace KOZ39.ElbowFixer
 
         private const float MaxRingSpacing = 0.08f;
         private const float MaxPieceSpan = 0.2f;
+        private const float MaxRibbonGap = 0.005f;
         internal const float MaxAccessorySpan = 0.5f;
         private const int MaxSubdivisionLevels = 3;
 
@@ -23,6 +24,7 @@ namespace KOZ39.ElbowFixer
         internal const string MeshNotReadable = nameof(MeshNotReadable);
 
         internal readonly SkinnedMeshRenderer Renderer;
+        internal readonly Dictionary<Transform, float> ChainNodes = new();
         private readonly int[] _lowerIndices;
         private readonly ForearmAxis[] _axes;
         private readonly HashSet<int>[] _lowerChains;
@@ -68,7 +70,8 @@ namespace KOZ39.ElbowFixer
             SkinnedMeshRenderer renderer,
             Arm[] arms,
             bool isSkin,
-            bool subdivide
+            bool subdivide,
+            HashSet<Transform> movableRoots
         )
         {
             var problem = FindMeshProblem(renderer);
@@ -170,7 +173,14 @@ namespace KOZ39.ElbowFixer
 
             foreach (var side in plan._skinnedSides)
             {
-                plan.Redistribute(side, arms[side], supportNodes[side], mirrorNodes, pieces);
+                plan.Redistribute(
+                    side,
+                    arms[side],
+                    supportNodes[side],
+                    mirrorNodes,
+                    pieces,
+                    movableRoots
+                );
             }
 
             return plan;
@@ -418,13 +428,24 @@ namespace KOZ39.ElbowFixer
             Arm arm,
             int[] nodes,
             Dictionary<int, int[]> mirrorNodes,
-            int[][] pieces
+            int[][] pieces,
+            HashSet<Transform> movableRoots
         )
         {
             var sources = Sources(side);
             var rawPositions = _vertices.Select(_axes[side].Position).ToArray();
             var forearm = rawPositions.Where((_, v) => UsesAny(_weights[v], sources)).ToArray();
             var isSleeve = forearm.Max() - forearm.Min() > MaxAccessorySpan;
+            var ribbons = Array.Empty<(int[] Piece, float Twist)>();
+
+            if (isSleeve)
+            {
+                ribbons = FindRibbons(side, arm, pieces, rawPositions, movableRoots);
+            }
+            else
+            {
+                HangAccessoryChains(side, arm, movableRoots);
+            }
 
             var sourceWeights = _weights
                 .Select(weight => ForearmWeights.SourceWeight(weight, sources))
@@ -488,6 +509,18 @@ namespace KOZ39.ElbowFixer
                 }
             }
 
+            var between = new bool[_vertices.Length];
+
+            foreach (var (piece, twist) in ribbons)
+            {
+                foreach (var v in piece.Where(v => sourceWeights[v] > 0))
+                {
+                    positions[v] = twist;
+                    rigid[v] = true;
+                    between[v] = true;
+                }
+            }
+
             for (var v = 0; v < _vertices.Length; v++)
             {
                 var sourceWeight = sourceWeights[v];
@@ -511,7 +544,9 @@ namespace KOZ39.ElbowFixer
                     )
                 )
                 {
-                    weight = ForearmWeights.Nearest(_weights[v], sources, sourceWeight, nodes, t);
+                    weight = between[v]
+                        ? ForearmWeights.Between(_weights[v], sources, sourceWeight, nodes, t)
+                        : ForearmWeights.Nearest(_weights[v], sources, sourceWeight, nodes, t);
                 }
 
                 var hidden = ForearmWeights
@@ -559,6 +594,132 @@ namespace KOZ39.ElbowFixer
             }
 
             return ForearmWeights.Rebind(weight, targets);
+        }
+
+        // A wrist accessory's chain hangs on the twist bone at its root, beside its band, so a cuff
+        // ruffle turns with the band instead of with the sleeve chains' node.
+        private void HangAccessoryChains(int side, Arm arm, HashSet<Transform> movableRoots)
+        {
+            var used = _weights
+                .SelectMany(ForearmWeights.Slots)
+                .Where(slot => slot.Weight > 0)
+                .Select(slot => slot.Bone)
+                .ToHashSet();
+
+            foreach (var bone in _lowerChains[side].Where(used.Contains))
+            {
+                var root = arm.HungAncestor(_bones[bone]);
+
+                if (!movableRoots.Contains(root))
+                {
+                    continue;
+                }
+
+                ChainNodes[root] = TwistRig.NodeAt(arm, root.position);
+                _physBoneTwists[side][bone] = ChainNodes[root] / (TwistRig.SupportCount - 1);
+            }
+        }
+
+        // A ribbon hanging on a PhysBone chain apart from the sleeve fabric turns as one with the
+        // twist bone its chain moves to, or it bends away from its knot.
+        private (int[] Piece, float Twist)[] FindRibbons(
+            int side,
+            Arm arm,
+            int[][] pieces,
+            float[] rawPositions,
+            HashSet<Transform> movableRoots
+        )
+        {
+            IEnumerable<int> Chains(int v) =>
+                ForearmWeights
+                    .Slots(_weights[v])
+                    .Where(slot => slot.Weight > 0 && _lowerChains[side].Contains(slot.Bone))
+                    .Select(slot => slot.Bone);
+
+            Transform Root(int bone) => arm.HungAncestor(_bones[bone]);
+
+            Transform[] Roots(IEnumerable<int> vertices) =>
+                vertices.SelectMany(Chains).Select(Root).Distinct().ToArray();
+
+            var hanging = pieces.Where(piece => piece.All(v => Chains(v).Any())).ToArray();
+            var singleRootPieces = hanging
+                .Select(piece => (Piece: piece, Roots: Roots(piece)))
+                .Where(candidate => candidate.Roots.Length == 1)
+                .ToArray();
+            var fabricRoots = Roots(
+                    Enumerable
+                        .Range(0, _vertices.Length)
+                        .Except(singleRootPieces.SelectMany(candidate => candidate.Piece))
+                )
+                .ToHashSet();
+            var ribbons = singleRootPieces
+                .Where(candidate =>
+                    !fabricRoots.Contains(candidate.Roots[0])
+                    && movableRoots.Contains(candidate.Roots[0])
+                )
+                .Select(candidate => (candidate.Piece, Root: candidate.Roots[0]))
+                .ToArray();
+            var gap = MaxRibbonGap * _axes[side].Length;
+
+            // A knot between ribbon loops touches them without sharing a vertex and lies within the
+            // bow, unlike a cuff band or button beside it.
+            var knots = ribbons
+                .GroupBy(ribbon => ribbon.Root)
+                .SelectMany(bow =>
+                {
+                    var bounds = GeometryUtility.CalculateBounds(
+                        bow.SelectMany(ribbon => ribbon.Piece).Select(v => _vertices[v]).ToArray(),
+                        Matrix4x4.identity
+                    );
+                    bounds.Expand(2 * gap);
+
+                    return pieces
+                        .Except(hanging)
+                        .Where(piece =>
+                            piece.All(v => bounds.Contains(_vertices[v]))
+                            && bow.Any(ribbon =>
+                                ribbon.Piece.Any(ribbonVertex =>
+                                    piece.Any(v =>
+                                        (_vertices[ribbonVertex] - _vertices[v]).magnitude <= gap
+                                    )
+                                )
+                            )
+                        )
+                        .Select(piece => (Piece: piece, Root: bow.Key));
+                })
+                .ToArray();
+            var last = TwistRig.SupportCount - 1;
+
+            foreach (var root in ribbons.Select(ribbon => ribbon.Root).Distinct())
+            {
+                var knotVertices = knots
+                    .Where(knot => knot.Root == root)
+                    .SelectMany(knot => knot.Piece)
+                    .ToArray();
+
+                // A bow a whole node off the sleeve under its knot turns ahead of or behind the
+                // sleeve and sinks into it on one side.
+                ChainNodes[root] =
+                    knotVertices.Length > 0
+                        ? Mathf.Clamp(
+                            Mathf.Round(knotVertices.Average(v => rawPositions[v]) * last * 2) / 2,
+                            1,
+                            last
+                        )
+                        : TwistRig.NodeAt(arm, root.position);
+            }
+
+            foreach (
+                var bone in _lowerChains[side].Where(bone => ChainNodes.ContainsKey(Root(bone)))
+            )
+            {
+                _physBoneTwists[side][bone] = ChainNodes[Root(bone)] / last;
+            }
+
+            return ribbons
+                .Concat(knots)
+                .Select(ribbon => (ribbon.Piece, ChainNodes[ribbon.Root] / last))
+                .ToArray();
         }
 
         private int[][] Pieces()

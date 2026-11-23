@@ -77,7 +77,9 @@ namespace KOZ39.ElbowFixer
         internal bool IsRotationDriven(Transform bone) => _sources.Contains(bone);
 
         internal bool IsInPhysBoneChain(Transform bone) =>
-            _physBoneDriven.Contains(bone) || _physBoneRoots.Contains(bone);
+            _physBoneDriven.Contains(bone) || IsPhysBoneRoot(bone);
+
+        internal bool IsPhysBoneRoot(Transform bone) => _physBoneRoots.Contains(bone);
 
         // Modular Avatar's hidden bones are named after a shape key, which may mention twist.
         internal Transform Find(Transform bone, Transform upper, Transform lower, Transform hand)
@@ -132,7 +134,7 @@ namespace KOZ39.ElbowFixer
         // Modular Avatar keeps an outfit bone it doesn't merge, such as one with other components,
         // under the avatar bone its name matches.
         // Sleeve weights on a kept lower arm then sit on a bone that only follows the LowerArm.
-        private bool IsLowerArmCopy(Transform bone, Transform lower, Transform hand) =>
+        internal bool IsLowerArmCopy(Transform bone, Transform lower, Transform hand) =>
             bone.parent == lower
             && bone.name.Contains(lower.name, StringComparison.Ordinal)
             && !ElbowFixerUtility.IsHiddenBone(bone)

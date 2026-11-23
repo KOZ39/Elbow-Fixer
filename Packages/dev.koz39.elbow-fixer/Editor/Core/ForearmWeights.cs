@@ -65,8 +65,6 @@ namespace KOZ39.ElbowFixer
             var influences = Others(weight, sources);
             var last = nodes.Length - 1;
             var phase = t * last;
-            var first = Mathf.Min(Mathf.FloorToInt(phase), last - 1);
-            var fraction = phase - first;
 
             var smoothing =
                 influences.Count <= 1
@@ -95,8 +93,7 @@ namespace KOZ39.ElbowFixer
                 );
             }
 
-            Add(influences, nodes[first], sourceWeight * (1 - fraction) * (1 - smoothing));
-            Add(influences, nodes[first + 1], sourceWeight * fraction * (1 - smoothing));
+            AddLinear(influences, nodes, t, sourceWeight * (1 - smoothing));
 
             var fits = influences.Count <= MaxInfluences;
             result = fits ? Pack(influences) : default;
@@ -114,6 +111,26 @@ namespace KOZ39.ElbowFixer
         {
             var influences = Others(weight, sources);
             Add(influences, nodes[Mathf.RoundToInt(t * (nodes.Length - 1))], sourceWeight);
+
+            return Pack(influences);
+        }
+
+        internal static BoneWeight Between(
+            BoneWeight weight,
+            HashSet<int> sources,
+            float sourceWeight,
+            int[] nodes,
+            float t
+        )
+        {
+            var influences = Others(weight, sources);
+            AddLinear(influences, nodes, t, sourceWeight);
+
+            if (influences.Count > MaxInfluences)
+            {
+                influences = Others(weight, sources);
+                Add(influences, nodes[Mathf.CeilToInt(t * (nodes.Length - 1))], sourceWeight);
+            }
 
             return Pack(influences);
         }
@@ -221,6 +238,20 @@ namespace KOZ39.ElbowFixer
                 influences.TryGetValue(bone, out var current);
                 influences[bone] = current + weight;
             }
+        }
+
+        private static void AddLinear(
+            Dictionary<int, float> influences,
+            int[] nodes,
+            float t,
+            float weight
+        )
+        {
+            var phase = t * (nodes.Length - 1);
+            var first = Mathf.Min(Mathf.FloorToInt(phase), nodes.Length - 2);
+            var fraction = phase - first;
+            Add(influences, nodes[first], weight * (1 - fraction));
+            Add(influences, nodes[first + 1], weight * fraction);
         }
 
         private static BoneWeight Pack(Dictionary<int, float> influences)

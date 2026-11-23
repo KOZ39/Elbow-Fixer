@@ -138,6 +138,21 @@ namespace KOZ39.ElbowFixer
         internal bool IsHandPhysBone(Transform bone) =>
             bone.IsChildOf(Hand) && _existingTwist.IsInPhysBoneChain(bone);
 
+        internal bool IsLowerArmCopy(Transform bone) =>
+            _existingTwist.IsLowerArmCopy(bone, Lower, Hand);
+
+        internal bool IsPhysBoneRoot(Transform bone) => _existingTwist.IsPhysBoneRoot(bone);
+
+        internal Transform HungAncestor(Transform bone)
+        {
+            while (bone.parent != Lower && !IsLowerArmCopy(bone.parent))
+            {
+                bone = bone.parent;
+            }
+
+            return bone;
+        }
+
         private static Arm ResolveSide(
             Transform avatarRoot,
             Animator animator,
