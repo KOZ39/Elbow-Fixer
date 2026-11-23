@@ -1,5 +1,6 @@
 using System.Linq;
 using nadena.dev.ndmf;
+using nadena.dev.ndmf.animator;
 using UnityEngine;
 
 [assembly: ExportsPlugin(typeof(global::KOZ39.ElbowFixer.ElbowFixerPlugin))]
@@ -22,10 +23,15 @@ namespace KOZ39.ElbowFixer
 
             // Sleeves merged by Modular Avatar must already use the avatar's forearm bones,
             // and Avatar Optimizer must see the final meshes.
+            // Moved objects keep their animations only while AnimatorServicesContext remaps paths,
+            // and the build reads Modular Avatar's merged clips from it.
             InPhase(BuildPhase.Transforming)
                 .AfterPlugin("nadena.dev.modular-avatar")
                 .BeforePlugin("com.anatawa12.avatar-optimizer")
-                .Run($"{ElbowFixerPackageInfo.DisplayName} (Build)", Build);
+                .WithRequiredExtension(
+                    typeof(AnimatorServicesContext),
+                    sequence => sequence.Run($"{ElbowFixerPackageInfo.DisplayName} (Build)", Build)
+                );
         }
 
         private static void Resolve(BuildContext context)
@@ -99,6 +105,7 @@ namespace KOZ39.ElbowFixer
                     context.AvatarRootObject,
                     meshes,
                     state.SubdivideForearm,
+                    context.Extension<AnimatorServicesContext>(),
                     e => Report(ErrorSeverity.NonFatal, e)
                 );
 

@@ -51,6 +51,23 @@ namespace KOZ39.ElbowFixer
             return (CreateTwists(arm, stable, roll), new[] { stable, up, handUp, roll });
         }
 
+        internal static int NodeAt(Arm arm, Vector3 position)
+        {
+            var forearm = arm.Hand.position - arm.Lower.position;
+            var t = Vector3.Dot(position - arm.Lower.position, forearm) / forearm.sqrMagnitude;
+
+            return Mathf.Clamp(Mathf.RoundToInt(t * (SupportCount - 1)), 1, SupportCount - 1);
+        }
+
+        internal static Transform CreateBetween(Arm arm, Transform[] supports, int node) =>
+            CreateTwist(
+                arm,
+                supports[0],
+                $"Twist{node}.5",
+                (supports[node], 1),
+                (supports[node + 1], 1)
+            );
+
         internal static Transform Mirror(Transform hiddenBone, Transform support)
         {
             var mirror = CreateChild(
