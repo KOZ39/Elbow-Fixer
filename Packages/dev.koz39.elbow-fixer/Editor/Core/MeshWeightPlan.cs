@@ -15,6 +15,7 @@ namespace KOZ39.ElbowFixer
         private const float MaxRestDrift = 0.0001f;
 
         private const float MaxRingSpacing = 0.08f;
+        private const float MaxPieceSpan = 0.2f;
         internal const float MaxAccessorySpan = 0.5f;
         private const int MaxSubdivisionLevels = 3;
 
@@ -159,6 +160,7 @@ namespace KOZ39.ElbowFixer
             }
 
             var mirrorNodes = new Dictionary<int, int[]>();
+            var pieces = plan._subdivision == null ? plan.Pieces() : Array.Empty<int[]>();
 
             foreach (var (_, boneIndex) in plan._hiddenSections)
             {
@@ -168,7 +170,7 @@ namespace KOZ39.ElbowFixer
 
             foreach (var side in plan._skinnedSides)
             {
-                plan.Redistribute(side, supportNodes[side], mirrorNodes);
+                plan.Redistribute(side, arms[side], supportNodes[side], mirrorNodes, pieces);
             }
 
             return plan;
@@ -411,10 +413,18 @@ namespace KOZ39.ElbowFixer
             );
         }
 
-        private void Redistribute(int side, int[] nodes, Dictionary<int, int[]> mirrorNodes)
+        private void Redistribute(
+            int side,
+            Arm arm,
+            int[] nodes,
+            Dictionary<int, int[]> mirrorNodes,
+            int[][] pieces
+        )
         {
             var sources = Sources(side);
             var rawPositions = _vertices.Select(_axes[side].Position).ToArray();
+            var forearm = rawPositions.Where((_, v) => UsesAny(_weights[v], sources)).ToArray();
+            var isSleeve = forearm.Max() - forearm.Min() > MaxAccessorySpan;
 
             var sourceWeights = _weights
                 .Select(weight => ForearmWeights.SourceWeight(weight, sources))
@@ -448,6 +458,36 @@ namespace KOZ39.ElbowFixer
                     ) / (sourceWeight + chains.Sum(slot => slot.Weight));
             }
 
+            var rigid = new bool[_vertices.Length];
+
+            // Spread over several nodes, a piece of a wrist accessory, such as a ribbon, bends out
+            // of shape and apart from the pieces beside it.
+            // A piece of a sleeve stays spread, or it lifts off the sleeve under it.
+            foreach (var piece in isSleeve ? Array.Empty<int[]>() : pieces)
+            {
+                var members = piece.Where(v => sourceWeights[v] > 0).ToArray();
+
+                if (members.Length == 0)
+                {
+                    continue;
+                }
+
+                var span = members.Select(v => rawPositions[v]).ToArray();
+
+                if (span.Max() - span.Min() > MaxPieceSpan)
+                {
+                    continue;
+                }
+
+                var mean = span.Average();
+
+                foreach (var v in members)
+                {
+                    positions[v] = mean;
+                    rigid[v] = true;
+                }
+            }
+
             for (var v = 0; v < _vertices.Length; v++)
             {
                 var sourceWeight = sourceWeights[v];
@@ -460,7 +500,8 @@ namespace KOZ39.ElbowFixer
                 var t = positions[v];
 
                 if (
-                    !ForearmWeights.TryRedistribute(
+                    rigid[v]
+                    || !ForearmWeights.TryRedistribute(
                         _weights[v],
                         sources,
                         sourceWeight,
@@ -518,6 +559,51 @@ namespace KOZ39.ElbowFixer
             }
 
             return ForearmWeights.Rebind(weight, targets);
+        }
+
+        private int[][] Pieces()
+        {
+            var parent = Enumerable.Range(0, _vertices.Length).ToArray();
+
+            int Find(int v)
+            {
+                while (parent[v] != v)
+                {
+                    parent[v] = parent[parent[v]];
+                    v = parent[v];
+                }
+
+                return v;
+            }
+
+            // Vertices split along UV or normal seams share a position.
+            var byPosition = new Dictionary<Vector3, int>();
+
+            for (var v = 0; v < _vertices.Length; v++)
+            {
+                if (byPosition.TryGetValue(_vertices[v], out var other))
+                {
+                    parent[Find(v)] = Find(other);
+                }
+                else
+                {
+                    byPosition[_vertices[v]] = v;
+                }
+            }
+
+            var triangles = Renderer.sharedMesh.triangles;
+
+            for (var i = 0; i < triangles.Length; i += 3)
+            {
+                parent[Find(triangles[i])] = Find(triangles[i + 1]);
+                parent[Find(triangles[i + 1])] = Find(triangles[i + 2]);
+            }
+
+            return Enumerable
+                .Range(0, _vertices.Length)
+                .GroupBy(Find)
+                .Select(piece => piece.ToArray())
+                .ToArray();
         }
 
         private bool IsHiddenSectionOf(int side, Arm arm, Transform candidate) =>
