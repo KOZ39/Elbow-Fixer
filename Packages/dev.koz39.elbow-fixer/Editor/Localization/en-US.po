@@ -56,25 +56,21 @@ msgstr "Mesh '{0}' is not added because it uses a bone under '{1}', a forearm tw
 msgid "messages.NoMesh"
 msgstr "'{0}' has no mesh. Remove it from the target meshes."
 
-#. {0}: mesh name, {1}: vertex count, {2}: vertices using the nearest segment
+#. {0}: mesh name
 msgid "messages.PlanSummary"
-msgstr "{0}: clothing mesh, {1} vertices redistributed ({2} using the nearest segment)"
+msgstr "{0}: clothing mesh"
 
-#. {0}: mesh name, {1}: vertex count, {2}: vertices using the nearest segment
+#. {0}: mesh name
 msgid "messages.SkinPlanSummary"
-msgstr "{0}: body mesh, {1} vertices redistributed ({2} using the nearest segment)"
+msgstr "{0}: body mesh"
 
 #. {0}: mesh name, {1}: vertex count
 msgid "messages.SubdivisionSummary"
-msgstr "{0}: {1} vertices added by subdivision"
+msgstr "{0}: body mesh, {1} vertices added by subdivision"
 
 #. {0}: skin bone count, {1}: VRC constraint count, {2}: reference object count
 msgid "messages.BuildSummary"
 msgstr "Added {0} skin bones, {1} VRC constraints and {2} reference objects."
-
-#. {0}: mesh name, {1}: distance
-msgid "messages.RestPoseDrift"
-msgstr "{0}: rest pose drift {1:F5} mm"
 
 msgid "errors.InvalidAvatar"
 msgstr "The avatar root needs a VRC Avatar Descriptor and a valid Humanoid Animator."
