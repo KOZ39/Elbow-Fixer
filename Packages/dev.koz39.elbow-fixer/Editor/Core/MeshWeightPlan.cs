@@ -100,7 +100,7 @@ namespace KOZ39.ElbowFixer
                     .ToHashSet();
 
                 // A PhysBone chain under the LowerArm stays on it or moves onto the LowerArm node,
-                // which turns like it.
+                // which turns nearly like it.
                 plan._physBoneTwists[side] = plan._lowerChains[side]
                     .ToDictionary(
                         i => i,

@@ -53,7 +53,7 @@ namespace KOZ39.ElbowFixer
                 arm.Lower.position,
                 arm.Lower.rotation
             );
-            AddRotationConstraint(halfLower, false, stable, arm.Lower);
+            AddRotationConstraint(halfLower, false, (stable, 1), (arm.Lower, 1));
 
             return (
                 CreateTwists(arm, stable, halfLower, handUp, wrist),
@@ -87,7 +87,7 @@ namespace KOZ39.ElbowFixer
                 support.position,
                 support.rotation
             );
-            AddRotationConstraint(mirror, false, support);
+            AddRotationConstraint(mirror, false, (support, 1));
 
             return mirror;
         }
@@ -106,17 +106,19 @@ namespace KOZ39.ElbowFixer
             twists[0] = stable;
             twists[last] = wrist;
 
-            // HandUp never turns against the Hand, so in local space it halves the wrist's turn
-            // against the LowerArm.
+            // HandUp never turns against the Hand, so in local space it takes three eighths of the
+            // wrist's turn against the LowerArm.
             // Adding that to HalfLower keeps each blend below a half turn even when the LowerArm
             // turns with the hand.
+            // Less than a half leaves more of the hand twist to the wrist half, so the elbow half
+            // twists less.
             twists[middle] = CreateChild(
                 $"{NamePrefix}Twist{middle}.{arm.Suffix}",
                 halfLower,
                 arm.Lower.position,
                 arm.Lower.rotation
             );
-            AddRotationConstraint(twists[middle], true, handUp, wrist);
+            AddRotationConstraint(twists[middle], true, (handUp, 0.625f), (wrist, 0.375f));
 
             // Two equal sources blend to the exact midpoint, while a GlobalWeight fraction spaces
             // the twist unevenly and thins the forearm between bones.
@@ -180,7 +182,7 @@ namespace KOZ39.ElbowFixer
                 arm.Lower.position,
                 arm.Lower.rotation
             );
-            AddRotationConstraint(twist, false, sources);
+            AddRotationConstraint(twist, false, sources.Select(source => (source, 1f)).ToArray());
 
             return twist;
         }
@@ -188,15 +190,15 @@ namespace KOZ39.ElbowFixer
         private static void AddRotationConstraint(
             Transform bone,
             bool solveInLocalSpace,
-            params Transform[] sources
+            params (Transform Source, float Weight)[] sources
         )
         {
             var constraint = bone.gameObject.AddComponent<VRCRotationConstraint>();
             constraint.SolveInLocalSpace = solveInLocalSpace;
 
-            foreach (var source in sources)
+            foreach (var (source, weight) in sources)
             {
-                constraint.Sources.Add(new VRCConstraintSource(source, 1));
+                constraint.Sources.Add(new VRCConstraintSource(source, weight));
             }
 
             constraint.ZeroConstraint();
