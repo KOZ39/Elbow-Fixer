@@ -15,6 +15,7 @@ namespace KOZ39.ElbowFixer
         private const float MaxRestDrift = 0.0001f;
 
         private const float MaxRingSpacing = 0.08f;
+        private const float MaxPieceSpan = 0.2f;
         internal const float MaxAccessorySpan = 0.5f;
         private const int MaxSubdivisionLevels = 3;
 
@@ -24,7 +25,8 @@ namespace KOZ39.ElbowFixer
         internal readonly SkinnedMeshRenderer Renderer;
         private readonly int[] _lowerIndices;
         private readonly ForearmAxis[] _axes;
-        private readonly HashSet<int>[] _lowerPhysBones;
+        private readonly HashSet<int>[] _lowerChains;
+        private readonly Dictionary<int, float>[] _physBoneTwists;
         private readonly List<int> _skinnedSides = new();
         private readonly List<(int Side, int BoneIndex)> _hiddenSections = new();
         private readonly Dictionary<int, int> _hiddenCopies = new();
@@ -57,7 +59,8 @@ namespace KOZ39.ElbowFixer
             _weights = weights;
             _lowerIndices = Enumerable.Repeat(-1, armCount).ToArray();
             _axes = new ForearmAxis[armCount];
-            _lowerPhysBones = new HashSet<int>[armCount];
+            _lowerChains = new HashSet<int>[armCount];
+            _physBoneTwists = new Dictionary<int, float>[armCount];
             IsSkin = isSkin;
         }
 
@@ -85,15 +88,37 @@ namespace KOZ39.ElbowFixer
 
             for (var side = 0; side < arms.Length; side++)
             {
-                plan.ResolveLower(side, arms[side], bones, bindposes);
-                plan._lowerPhysBones[side] = Enumerable
+                var arm = arms[side];
+                plan.ResolveLower(side, arm, bones, bindposes);
+                plan._lowerChains[side] = Enumerable
                     .Range(0, bones.Length)
-                    .Where(i => bones[i] != null && arms[side].IsLowerPhysBone(bones[i]))
+                    .Where(i => bones[i] != null && arm.IsLowerPhysBone(bones[i]))
                     .ToHashSet();
+
+                // A PhysBone chain left on the LowerArm turns with it.
+                plan._physBoneTwists[side] = plan._lowerChains[side]
+                    .ToDictionary(i => i, _ => arm.LowerArmTwist);
+
+                for (var i = 0; i < bones.Length; i++)
+                {
+                    if (bones[i] == null)
+                    {
+                        continue;
+                    }
+
+                    if (arm.IsUpperPhysBone(bones[i]))
+                    {
+                        plan._physBoneTwists[side][i] = 0;
+                    }
+                    else if (arm.IsHandPhysBone(bones[i]))
+                    {
+                        plan._physBoneTwists[side][i] = 1;
+                    }
+                }
 
                 for (var boneIndex = 0; boneIndex < bones.Length; boneIndex++)
                 {
-                    if (plan.IsHiddenSectionOf(side, arms[side], bones[boneIndex]))
+                    if (plan.IsHiddenSectionOf(side, arm, bones[boneIndex]))
                     {
                         plan._hiddenSections.Add((side, boneIndex));
                     }
@@ -135,6 +160,7 @@ namespace KOZ39.ElbowFixer
             }
 
             var mirrorNodes = new Dictionary<int, int[]>();
+            var pieces = plan._subdivision == null ? plan.Pieces() : Array.Empty<int[]>();
 
             foreach (var (_, boneIndex) in plan._hiddenSections)
             {
@@ -144,7 +170,7 @@ namespace KOZ39.ElbowFixer
 
             foreach (var side in plan._skinnedSides)
             {
-                plan.Redistribute(side, supportNodes[side], mirrorNodes);
+                plan.Redistribute(side, arms[side], supportNodes[side], mirrorNodes, pieces);
             }
 
             return plan;
@@ -387,13 +413,39 @@ namespace KOZ39.ElbowFixer
             );
         }
 
-        private void Redistribute(int side, int[] nodes, Dictionary<int, int[]> mirrorNodes)
+        private void Redistribute(
+            int side,
+            Arm arm,
+            int[] nodes,
+            Dictionary<int, int[]> mirrorNodes,
+            int[][] pieces
+        )
         {
             var sources = Sources(side);
+            var rawPositions = _vertices.Select(_axes[side].Position).ToArray();
+            var forearm = rawPositions.Where((_, v) => UsesAny(_weights[v], sources)).ToArray();
+            var isSleeve = forearm.Max() - forearm.Min() > MaxAccessorySpan;
+
+            if (!isSleeve)
+            {
+                // A wrist accessory hanging on a PhysBone chain, such as a cuff ruffle, would turn
+                // as one with the chain while the skin under it turns less at one end and more at
+                // the other, so the twist bones carry it instead.
+                var toLower = _lowerChains[side]
+                    .ToDictionary(bone => bone, _ => _lowerIndices[side]);
+                _weights = _weights
+                    .Select(weight => ForearmWeights.Rebind(weight, toLower))
+                    .ToArray();
+            }
+
+            var sourceWeights = _weights
+                .Select(weight => ForearmWeights.SourceWeight(weight, sources))
+                .ToArray();
+            var positions = new float[_vertices.Length];
 
             for (var v = 0; v < _vertices.Length; v++)
             {
-                var sourceWeight = ForearmWeights.SourceWeight(_weights[v], sources);
+                var sourceWeight = sourceWeights[v];
 
                 if (sourceWeight <= 0)
                 {
@@ -404,18 +456,64 @@ namespace KOZ39.ElbowFixer
                 // bone's weight keeps this vertex in step with the unhidden copy beside it.
                 _weights[v] = MergeIntoHiddenCopies(_weights[v]);
 
-                var physBoneWeight = ForearmWeights
+                var chains = ForearmWeights
                     .Slots(_weights[v])
-                    .Where(slot => slot.Weight > 0 && _lowerPhysBones[side].Contains(slot.Bone))
-                    .Sum(slot => slot.Weight);
+                    .Where(slot => slot.Weight > 0 && _physBoneTwists[side].ContainsKey(slot.Bone))
+                    .ToArray();
 
-                // A PhysBone chain under the LowerArm turns far more than the nodes near the elbow,
-                // and mixing them pulls the vertex toward the forearm axis.
-                var t = _axes[side].Position(_vertices[v]);
-                t += (1 - t) * physBoneWeight / (sourceWeight + physBoneWeight);
+                // A vertex mixed with a PhysBone chain takes the twist of the bone the chain hangs
+                // on in that chain's share, or the two pull it toward the forearm axis.
+                positions[v] =
+                    (
+                        rawPositions[v] * sourceWeight
+                        + chains.Sum(slot => slot.Weight * _physBoneTwists[side][slot.Bone])
+                    ) / (sourceWeight + chains.Sum(slot => slot.Weight));
+            }
+
+            var rigid = new bool[_vertices.Length];
+
+            // Spread over several nodes, a piece of a wrist accessory, such as a ribbon, bends out
+            // of shape and apart from the pieces beside it.
+            // A piece of a sleeve stays spread, or it lifts off the sleeve under it.
+            foreach (var piece in isSleeve ? Array.Empty<int[]>() : pieces)
+            {
+                var members = piece.Where(v => sourceWeights[v] > 0).ToArray();
+
+                if (members.Length == 0)
+                {
+                    continue;
+                }
+
+                var span = members.Select(v => rawPositions[v]).ToArray();
+
+                if (span.Max() - span.Min() > MaxPieceSpan)
+                {
+                    continue;
+                }
+
+                var mean = span.Average();
+
+                foreach (var v in members)
+                {
+                    positions[v] = mean;
+                    rigid[v] = true;
+                }
+            }
+
+            for (var v = 0; v < _vertices.Length; v++)
+            {
+                var sourceWeight = sourceWeights[v];
+
+                if (sourceWeight <= 0)
+                {
+                    continue;
+                }
+
+                var t = positions[v];
 
                 if (
-                    !ForearmWeights.TryRedistribute(
+                    rigid[v]
+                    || !ForearmWeights.TryRedistribute(
                         _weights[v],
                         sources,
                         sourceWeight,
@@ -473,6 +571,51 @@ namespace KOZ39.ElbowFixer
             }
 
             return ForearmWeights.Rebind(weight, targets);
+        }
+
+        private int[][] Pieces()
+        {
+            var parent = Enumerable.Range(0, _vertices.Length).ToArray();
+
+            int Find(int v)
+            {
+                while (parent[v] != v)
+                {
+                    parent[v] = parent[parent[v]];
+                    v = parent[v];
+                }
+
+                return v;
+            }
+
+            // Vertices split along UV or normal seams share a position.
+            var byPosition = new Dictionary<Vector3, int>();
+
+            for (var v = 0; v < _vertices.Length; v++)
+            {
+                if (byPosition.TryGetValue(_vertices[v], out var other))
+                {
+                    parent[Find(v)] = Find(other);
+                }
+                else
+                {
+                    byPosition[_vertices[v]] = v;
+                }
+            }
+
+            var triangles = Renderer.sharedMesh.triangles;
+
+            for (var i = 0; i < triangles.Length; i += 3)
+            {
+                parent[Find(triangles[i])] = Find(triangles[i + 1]);
+                parent[Find(triangles[i + 1])] = Find(triangles[i + 2]);
+            }
+
+            return Enumerable
+                .Range(0, _vertices.Length)
+                .GroupBy(Find)
+                .Select(piece => piece.ToArray())
+                .ToArray();
         }
 
         private bool IsHiddenSectionOf(int side, Arm arm, Transform candidate) =>
