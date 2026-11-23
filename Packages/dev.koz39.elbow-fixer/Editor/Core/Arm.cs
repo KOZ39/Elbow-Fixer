@@ -63,6 +63,7 @@ namespace KOZ39.ElbowFixer
         internal readonly Transform Lower;
         internal readonly Transform Hand;
         internal readonly Vector3 UpDirection;
+        internal readonly float LowerArmTwist;
         private readonly ExistingTwist _existingTwist;
 
         private Arm(
@@ -72,6 +73,7 @@ namespace KOZ39.ElbowFixer
             Transform lower,
             Transform hand,
             Vector3 upDirection,
+            float lowerArmTwist,
             ExistingTwist existingTwist
         )
         {
@@ -81,6 +83,7 @@ namespace KOZ39.ElbowFixer
             Lower = lower;
             Hand = hand;
             UpDirection = upDirection;
+            LowerArmTwist = lowerArmTwist;
             _existingTwist = existingTwist;
         }
 
@@ -157,7 +160,17 @@ namespace KOZ39.ElbowFixer
             var upDirection = Vector3.Cross(forearm.normalized, avatarRoot.forward);
             Require(upDirection.magnitude > 0.1f, lower, "ForearmParallel", name);
 
-            return new(side, name, upper, lower, hand, upDirection.normalized, existingTwist);
+            return new(
+                side,
+                name,
+                upper,
+                lower,
+                hand,
+                upDirection.normalized,
+                // Humanoid animation turns the LowerArm by this share of the hand twist.
+                animator.avatar.humanDescription.lowerArmTwist,
+                existingTwist
+            );
         }
 
         private static bool IsUniformPositive(Vector3 scale) =>

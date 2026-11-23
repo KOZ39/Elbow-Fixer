@@ -59,7 +59,7 @@ namespace KOZ39.ElbowFixer
                 support.position,
                 support.rotation
             );
-            AddRotationConstraint(mirror, support);
+            AddRotationConstraint(mirror, (support, 1));
 
             return mirror;
         }
@@ -70,27 +70,58 @@ namespace KOZ39.ElbowFixer
             var twists = new Transform[SupportCount];
             twists[0] = stable;
 
-            // Blending from the LowerArm instead of Stable keeps the twist from flipping when the
-            // hand turns past 180 degrees.
-            twists[last] = CreateTwist(arm, stable, $"Twist{last}", arm.Lower, roll);
+            twists[last] = CreateTwist(arm, stable, $"Twist{last}", (roll, 1));
 
-            // Two equal sources blend to the exact midpoint, while a GlobalWeight fraction spaces
-            // the twist unevenly and thins the forearm between bones.
-            for (var step = last / 2; step > 0; step /= 2)
+            // The node nearest the LowerArm's share of the hand twist follows the LowerArm, so each
+            // blend stays below a half turn for longer.
+            // Off that share, a little of the nearer end brings the node back to its own share.
+            var share = arm.LowerArmTwist * last;
+            var anchor = Mathf.Clamp(Mathf.RoundToInt(share), 1, last - 1);
+            var anchorSources =
+                Mathf.Approximately(share, anchor) ? new[] { (arm.Lower, 1f) }
+                : share > anchor
+                    ? new[] { (stable, (share - anchor) / share), (arm.Lower, anchor / share) }
+                : new[]
+                {
+                    (arm.Lower, (last - anchor) / (last - share)),
+                    (twists[last], (anchor - share) / (last - share)),
+                };
+            twists[anchor] = CreateTwist(arm, stable, $"Twist{anchor}", anchorSources);
+            Fill(0, anchor);
+            Fill(anchor, last);
+
+            return twists;
+
+            // Two equal sources blend to the exact midpoint, but unequal weights land a little off
+            // their share, so they split only spans that can't be halved.
+            void Fill(int from, int to)
             {
-                for (var i = step; i < last; i += step * 2)
+                if (to - from > 1 && (to - from) % 2 == 0)
+                {
+                    var middle = (from + to) / 2;
+                    twists[middle] = CreateTwist(
+                        arm,
+                        stable,
+                        $"Twist{middle}",
+                        (twists[from], 1),
+                        (twists[to], 1)
+                    );
+                    Fill(from, middle);
+                    Fill(middle, to);
+                    return;
+                }
+
+                for (var i = from + 1; i < to; i++)
                 {
                     twists[i] = CreateTwist(
                         arm,
                         stable,
                         $"Twist{i}",
-                        twists[i - step],
-                        twists[i + step]
+                        (twists[from], (float)(to - i) / (to - from)),
+                        (twists[to], (float)(i - from) / (to - from))
                     );
                 }
             }
-
-            return twists;
         }
 
         private static Transform CreateChild(
@@ -127,7 +158,7 @@ namespace KOZ39.ElbowFixer
             Arm arm,
             Transform stable,
             string name,
-            params Transform[] sources
+            params (Transform Source, float Weight)[] sources
         )
         {
             var twist = CreateChild(
@@ -141,13 +172,16 @@ namespace KOZ39.ElbowFixer
             return twist;
         }
 
-        private static void AddRotationConstraint(Transform bone, params Transform[] sources)
+        private static void AddRotationConstraint(
+            Transform bone,
+            params (Transform Source, float Weight)[] sources
+        )
         {
             var constraint = bone.gameObject.AddComponent<VRCRotationConstraint>();
 
-            foreach (var source in sources)
+            foreach (var (source, weight) in sources)
             {
-                constraint.Sources.Add(new VRCConstraintSource(source, 1));
+                constraint.Sources.Add(new VRCConstraintSource(source, weight));
             }
 
             constraint.ZeroConstraint();
