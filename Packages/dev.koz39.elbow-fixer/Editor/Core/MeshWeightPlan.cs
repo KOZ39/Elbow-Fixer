@@ -104,7 +104,7 @@ namespace KOZ39.ElbowFixer
                 plan._physBoneTwists[side] = plan._lowerChains[side]
                     .ToDictionary(
                         i => i,
-                        _ => (float)TwistRig.LowerArmNode(arm) / (TwistRig.SupportCount - 1)
+                        _ => TwistRig.LowerArmNode(arm) / (TwistRig.SupportCount - 1)
                     );
 
                 for (var i = 0; i < bones.Length; i++)

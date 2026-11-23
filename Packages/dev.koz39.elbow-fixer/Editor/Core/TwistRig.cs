@@ -12,6 +12,7 @@ namespace KOZ39.ElbowFixer
 
         internal const int SupportCount = 9;
         internal const int ReferenceCount = 3;
+        private const float MiddleWristShare = 0.375f;
 
         internal static (Transform[] Supports, Transform[] Roots) Build(Arm arm)
         {
@@ -69,12 +70,27 @@ namespace KOZ39.ElbowFixer
             return Mathf.Clamp(Mathf.RoundToInt(t * (SupportCount - 1)), 1, SupportCount - 1);
         }
 
-        internal static int LowerArmNode(Arm arm) =>
-            Mathf.Clamp(
-                Mathf.RoundToInt(arm.LowerArmTwist * (SupportCount - 1)),
-                1,
-                SupportCount - 2
-            );
+        internal static float LowerArmNode(Arm arm)
+        {
+            var last = SupportCount - 1;
+            var share = arm.LowerArmTwist;
+
+            float Turn(float node) =>
+                share * node / last
+                + (1 - share)
+                    * (
+                        node <= last / 2
+                            ? MiddleWristShare * node / (last / 2)
+                            : MiddleWristShare
+                                + (1 - MiddleWristShare) * (node - last / 2) / (last / 2)
+                    );
+
+            return Enumerable
+                .Range(2, 2 * last - 3)
+                .Select(half => half / 2f)
+                .OrderBy(node => Mathf.Abs(Turn(node) - share))
+                .First();
+        }
 
         internal static Transform CreateBetween(Arm arm, Transform[] supports, int node) =>
             CreateTwist(arm, supports[0], $"Twist{node}.5", supports[node], supports[node + 1]);
@@ -118,7 +134,12 @@ namespace KOZ39.ElbowFixer
                 arm.Lower.position,
                 arm.Lower.rotation
             );
-            AddRotationConstraint(twists[middle], true, (handUp, 0.625f), (wrist, 0.375f));
+            AddRotationConstraint(
+                twists[middle],
+                true,
+                (handUp, 1 - MiddleWristShare),
+                (wrist, MiddleWristShare)
+            );
 
             // Two equal sources blend to the exact midpoint, while a GlobalWeight fraction spaces
             // the twist unevenly and thins the forearm between bones.

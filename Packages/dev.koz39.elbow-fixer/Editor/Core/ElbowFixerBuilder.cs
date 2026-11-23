@@ -247,11 +247,30 @@ namespace KOZ39.ElbowFixer
                     )
                     .ToArray();
 
-                foreach (var hungObject in movable)
+                // A chain that only planned sleeves weight turns with the node their mixed vertices
+                // use, so the two keep step even when IK turns the LowerArm with the whole hand.
+                var sleeveChains = hung[side]
+                    .Except(movable)
+                    .Where(arm.IsPhysBoneRoot)
+                    .Where(hungObject =>
+                        carriersBefore[hungObject].All(appliedRenderers.Contains)
+                        && appliedCarriers[hungObject].Any()
+                    )
+                    .Select(hungObject => (hungObject, TwistRig.LowerArmNode(arm)));
+                var placements = movable
+                    .Select(hungObject =>
+                        (
+                            hungObject,
+                            ribbonNodes.TryGetValue(hungObject, out var ribbonNode)
+                                ? ribbonNode
+                                : TwistRig.NodeAt(arm, hungObject.position)
+                        )
+                    )
+                    .Concat(sleeveChains)
+                    .ToArray();
+
+                foreach (var (hungObject, node) in placements)
                 {
-                    var node = ribbonNodes.TryGetValue(hungObject, out var ribbonNode)
-                        ? ribbonNode
-                        : TwistRig.NodeAt(arm, hungObject.position);
                     var lower = (int)node;
 
                     if (node > lower && !betweens.ContainsKey((side, lower)))
@@ -267,21 +286,6 @@ namespace KOZ39.ElbowFixer
                         node > lower ? betweens[(side, lower)] : supports[side][lower],
                         true
                     );
-                }
-
-                // A chain that only planned sleeves weight turns with the node their mixed vertices
-                // use, so the two keep step even when IK turns the LowerArm with the whole hand.
-                foreach (
-                    var hungObject in hung[side]
-                        .Except(movable)
-                        .Where(arm.IsPhysBoneRoot)
-                        .Where(hungObject =>
-                            carriersBefore[hungObject].All(appliedRenderers.Contains)
-                            && appliedCarriers[hungObject].Any()
-                        )
-                )
-                {
-                    hungObject.SetParent(supports[side][TwistRig.LowerArmNode(arm)], true);
                 }
             }
 
