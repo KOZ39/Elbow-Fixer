@@ -9,7 +9,7 @@ namespace KOZ39.ElbowFixer
     internal static class TargetMeshes
     {
         private const int MinForearmVertices = 20;
-        private const float MinForearmCoverage = 0.3f;
+        private const float MinForearmReach = 0.3f;
 
         private const string MergeArmatureType =
             "nadena.dev.modular_avatar.core.ModularAvatarMergeArmature";
@@ -307,7 +307,7 @@ namespace KOZ39.ElbowFixer
 
             var count = 0;
             var blended = false;
-            var min = 1f;
+            var min = float.MaxValue;
             var max = 0f;
 
             for (var v = 0; v < vertices.Length && v < weights.Length; v++)
@@ -329,7 +329,11 @@ namespace KOZ39.ElbowFixer
                 max = Mathf.Max(max, t);
             }
 
-            return count >= MinForearmVertices && max - min >= MinForearmCoverage && blended;
+            // A rigid mesh short along the forearm, such as a bracelet, turns as one with the twist
+            // bone at its position.
+            return count >= MinForearmVertices
+                && max >= MinForearmReach
+                && (blended || max - min <= MeshWeightPlan.MaxAccessorySpan);
         }
     }
 }

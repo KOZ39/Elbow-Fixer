@@ -19,10 +19,10 @@ msgid "labels.Right"
 msgstr "right"
 
 msgid "tooltips.TargetMeshes"
-msgstr "Meshes that should follow the forearm twist. Add the body and clothing sleeves, and leave rigid accessories such as bracelets out."
+msgstr "Meshes that should follow the forearm twist. Add the body, clothing sleeves and wrist accessories such as bracelets, and leave out rigid accessories that cover most of the forearm."
 
 msgid "tooltips.AutoAdd"
-msgstr "Finds and adds meshes that should follow the forearm twist, such as the body and clothing sleeves. Rigid meshes such as bracelets and meshes that cover little of the forearm are skipped. Check the added meshes."
+msgstr "Finds and adds meshes that should follow the forearm twist, such as the body, clothing sleeves and bracelets. Rigid meshes that cover most of the forearm and meshes that cover only the area near the elbow are skipped. Check the added meshes."
 
 msgid "tooltips.SubdivideForearm"
 msgstr "(Recommended: On) Subdivides the forearms of the body mesh among the target meshes so the surface still looks smooth when the hand twists far. However, this slightly increases the vertex count of the body mesh."
