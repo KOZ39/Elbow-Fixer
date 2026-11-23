@@ -99,9 +99,13 @@ namespace KOZ39.ElbowFixer
                     .Where(i => bones[i] != null && arm.IsLowerPhysBone(bones[i]))
                     .ToHashSet();
 
-                // A PhysBone chain left on the LowerArm turns with it.
+                // A PhysBone chain under the LowerArm stays on it or moves onto the LowerArm node,
+                // which turns like it.
                 plan._physBoneTwists[side] = plan._lowerChains[side]
-                    .ToDictionary(i => i, _ => arm.LowerArmTwist);
+                    .ToDictionary(
+                        i => i,
+                        _ => (float)TwistRig.LowerArmNode(arm) / (TwistRig.SupportCount - 1)
+                    );
 
                 for (var i = 0; i < bones.Length; i++)
                 {

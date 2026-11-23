@@ -69,6 +69,13 @@ namespace KOZ39.ElbowFixer
             return Mathf.Clamp(Mathf.RoundToInt(t * (SupportCount - 1)), 1, SupportCount - 1);
         }
 
+        internal static int LowerArmNode(Arm arm) =>
+            Mathf.Clamp(
+                Mathf.RoundToInt(arm.LowerArmTwist * (SupportCount - 1)),
+                1,
+                SupportCount - 2
+            );
+
         internal static Transform CreateBetween(Arm arm, Transform[] supports, int node) =>
             CreateTwist(arm, supports[0], $"Twist{node}.5", supports[node], supports[node + 1]);
 
