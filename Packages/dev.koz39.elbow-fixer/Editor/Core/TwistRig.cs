@@ -32,10 +32,12 @@ namespace KOZ39.ElbowFixer
 
             AddAimConstraint(stable, arm.Hand, up, forearm.normalized);
 
+            // Beside the hand, wrist flexion never lines HandUp up with the aim.
             var handUp = CreateChild(
                 $"{NamePrefix}HandUp.{arm.Suffix}",
                 arm.Hand,
-                arm.Hand.position + upOffset,
+                arm.Hand.position
+                    + Vector3.Cross(forearm.normalized, arm.UpDirection) * forearm.magnitude,
                 arm.Hand.rotation
             );
             var roll = CreateChild(
