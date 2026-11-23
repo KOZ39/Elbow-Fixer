@@ -10,7 +10,7 @@ namespace KOZ39.ElbowFixer
     {
         internal const string NamePrefix = "ElbowFixer.";
 
-        internal const int SupportCount = 9;
+        internal const int SupportCount = 17;
         internal const int ReferenceCount = 3;
         private const float MiddleWristShare = 0.375f;
 
