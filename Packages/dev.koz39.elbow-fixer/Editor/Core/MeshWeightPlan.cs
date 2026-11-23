@@ -15,6 +15,7 @@ namespace KOZ39.ElbowFixer
         private const float MaxRestDrift = 0.0001f;
 
         private const float MaxRingSpacing = 0.08f;
+        internal const float MaxAccessorySpan = 0.5f;
         private const int MaxSubdivisionLevels = 3;
 
         internal const string MissingMesh = nameof(MissingMesh);

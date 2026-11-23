@@ -9,7 +9,7 @@ namespace KOZ39.ElbowFixer
     internal static class TargetMeshes
     {
         private const int MinForearmVertices = 20;
-        private const float MinForearmCoverage = 0.3f;
+        private const float MinForearmReach = 0.3f;
 
         private const string MergeArmatureType =
             "nadena.dev.modular_avatar.core.ModularAvatarMergeArmature";
@@ -79,31 +79,61 @@ namespace KOZ39.ElbowFixer
             var targets = new List<SkinnedMeshRenderer>();
             var skipped = new List<(SkinnedMeshRenderer Mesh, Transform Blocker)>();
 
-            foreach (var renderer in avatarRoot.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            var candidates = avatarRoot
+                .GetComponentsInChildren<SkinnedMeshRenderer>(true)
+                .Where(renderer =>
+                    FindSelectionProblem(renderer, avatarRoot.transform) == null
+                    && renderer.sharedMesh != null
+                )
+                .Select(renderer =>
+                {
+                    var weights = renderer.sharedMesh.boneWeights;
+                    var source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(renderer);
+
+                    // A body mesh baked to its own asset still has the model's renderer as source.
+                    return (
+                        Renderer: renderer,
+                        Weights: weights,
+                        Model: AssetDatabase.GetAssetPath(
+                            source != null ? (UnityEngine.Object)source : renderer.sharedMesh
+                        ),
+                        UsedBones: ForearmWeights.UsedBones(weights, renderer.bones)
+                    );
+                })
+                .ToArray();
+
+            foreach (var (renderer, weights, model, usedBones) in candidates)
             {
                 var mesh = renderer.sharedMesh;
-
-                // Outside play mode the editor can read a mesh even without Read/Write.
-                if (
-                    FindSelectionProblem(renderer, avatarRoot.transform) != null
-                    || mesh == null
-                    || (!mesh.isReadable && EditorApplication.isPlaying)
-                )
-                {
-                    continue;
-                }
-
                 var bones = renderer.bones;
                 var bindposes = mesh.bindposes;
                 var vertices = mesh.vertices;
-                var weights = mesh.boneWeights;
-                var usedBones = ForearmWeights.UsedBones(weights, bones);
                 var follows = false;
                 Transform blocker = null;
 
                 foreach (var arm in arms)
                 {
-                    var forearm = FindForearm(bones, bindposes, usedBones, arm, existingTwist);
+                    bool IsTwist(Transform bone) =>
+                        bone.parent == arm.Lower && existingTwist.IsRotationDriven(bone);
+
+                    // A mesh from the model of a mesh that weights the avatar's twist bones leaves
+                    // them out on purpose, to keep a loose sleeve from twisting.
+                    // An outfit merged onto the armature by hand comes from another model.
+                    var leavesOutTwists =
+                        model != ""
+                        && !usedBones.Any(IsTwist)
+                        && candidates
+                            .Where(other => other.Renderer != renderer && other.Model == model)
+                            .SelectMany(other => other.UsedBones)
+                            .Any(IsTwist);
+                    var forearm = FindForearm(
+                        bones,
+                        bindposes,
+                        usedBones,
+                        arm,
+                        leavesOutTwists,
+                        existingTwist
+                    );
 
                     if (forearm == null)
                     {
@@ -143,6 +173,7 @@ namespace KOZ39.ElbowFixer
             Matrix4x4[] bindposes,
             Transform[] usedBones,
             (Transform Lower, Transform Hand) arm,
+            bool leavesOutTwists,
             ExistingTwist existingTwist
         )
         {
@@ -154,6 +185,11 @@ namespace KOZ39.ElbowFixer
                 .FirstOrDefault(t => t != null);
 
             if (lower == null || lower.parent == null)
+            {
+                return null;
+            }
+
+            if (lower == arm.Lower && leavesOutTwists)
             {
                 return null;
             }
@@ -307,7 +343,7 @@ namespace KOZ39.ElbowFixer
 
             var count = 0;
             var blended = false;
-            var min = 1f;
+            var min = float.MaxValue;
             var max = 0f;
 
             for (var v = 0; v < vertices.Length && v < weights.Length; v++)
@@ -329,7 +365,11 @@ namespace KOZ39.ElbowFixer
                 max = Mathf.Max(max, t);
             }
 
-            return count >= MinForearmVertices && max - min >= MinForearmCoverage && blended;
+            // A rigid mesh short along the forearm, such as a bracelet, turns as one with the twist
+            // bone at its position.
+            return count >= MinForearmVertices
+                && max >= MinForearmReach
+                && (blended || max - min <= MeshWeightPlan.MaxAccessorySpan);
         }
     }
 }
