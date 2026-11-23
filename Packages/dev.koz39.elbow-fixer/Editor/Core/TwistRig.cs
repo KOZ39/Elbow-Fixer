@@ -11,7 +11,7 @@ namespace KOZ39.ElbowFixer
         internal const string NamePrefix = "ElbowFixer.";
 
         internal const int SupportCount = 9;
-        internal const int ReferenceCount = 3;
+        internal const int ReferenceCount = 4;
 
         internal static (Transform[] Supports, Transform[] Roots) Build(Arm arm)
         {
@@ -47,8 +47,18 @@ namespace KOZ39.ElbowFixer
                 arm.Lower.rotation
             );
             AddAimConstraint(roll, arm.Hand, handUp, forearm.normalized);
+            var halfLower = CreateChild(
+                $"{NamePrefix}HalfLower.{arm.Suffix}",
+                arm.Lower,
+                arm.Lower.position,
+                arm.Lower.rotation
+            );
+            AddRotationConstraint(halfLower, false, stable, arm.Lower);
 
-            return (CreateTwists(arm, stable, roll), new[] { stable, up, handUp, roll });
+            return (
+                CreateTwists(arm, stable, halfLower, handUp, roll),
+                new[] { stable, up, handUp, roll, halfLower }
+            );
         }
 
         internal static Transform Mirror(Transform hiddenBone, Transform support)
@@ -59,24 +69,40 @@ namespace KOZ39.ElbowFixer
                 support.position,
                 support.rotation
             );
-            AddRotationConstraint(mirror, support);
+            AddRotationConstraint(mirror, false, support);
 
             return mirror;
         }
 
-        private static Transform[] CreateTwists(Arm arm, Transform stable, Transform roll)
+        private static Transform[] CreateTwists(
+            Arm arm,
+            Transform stable,
+            Transform halfLower,
+            Transform handUp,
+            Transform roll
+        )
         {
             var last = SupportCount - 1;
+            var middle = last / 2;
             var twists = new Transform[SupportCount];
             twists[0] = stable;
+            twists[last] = CreateTwist(arm, stable, $"Twist{last}", roll);
 
-            // Blending from the LowerArm instead of Stable keeps the twist from flipping when the
-            // hand turns past 180 degrees.
-            twists[last] = CreateTwist(arm, stable, $"Twist{last}", arm.Lower, roll);
+            // HandUp never turns against the Hand, so in local space it halves Roll's turn against
+            // the LowerArm.
+            // Adding that to HalfLower keeps each blend below a half turn even when the LowerArm
+            // turns with the hand.
+            twists[middle] = CreateChild(
+                $"{NamePrefix}Twist{middle}.{arm.Suffix}",
+                halfLower,
+                arm.Lower.position,
+                arm.Lower.rotation
+            );
+            AddRotationConstraint(twists[middle], true, handUp, roll);
 
             // Two equal sources blend to the exact midpoint, while a GlobalWeight fraction spaces
             // the twist unevenly and thins the forearm between bones.
-            for (var step = last / 2; step > 0; step /= 2)
+            for (var step = middle / 2; step > 0; step /= 2)
             {
                 for (var i = step; i < last; i += step * 2)
                 {
@@ -136,14 +162,19 @@ namespace KOZ39.ElbowFixer
                 arm.Lower.position,
                 arm.Lower.rotation
             );
-            AddRotationConstraint(twist, sources);
+            AddRotationConstraint(twist, false, sources);
 
             return twist;
         }
 
-        private static void AddRotationConstraint(Transform bone, params Transform[] sources)
+        private static void AddRotationConstraint(
+            Transform bone,
+            bool solveInLocalSpace,
+            params Transform[] sources
+        )
         {
             var constraint = bone.gameObject.AddComponent<VRCRotationConstraint>();
+            constraint.SolveInLocalSpace = solveInLocalSpace;
 
             foreach (var source in sources)
             {
