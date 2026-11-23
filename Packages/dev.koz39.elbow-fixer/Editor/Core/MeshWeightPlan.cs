@@ -24,7 +24,8 @@ namespace KOZ39.ElbowFixer
         internal readonly SkinnedMeshRenderer Renderer;
         private readonly int[] _lowerIndices;
         private readonly ForearmAxis[] _axes;
-        private readonly HashSet<int>[] _lowerPhysBones;
+        private readonly HashSet<int>[] _lowerChains;
+        private readonly Dictionary<int, float>[] _physBoneTwists;
         private readonly List<int> _skinnedSides = new();
         private readonly List<(int Side, int BoneIndex)> _hiddenSections = new();
         private readonly Dictionary<int, int> _hiddenCopies = new();
@@ -57,7 +58,8 @@ namespace KOZ39.ElbowFixer
             _weights = weights;
             _lowerIndices = Enumerable.Repeat(-1, armCount).ToArray();
             _axes = new ForearmAxis[armCount];
-            _lowerPhysBones = new HashSet<int>[armCount];
+            _lowerChains = new HashSet<int>[armCount];
+            _physBoneTwists = new Dictionary<int, float>[armCount];
             IsSkin = isSkin;
         }
 
@@ -85,15 +87,37 @@ namespace KOZ39.ElbowFixer
 
             for (var side = 0; side < arms.Length; side++)
             {
-                plan.ResolveLower(side, arms[side], bones, bindposes);
-                plan._lowerPhysBones[side] = Enumerable
+                var arm = arms[side];
+                plan.ResolveLower(side, arm, bones, bindposes);
+                plan._lowerChains[side] = Enumerable
                     .Range(0, bones.Length)
-                    .Where(i => bones[i] != null && arms[side].IsLowerPhysBone(bones[i]))
+                    .Where(i => bones[i] != null && arm.IsLowerPhysBone(bones[i]))
                     .ToHashSet();
+
+                // A PhysBone chain left on the LowerArm turns with it.
+                plan._physBoneTwists[side] = plan._lowerChains[side]
+                    .ToDictionary(i => i, _ => arm.LowerArmTwist);
+
+                for (var i = 0; i < bones.Length; i++)
+                {
+                    if (bones[i] == null)
+                    {
+                        continue;
+                    }
+
+                    if (arm.IsUpperPhysBone(bones[i]))
+                    {
+                        plan._physBoneTwists[side][i] = 0;
+                    }
+                    else if (arm.IsHandPhysBone(bones[i]))
+                    {
+                        plan._physBoneTwists[side][i] = 1;
+                    }
+                }
 
                 for (var boneIndex = 0; boneIndex < bones.Length; boneIndex++)
                 {
-                    if (plan.IsHiddenSectionOf(side, arms[side], bones[boneIndex]))
+                    if (plan.IsHiddenSectionOf(side, arm, bones[boneIndex]))
                     {
                         plan._hiddenSections.Add((side, boneIndex));
                     }
@@ -390,10 +414,16 @@ namespace KOZ39.ElbowFixer
         private void Redistribute(int side, int[] nodes, Dictionary<int, int[]> mirrorNodes)
         {
             var sources = Sources(side);
+            var rawPositions = _vertices.Select(_axes[side].Position).ToArray();
+
+            var sourceWeights = _weights
+                .Select(weight => ForearmWeights.SourceWeight(weight, sources))
+                .ToArray();
+            var positions = new float[_vertices.Length];
 
             for (var v = 0; v < _vertices.Length; v++)
             {
-                var sourceWeight = ForearmWeights.SourceWeight(_weights[v], sources);
+                var sourceWeight = sourceWeights[v];
 
                 if (sourceWeight <= 0)
                 {
@@ -404,15 +434,30 @@ namespace KOZ39.ElbowFixer
                 // bone's weight keeps this vertex in step with the unhidden copy beside it.
                 _weights[v] = MergeIntoHiddenCopies(_weights[v]);
 
-                var physBoneWeight = ForearmWeights
+                var chains = ForearmWeights
                     .Slots(_weights[v])
-                    .Where(slot => slot.Weight > 0 && _lowerPhysBones[side].Contains(slot.Bone))
-                    .Sum(slot => slot.Weight);
+                    .Where(slot => slot.Weight > 0 && _physBoneTwists[side].ContainsKey(slot.Bone))
+                    .ToArray();
 
-                // A PhysBone chain under the LowerArm turns far more than the nodes near the elbow,
-                // and mixing them pulls the vertex toward the forearm axis.
-                var t = _axes[side].Position(_vertices[v]);
-                t += (1 - t) * physBoneWeight / (sourceWeight + physBoneWeight);
+                // A vertex mixed with a PhysBone chain takes the twist of the bone the chain hangs
+                // on in that chain's share, or the two pull it toward the forearm axis.
+                positions[v] =
+                    (
+                        rawPositions[v] * sourceWeight
+                        + chains.Sum(slot => slot.Weight * _physBoneTwists[side][slot.Bone])
+                    ) / (sourceWeight + chains.Sum(slot => slot.Weight));
+            }
+
+            for (var v = 0; v < _vertices.Length; v++)
+            {
+                var sourceWeight = sourceWeights[v];
+
+                if (sourceWeight <= 0)
+                {
+                    continue;
+                }
+
+                var t = positions[v];
 
                 if (
                     !ForearmWeights.TryRedistribute(
