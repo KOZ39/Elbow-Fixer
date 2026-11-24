@@ -19,13 +19,13 @@ msgid "labels.Right"
 msgstr "右"
 
 msgid "tooltips.TargetMeshes"
-msgstr "需要跟隨前臂扭轉的網格。請加入身體、衣袖和手鐲等手腕飾品，不要加入覆蓋大部分前臂的剛性飾品。"
+msgstr "需要跟隨前臂扭轉的網格。\n請加入身體、衣袖和手鐲等手腕飾品。\n不要加入覆蓋大部分前臂的剛性飾品。"
 
 msgid "tooltips.AutoAdd"
-msgstr "尋找並加入身體、衣袖、手鐲等需要跟隨前臂扭轉的網格。請檢查加入的網格。"
+msgstr "尋找並加入身體、衣袖、手鐲等需要跟隨前臂扭轉的網格。\n請檢查加入的網格。"
 
 msgid "tooltips.SubdivideForearm"
-msgstr "（建議：開啟）細分目標網格中身體網格的前臂，使手部大幅扭轉時表面依然看起來平滑。但身體網格的頂點數會略有增加。"
+msgstr "（建議：開啟）\n細分目標網格中身體網格的前臂，使手部大幅扭轉時表面依然看起來平滑。\n身體網格的頂點數會略有增加。"
 
 msgid "buttons.Select"
 msgstr "選擇"
