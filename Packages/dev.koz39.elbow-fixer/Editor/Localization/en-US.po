@@ -25,7 +25,7 @@ msgid "tooltips.AutoAdd"
 msgstr "Find and add meshes that should follow the forearm twist, such as the body, clothing sleeves and bracelets.\nCheck the added meshes."
 
 msgid "tooltips.SubdivideForearm"
-msgstr "(Recommended: On)\nSubdivide the forearms of the body mesh among the target meshes so the surface stays smooth when the hand twists far.\nSlightly increases the vertex count of the body mesh."
+msgstr "(Recommended: On)\nSubdivide the forearms of the body mesh among the target meshes so the surface stays smooth when the hand twists far.\nSlightly raises Triangles in the Performance Rank."
 
 msgid "buttons.Select"
 msgstr "Select"

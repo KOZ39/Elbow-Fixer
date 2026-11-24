@@ -25,7 +25,7 @@ msgid "tooltips.AutoAdd"
 msgstr "尋找並加入身體、衣袖、手鐲等需要跟隨前臂扭轉的網格。\n請檢查加入的網格。"
 
 msgid "tooltips.SubdivideForearm"
-msgstr "（建議：開啟）\n細分目標網格中身體網格的前臂，使手部大幅扭轉時表面依然看起來平滑。\n身體網格的頂點數會略有增加。"
+msgstr "（建議：開啟）\n細分目標網格中身體網格的前臂，使手部大幅扭轉時表面依然看起來平滑。\nPerformance Rank 中的 Triangles 會略有增加。"
 
 msgid "buttons.Select"
 msgstr "選擇"
