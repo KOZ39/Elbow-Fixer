@@ -22,7 +22,7 @@ msgid "tooltips.TargetMeshes"
 msgstr "需要跟隨前臂扭轉的網格。請加入身體、衣袖和手鐲等手腕飾品，不要加入覆蓋大部分前臂的剛性飾品。"
 
 msgid "tooltips.AutoAdd"
-msgstr "尋找並加入身體、衣袖、手鐲等需要跟隨前臂扭轉的網格。覆蓋大部分前臂的剛性網格、只覆蓋肘部附近的網格，以及不使用 Avatar 前臂扭轉骨骼的 Avatar 附帶服裝網格會被排除。請檢查加入的網格。"
+msgstr "尋找並加入身體、衣袖、手鐲等需要跟隨前臂扭轉的網格。請檢查加入的網格。"
 
 msgid "tooltips.SubdivideForearm"
 msgstr "（建議：開啟）細分目標網格中身體網格的前臂，使手部大幅扭轉時表面依然看起來平滑。但身體網格的頂點數會略有增加。"
