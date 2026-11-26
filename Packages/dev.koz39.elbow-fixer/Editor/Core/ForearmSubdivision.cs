@@ -59,6 +59,7 @@ namespace KOZ39.ElbowFixer
 
         internal void Subdivide(
             int maxLevels,
+            bool[] hidden,
             Func<Vector3, BoneWeight, Vector3, BoneWeight, bool> splits
         )
         {
@@ -79,7 +80,14 @@ namespace KOZ39.ElbowFixer
 
                     for (var i = 0; i < source.Count; i += 3)
                     {
-                        SplitTriangle(result, source[i], source[i + 1], source[i + 2], splits);
+                        SplitTriangle(
+                            result,
+                            source[i],
+                            source[i + 1],
+                            source[i + 2],
+                            hidden,
+                            splits
+                        );
                     }
 
                     _indices[subMesh] = result;
@@ -224,9 +232,13 @@ namespace KOZ39.ElbowFixer
             int a,
             int b,
             int c,
+            bool[] hidden,
             Func<Vector3, BoneWeight, Vector3, BoneWeight, bool> splits
         )
         {
+            // A midpoint splits an edge with a shown end, so only source vertices can be hidden.
+            bool IsHidden(int vertex) => vertex < hidden.Length && hidden[vertex];
+
             var corners = new[] { a, b, c };
             var split = Enumerable
                 .Range(0, 3)
@@ -234,12 +246,13 @@ namespace KOZ39.ElbowFixer
                 {
                     var (first, second) = (corners[edge], corners[(edge + 1) % 3]);
 
-                    return splits(
-                        _positions[first],
-                        _weights[first],
-                        _positions[second],
-                        _weights[second]
-                    );
+                    return !(IsHidden(first) && IsHidden(second))
+                        && splits(
+                            _positions[first],
+                            _weights[first],
+                            _positions[second],
+                            _weights[second]
+                        );
                 })
                 .ToArray();
 

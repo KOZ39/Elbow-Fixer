@@ -96,6 +96,17 @@ namespace KOZ39.ElbowFixer
                             && animators
                                 .AnimationIndex.GetClipsForObjectPath(VirtualPath(bone))
                                 .Any(),
+                        shape =>
+                            animators != null
+                            && animators
+                                .AnimationIndex.GetClipsForBinding(
+                                    EditorCurveBinding.FloatCurve(
+                                        VirtualPath(renderer.transform),
+                                        typeof(SkinnedMeshRenderer),
+                                        $"blendShape.{shape}"
+                                    )
+                                )
+                                .Any(),
                         meshSwaps,
                         skip
                     )
@@ -331,6 +342,7 @@ namespace KOZ39.ElbowFixer
             Arm[] arms,
             HashSet<Transform> movableRoots,
             Func<Transform, bool> isAnimated,
+            Func<string, bool> isShapeAnimated,
             Dictionary<SkinnedMeshRenderer, string> meshSwaps,
             Action<ElbowFixerException> skip
         )
@@ -349,7 +361,8 @@ namespace KOZ39.ElbowFixer
                     isSkin,
                     subdivideForearm && isSkin,
                     movableRoots,
-                    isAnimated
+                    isAnimated,
+                    isShapeAnimated
                 );
                 Require(plan.RedistributedCount > 0, "NoForearmWeights", renderer);
 

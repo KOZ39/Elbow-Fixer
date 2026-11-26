@@ -19,6 +19,7 @@ namespace KOZ39.ElbowFixer
         private const float MaxRibbonGap = 0.005f;
         internal const float MaxAccessorySpan = 0.5f;
         private const int MaxSubdivisionLevels = 3;
+        private const float MaxHiddenRadius = 0.5f;
 
         internal const string MissingMesh = nameof(MissingMesh);
         internal const string MeshNotReadable = nameof(MeshNotReadable);
@@ -72,7 +73,8 @@ namespace KOZ39.ElbowFixer
             bool isSkin,
             bool subdivide,
             HashSet<Transform> movableRoots,
-            Func<Transform, bool> isAnimated
+            Func<Transform, bool> isAnimated,
+            Func<string, bool> isShapeAnimated
         )
         {
             var problem = FindMeshProblem(renderer);
@@ -151,7 +153,7 @@ namespace KOZ39.ElbowFixer
 
             if (subdivide)
             {
-                plan.Subdivide(mesh);
+                plan.Subdivide(mesh, arms, isShapeAnimated);
             }
 
             var firstNode = bones.Length;
@@ -352,13 +354,14 @@ namespace KOZ39.ElbowFixer
             Matrix4x4 referenceBindpose
         ) => bone.worldToLocalMatrix * reference.localToWorldMatrix * referenceBindpose;
 
-        private void Subdivide(Mesh mesh)
+        private void Subdivide(Mesh mesh, Arm[] arms, Func<string, bool> isShapeAnimated)
         {
             var sources = Enumerable.Range(0, _lowerIndices.Length).Select(Sources).ToArray();
 
             _subdivision = new(mesh, _vertices, _normals, _tangents, _weights);
             _subdivision.Subdivide(
                 MaxSubdivisionLevels,
+                FindHiddenVertices(arms, isShapeAnimated),
                 (first, firstWeight, second, secondWeight) =>
                     Enumerable
                         .Range(0, sources.Length)
@@ -381,6 +384,82 @@ namespace KOZ39.ElbowFixer
             AddedVertexCount = positions.Length - mesh.vertexCount;
             _vertices = positions;
             _weights = _subdivision.Weights;
+        }
+
+        // A blend shape that no animation changes keeps its weight in the build, so the forearm it
+        // tucks under a sleeve never shows.
+        private bool[] FindHiddenVertices(Arm[] arms, Func<string, bool> isShapeAnimated)
+        {
+            var mesh = Renderer.sharedMesh;
+            var hidden = new bool[mesh.vertexCount];
+            var fixedShapes = Enumerable
+                .Range(0, mesh.blendShapeCount)
+                .Where(shape =>
+                    Renderer.GetBlendShapeWeight(shape) > 0
+                    && !isShapeAnimated(mesh.GetBlendShapeName(shape))
+                )
+                .ToArray();
+
+            if (fixedShapes.Length == 0)
+            {
+                return hidden;
+            }
+
+            var weights = fixedShapes.Select(Renderer.GetBlendShapeWeight).ToArray();
+            var shown = Bake();
+            Vector3[] unshaped;
+
+            try
+            {
+                foreach (var shape in fixedShapes)
+                {
+                    Renderer.SetBlendShapeWeight(shape, 0);
+                }
+
+                unshaped = Bake();
+            }
+            finally
+            {
+                for (var i = 0; i < fixedShapes.Length; i++)
+                {
+                    Renderer.SetBlendShapeWeight(fixedShapes[i], weights[i]);
+                }
+            }
+
+            foreach (
+                var side in Enumerable.Range(0, arms.Length).Where(side => _lowerIndices[side] >= 0)
+            )
+            {
+                var elbow = arms[side].Lower.position;
+                var axis = arms[side].Hand.position - elbow;
+
+                float Radius(Vector3 vertex) =>
+                    Vector3.ProjectOnPlane(vertex - elbow, axis).magnitude;
+
+                for (var v = 0; v < hidden.Length; v++)
+                {
+                    hidden[v] |= Radius(shown[v]) < MaxHiddenRadius * Radius(unshaped[v]);
+                }
+            }
+
+            return hidden;
+
+            Vector3[] Bake()
+            {
+                var baked = new Mesh();
+
+                try
+                {
+                    Renderer.BakeMesh(baked, true);
+                    var matrix = Renderer.transform.localToWorldMatrix;
+
+                    return baked.vertices.Select(matrix.MultiplyPoint3x4).ToArray();
+                }
+                finally
+                {
+                    UnityEngine.Object.DestroyImmediate(baked);
+                }
+            }
         }
 
         private static int[] Nodes(int first) =>
